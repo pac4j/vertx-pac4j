@@ -2,6 +2,7 @@
 
   // Java verticle
   "main":"org.pac4j.vertx.Pac4jManager",
+  "worker": true,
 
   // If your module is going to be registered in the Vert.x module registry you will also need the following
   // mandatory fields
