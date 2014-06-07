@@ -151,9 +151,9 @@ Where `userProfile` is a Json Object representing the authenticated user. It is 
 # Java helper classes
 
 In order to facilitate the integration with the pac4j manager busmod, you can use the following classes:
-* org.pac4j.vertx.Pac4jHelper this class has methods to send messages to the busmod based on the `HttpServerRequest` object.
-* org.pac4j.vertx.handlers.RequiresAuthenticationHandler this class encapsulates another handler. It fowards the request to the handler if the user is already authenticated or redirects the user to the authentication provider otherwise.
-* org.pac4j.vertx.handlers.CallbackHandler this class finishes the authentication process by validating the authentication information (e.g. a form with username and password) to the busmod and stores the user profile in session
-* org.pac4j.vertx.handlers.LogoutHandler this class removes the user profile from the session
+* **org.pac4j.vertx.Pac4jHelper** this class has methods to send messages to the busmod based on the `HttpServerRequest` object.
+* **org.pac4j.vertx.handlers.RequiresAuthenticationHandler** this class encapsulates another handler. It fowards the request to the handler if the user is already authenticated or redirects the user to the authentication provider otherwise.
+* **org.pac4j.vertx.handlers.CallbackHandler** this class finishes the authentication process by validating the authentication information (e.g. a form with username and password) to the busmod and stores the user profile in session
+* **org.pac4j.vertx.handlers.LogoutHandler** this class removes the user profile from the session
 
 All these classes inherit from the `SessionAwareHandler` which uses the session-manager helper from campudus.
