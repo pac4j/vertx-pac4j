@@ -7,6 +7,6 @@
   // mandatory fields
   "description":"Vert.x pac4j manager module",
   "licenses": ["The Apache Software License Version 2.0"],
-  "author": "Michael Remond",
+  "author": "Michael Remond"
 
 }

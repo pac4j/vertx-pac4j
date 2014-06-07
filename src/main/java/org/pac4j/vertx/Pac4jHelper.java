@@ -40,12 +40,12 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class Pac4jHelper {
 
-    private Vertx vertx;
+    private final Vertx vertx;
 
-    private String address;
+    private final String address;
 
     public Pac4jHelper(Vertx vertx) {
-        this(vertx, "vertx.pac4jmodule");
+        this(vertx, "vertx.pac4j-manager");
     }
 
     public Pac4jHelper(Vertx vertx, String address) {

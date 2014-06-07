@@ -15,7 +15,6 @@
  */
 package org.pac4j.vertx;
 
-
 import org.pac4j.core.client.BaseClient;
 import org.pac4j.core.client.Client;
 import org.pac4j.core.client.Clients;
@@ -56,7 +55,7 @@ public class Pac4jManager extends BusModBase {
     public void start() {
         super.start();
 
-        this.address = getOptionalStringConfig("address", "vertx.pac4jmodule");
+        this.address = getOptionalStringConfig("address", "vertx.pac4j-manager");
         this.clients = ClientsBuilder.buildClients(getOptionalObjectConfig("clientsConfig", new JsonObject()));
 
         redirectHandler = new Handler<Message<JsonObject>>() {
