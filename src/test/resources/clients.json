@@ -1,0 +1,51 @@
+{
+	"callbackUrl": "http://localhost:8080/callback",
+	"clients": {
+		"facebook": {
+			"class": "org.pac4j.oauth.client.FacebookClient",
+			"props": {
+				"key": "145278422258960",
+				"secret": "be21409ba8f39b5dae2a7de525484da8"
+			}
+		},
+		"twitter": {
+			"class": "org.pac4j.oauth.client.TwitterClient",
+			"props": {
+				"key": "CoxUiYwQOSFDReZYdjigBA",
+				"secret": "2kAzunH5Btc4gRSaMr7D7MkyoJ5u1VzbOOzE8rBofs"
+			}
+		},
+		"form": {
+			"class": "org.pac4j.http.client.FormClient",
+			"props": {
+				"loginUrl": "http://localhost:8080/theForm.html",
+				"usernamePasswordAuthenticator": {
+					"class": "org.pac4j.http.credentials.SimpleTestUsernamePasswordAuthenticator"
+				}
+			}
+		},
+		"basicAuth": {
+			"class": "org.pac4j.http.client.BasicAuthClient",
+			"props": {
+				"usernamePasswordAuthenticator": {
+					"class": "org.pac4j.http.credentials.SimpleTestUsernamePasswordAuthenticator"
+				}
+			}
+		},
+		"cas": {
+			"class": "org.pac4j.cas.client.CasClient",
+			"props": {
+				"casLoginUrl": "https://freeuse1.casinthecloud.com/leleujgithub/login"
+			}
+		},
+		"saml2": {
+			"class": "org.pac4j.saml.client.Saml2Client",
+			"props": {
+				"keystorePath": "resource:samlKeystore.jks",
+				"keystorePassword": "pac4j-demo-passwd",
+				"privateKeyPassword": "pac4j-demo-passwd",
+				"idpMetadataPath": "resource:testshib-providers.xml"
+			}
+		}
+	}
+}
