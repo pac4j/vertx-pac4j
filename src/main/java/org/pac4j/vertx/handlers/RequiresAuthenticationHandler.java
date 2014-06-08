@@ -62,6 +62,7 @@ public class RequiresAuthenticationHandler extends SessionAwareHandler {
         this.isAjax = isAjax;
     }
 
+    @Override
     protected void doHandle(final HttpServerRequest req, final String sessionId, final JsonObject sessionAttributes) {
         if (sessionAttributes.getValue(Constants.USER_PROFILE) != null) {
             delegate.handle(req);

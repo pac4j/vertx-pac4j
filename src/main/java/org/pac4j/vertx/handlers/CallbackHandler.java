@@ -47,12 +47,13 @@ public class CallbackHandler implements Handler<HttpServerRequest> {
 
     protected static final Logger logger = LoggerFactory.getLogger(CallbackHandler.class);
 
-    private Handler<HttpServerRequest> handler;
+    private final Handler<HttpServerRequest> handler;
 
     public CallbackHandler(Pac4jHelper pac4jHelper, SessionHelper sessionHelper) {
         this.handler = new CBHandler(pac4jHelper, sessionHelper);
     }
 
+    @Override
     public void handle(final HttpServerRequest req) {
         // get form urlencoded data
         String contentType = req.headers().get(Constants.CONTENT_TYPE_HEADER);
@@ -73,7 +74,7 @@ public class CallbackHandler implements Handler<HttpServerRequest> {
 
     private static class CBHandler extends SessionAwareHandler {
 
-        private Pac4jHelper pac4jHelper;
+        private final Pac4jHelper pac4jHelper;
 
         public CBHandler(Pac4jHelper pac4jHelper, SessionHelper sessionHelper) {
             super(sessionHelper);
@@ -87,29 +88,29 @@ public class CallbackHandler implements Handler<HttpServerRequest> {
                 @Override
                 public void handle(final Message<JsonObject> msg) {
                     final JsonObject response = msg.body();
-                    Object userProfile = pac4jHelper.getUserProfile(response);
                     JsonObject sessionAttributes = pac4jHelper.getSessionAttributes(response);
-
-                    if (userProfile == null) {
+                    if (pac4jHelper.isRequiresHttpAction(response)) {
                         saveSessionAttributes(sessionId, sessionAttributes, new Handler<JsonObject>() {
                             @Override
                             public void handle(JsonObject event) {
                                 pac4jHelper.sendResponse(req.response(), response);
                             }
                         });
-                    } else {
-                        sessionAttributes.putValue(Constants.USER_PROFILE, userProfile);
-                        final String requestedUrl = sessionAttributes.getString(Constants.REQUESTED_URL);
-                        sessionAttributes.putString(Constants.REQUESTED_URL, null);
-                        final String redirectUrl = defaultUrl(requestedUrl, Config.getDefaultSuccessUrl());
-
-                        saveSessionAttributes(sessionId, sessionAttributes, new Handler<JsonObject>() {
-                            @Override
-                            public void handle(JsonObject event) {
-                                HttpResponseHelper.redirect(req, redirectUrl);
-                            }
-                        });
                     }
+                    Object userProfile = pac4jHelper.getUserProfile(response);
+                    if (userProfile != null) {
+                        sessionAttributes.putValue(Constants.USER_PROFILE, userProfile);
+                    }
+                    final String requestedUrl = sessionAttributes.getString(Constants.REQUESTED_URL);
+                    sessionAttributes.putString(Constants.REQUESTED_URL, null);
+                    final String redirectUrl = defaultUrl(requestedUrl, Config.getDefaultSuccessUrl());
+
+                    saveSessionAttributes(sessionId, sessionAttributes, new Handler<JsonObject>() {
+                        @Override
+                        public void handle(JsonObject event) {
+                            HttpResponseHelper.redirect(req, redirectUrl);
+                        }
+                    });
                 }
             });
         }

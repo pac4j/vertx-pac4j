@@ -116,11 +116,17 @@ public class Pac4jHelper {
      * @param event
      */
     public void sendResponse(HttpServerResponse response, JsonObject event) {
-        response.setStatusCode(event.getInteger("code"));
+        Integer code = event.getInteger("code");
+        response.setStatusCode(code);
         for (String name : event.getObject("headers").getFieldNames()) {
             response.putHeader(name, event.getObject("headers").getString(name));
         }
         String content = event.getString("content");
+        if (code == 401) {
+            content = Config.getErrorPage401();
+        } else if (code == 403) {
+            content = Config.getErrorPage403();
+        }
         response.end(content);
     }
 
@@ -186,6 +192,10 @@ public class Pac4jHelper {
 
     public JsonObject getSessionAttributes(JsonObject response) {
         return response.getObject("sessionAttributes");
+    }
+
+    public boolean isRequiresHttpAction(JsonObject response) {
+        return response.getInteger("code") != 0;
     }
 
 }
