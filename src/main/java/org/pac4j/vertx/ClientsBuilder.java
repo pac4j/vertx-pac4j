@@ -17,7 +17,9 @@ package org.pac4j.vertx;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.pac4j.core.client.Client;
 import org.pac4j.core.client.Clients;
@@ -33,6 +35,14 @@ import org.vertx.java.core.json.JsonObject;
  */
 @SuppressWarnings("rawtypes")
 public class ClientsBuilder {
+
+    private static Map<Class, Class> map = new HashMap<>();
+
+    static {
+        map.put(int.class, Integer.class);
+        map.put(long.class, Long.class);
+        map.put(boolean.class, Boolean.class);
+    }
 
     public static Clients buildClients(JsonObject conf) {
         String callbackUrl = conf.getString("callbackUrl");
@@ -60,14 +70,12 @@ public class ClientsBuilder {
             if (props != null) {
                 for (String field : props.getFieldNames()) {
                     Object value = props.getValue(field);
-                    if (value instanceof String) {
-                        Method m = findInheritedMethod(c, getSetterName(field), new Class[] { String.class }, false);
+                    if (value != null) {
+                        if (value instanceof JsonObject) {
+                            value = buildObjectTree((JsonObject) value);
+                        }
+                        Method m = findInheritedMethod(c, getSetterName(field), new Class[] { value.getClass() }, false);
                         m.invoke(object, value);
-                    } else if (value instanceof JsonObject) {
-                        Object objectValue = buildObjectTree((JsonObject) value);
-                        Method m = findInheritedMethod(c, getSetterName(field), new Class[] { objectValue.getClass() },
-                                false);
-                        m.invoke(object, objectValue);
                     }
                 }
             }
@@ -80,7 +88,7 @@ public class ClientsBuilder {
     private static Method findInheritedMethod(Class clazz, String methodName, Class[] args, boolean strictArgs)
             throws NoSuchMethodException {
         if (clazz == null)
-            throw new NoSuchMethodException("No class");
+            throw new NoSuchMethodException("No class for method " + methodName + " and args " + args);
         if (methodName == null)
             throw new NoSuchMethodException("No method name");
 
@@ -117,7 +125,7 @@ public class ClientsBuilder {
             while (j < formalParams.length && formalParams[j].equals(actualParams[j]))
                 j++;
         } else {
-            while ((j < formalParams.length) && (formalParams[j].isAssignableFrom(actualParams[j]))) {
+            while ((j < formalParams.length) && (getWrapperClass(formalParams[j]).isAssignableFrom(actualParams[j]))) {
                 j++;
             }
         }
@@ -127,6 +135,11 @@ public class ClientsBuilder {
         }
 
         return true;
+    }
+
+    private static Class getWrapperClass(Class clazz) {
+        Class c = map.get(clazz);
+        return (c == null) ? clazz : c;
     }
 
     private static String getSetterName(String field) {

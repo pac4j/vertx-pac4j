@@ -96,6 +96,7 @@ public class CallbackHandler implements Handler<HttpServerRequest> {
                                 pac4jHelper.sendResponse(req.response(), response);
                             }
                         });
+                        return;
                     }
                     Object userProfile = pac4jHelper.getUserProfile(response);
                     if (userProfile != null) {
