@@ -15,7 +15,6 @@
  */
 package org.pac4j.vertx;
 
-import org.pac4j.core.client.Clients;
 
 /**
  * Holder for configuration values.
@@ -31,9 +30,6 @@ public final class Config {
     private static String defaultSuccessUrl = DEFAULT_URL;
 
     private static String defaultLogoutUrl = DEFAULT_URL;
-
-    // all the clients
-    private static Clients clients;
 
     private static String errorPage401 = "authentication required";
 
@@ -53,14 +49,6 @@ public final class Config {
 
     public static void setDefaultLogoutUrl(final String defaultLogoutUrl) {
         Config.defaultLogoutUrl = defaultLogoutUrl;
-    }
-
-    public static Clients getClients() {
-        return clients;
-    }
-
-    public static void setClients(final Clients clients) {
-        Config.clients = clients;
     }
 
     public static String getErrorPage401() {

@@ -36,16 +36,31 @@ import org.vertx.java.core.json.JsonObject;
 public class EventBusObjectConverter {
 
     private static Map<String, Converter<? extends Object>> map;
+
     static {
         map = new HashMap<>();
         map.put("org.scribe.model.Token", new TokenConverter());
         map.put("org.pac4j.core.profile.UserProfile", new UserProfileConverter());
     }
 
+    /**
+     * Add the given converter for encoding/decoding the given class name. 
+     * 
+     * @param className
+     * @param converter
+     */
     public static void addConverter(String className, Converter<? extends Object> converter) {
-        map.put(className, converter);
+        if (!map.containsKey(className)) {
+            map.put(className, converter);
+        }
     }
 
+    /**
+     * Encode the given object using the corresponding encoder if available. Returns the String representation otherwise. 
+     * 
+     * @param value
+     * @return
+     */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public static Object encode(Object value) {
         if (value == null) {
@@ -72,6 +87,12 @@ public class EventBusObjectConverter {
         return null;
     }
 
+    /**
+     * Decode given object using the corresponding decoder if available. Returns a String representation otherwise.
+     * 
+     * @param value
+     * @return
+     */
     public static Object decode(Object value) {
         if (value == null) {
             return null;

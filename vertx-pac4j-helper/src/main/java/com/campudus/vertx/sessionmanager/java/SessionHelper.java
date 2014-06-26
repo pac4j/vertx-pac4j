@@ -20,6 +20,8 @@ import org.vertx.java.core.json.JsonObject;
  * to handle storing and retrieving session data more easily.
  * 
  * @author <a href="http://www.campudus.com/">Joern Bernhardt</a>
+ * 
+ * This class was modified for Vertx 2.1 and some methods were added.
  */
 public class SessionHelper {
 
