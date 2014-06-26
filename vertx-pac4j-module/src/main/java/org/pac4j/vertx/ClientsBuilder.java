@@ -44,6 +44,12 @@ public class ClientsBuilder {
         map.put(boolean.class, Boolean.class);
     }
 
+    /**
+     * Return a {@link Clients} object configured by the Json configuration. 
+     * 
+     * @param conf
+     * @return
+     */
     public static Clients buildClients(JsonObject conf) {
         String callbackUrl = conf.getString("callbackUrl");
         if (callbackUrl == null) {
@@ -53,7 +59,11 @@ public class ClientsBuilder {
         JsonObject cs = conf.getObject("clients");
         if (cs != null) {
             for (String name : cs.getFieldNames()) {
-                clients.add((Client) buildObjectTree(cs.getObject(name)));
+                Client client = (Client) buildObjectTree(cs.getObject(name));
+                if (client == null) {
+                    throw new RuntimeException("Cannot build client " + name);
+                }
+                clients.add(client);
             }
         }
 
@@ -80,7 +90,6 @@ public class ClientsBuilder {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
         }
         return object;
     }

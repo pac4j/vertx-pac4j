@@ -1,5 +1,4 @@
 {
-
   // Java verticle
   "main":"org.pac4j.vertx.Pac4jManager",
   "worker": true,

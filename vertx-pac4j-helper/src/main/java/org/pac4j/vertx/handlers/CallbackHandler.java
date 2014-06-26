@@ -15,7 +15,6 @@
  */
 package org.pac4j.vertx.handlers;
 
-import org.apache.commons.lang3.StringUtils;
 import org.pac4j.vertx.Config;
 import org.pac4j.vertx.Constants;
 import org.pac4j.vertx.HttpResponseHelper;
@@ -126,7 +125,7 @@ public class CallbackHandler implements Handler<HttpServerRequest> {
      */
     public static String defaultUrl(final String url, final String defaultUrl) {
         String redirectUrl = defaultUrl;
-        if (StringUtils.isNotBlank(url)) {
+        if (url != null && !"".equals(url)) {
             redirectUrl = url;
         }
         logger.debug("defaultUrl : {}", redirectUrl);
