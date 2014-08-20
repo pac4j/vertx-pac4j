@@ -15,8 +15,8 @@
  */
 package org.pac4j.vertx.handlers;
 
-import org.pac4j.vertx.Config;
-import org.pac4j.vertx.Constants;
+import org.pac4j.core.context.BaseConfig;
+import org.pac4j.core.context.HttpConstants;
 import org.pac4j.vertx.HttpResponseHelper;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.http.HttpServerRequest;
@@ -39,12 +39,12 @@ public class LogoutHandler extends SessionAwareHandler {
 
     @Override
     protected void doHandle(final HttpServerRequest req, final String sessionId, final JsonObject sessionAttributes) {
-        sessionAttributes.putValue(Constants.USER_PROFILE, null);
+        sessionAttributes.putValue(HttpConstants.USER_PROFILE, null);
 
         saveSessionAttributes(sessionId, sessionAttributes, new Handler<JsonObject>() {
             @Override
             public void handle(JsonObject event) {
-                HttpResponseHelper.redirect(req, Config.getDefaultLogoutUrl());
+                HttpResponseHelper.redirect(req, BaseConfig.getDefaultLogoutUrl());
             }
         });
     }

@@ -15,7 +15,7 @@
  */
 package org.pac4j.vertx.handlers;
 
-import org.pac4j.vertx.Constants;
+import org.pac4j.core.context.HttpConstants;
 import org.pac4j.vertx.Pac4jHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,11 +64,11 @@ public class RequiresAuthenticationHandler extends SessionAwareHandler {
 
     @Override
     protected void doHandle(final HttpServerRequest req, final String sessionId, final JsonObject sessionAttributes) {
-        if (sessionAttributes.getValue(Constants.USER_PROFILE) != null) {
+        if (sessionAttributes.getValue(HttpConstants.USER_PROFILE) != null) {
             delegate.handle(req);
         } else {
             final String requestedUrlToSave = pac4jHelper.getFullRequestURL(req);
-            sessionAttributes.putString(Constants.REQUESTED_URL, requestedUrlToSave);
+            sessionAttributes.putString(HttpConstants.REQUESTED_URL, requestedUrlToSave);
             logger.debug("requestedUrlToSave : {}", requestedUrlToSave);
 
             pac4jHelper.redirect(req, sessionAttributes, clientName, true, isAjax, new Handler<Message<JsonObject>>() {

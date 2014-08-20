@@ -17,6 +17,7 @@ package org.pac4j.vertx;
 
 import java.util.List;
 
+import org.pac4j.core.context.BaseConfig;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.eventbus.Message;
@@ -123,9 +124,9 @@ public class Pac4jHelper {
         }
         String content = event.getString("content");
         if (code == 401) {
-            content = Config.getErrorPage401();
+            content = BaseConfig.getErrorPage401();
         } else if (code == 403) {
-            content = Config.getErrorPage403();
+            content = BaseConfig.getErrorPage403();
         }
         response.end(content);
     }
