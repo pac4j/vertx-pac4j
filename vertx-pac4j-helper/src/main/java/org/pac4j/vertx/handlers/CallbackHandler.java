@@ -15,7 +15,8 @@
  */
 package org.pac4j.vertx.handlers;
 
-import org.pac4j.vertx.Config;
+import org.pac4j.core.context.BaseConfig;
+import org.pac4j.core.context.HttpConstants;
 import org.pac4j.vertx.Constants;
 import org.pac4j.vertx.HttpResponseHelper;
 import org.pac4j.vertx.Pac4jHelper;
@@ -55,7 +56,7 @@ public class CallbackHandler implements Handler<HttpServerRequest> {
     @Override
     public void handle(final HttpServerRequest req) {
         // get form urlencoded data
-        String contentType = req.headers().get(Constants.CONTENT_TYPE_HEADER);
+        String contentType = req.headers().get(HttpConstants.CONTENT_TYPE_HEADER);
         if ("POST".equals(req.method()) && contentType != null
                 && Constants.FORM_URLENCODED_CONTENT_TYPE.equals(contentType)) {
             req.expectMultiPart(true);
@@ -99,11 +100,11 @@ public class CallbackHandler implements Handler<HttpServerRequest> {
                     }
                     Object userProfile = pac4jHelper.getUserProfile(response);
                     if (userProfile != null) {
-                        sessionAttributes.putValue(Constants.USER_PROFILE, userProfile);
+                        sessionAttributes.putValue(HttpConstants.USER_PROFILE, userProfile);
                     }
-                    final String requestedUrl = sessionAttributes.getString(Constants.REQUESTED_URL);
-                    sessionAttributes.putString(Constants.REQUESTED_URL, null);
-                    final String redirectUrl = defaultUrl(requestedUrl, Config.getDefaultSuccessUrl());
+                    final String requestedUrl = sessionAttributes.getString(HttpConstants.REQUESTED_URL);
+                    sessionAttributes.putString(HttpConstants.REQUESTED_URL, null);
+                    final String redirectUrl = defaultUrl(requestedUrl, BaseConfig.getDefaultSuccessUrl());
 
                     saveSessionAttributes(sessionId, sessionAttributes, new Handler<JsonObject>() {
                         @Override

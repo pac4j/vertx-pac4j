@@ -26,20 +26,8 @@ public interface Constants {
 
     public static final String HOST_HEADER = "Host";
 
-    public static final String CONTENT_TYPE_HEADER = "Content-Type";
-
-    public final static String SESSION_ID = "pac4jSessionId";
-
-    public final static String USER_PROFILE = "pac4jUserProfile";
-
-    public final static String REQUESTED_URL = "pac4jRequestedUrl";
-
     public final static String FORM_ATTRIBUTES = "pac4jFormAttributes";
 
-    public final static String HTML_CONTENT_TYPE = "text/html; charset=utf-8";
-
     public final static String FORM_URLENCODED_CONTENT_TYPE = "application/x-www-form-urlencoded";
-
-    public final static String SEPARATOR = "$";
 
 }

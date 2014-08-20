@@ -29,7 +29,7 @@ public class HttpResponseHelper {
 
     public static void ok(HttpServerRequest req, String content) {
         req.response().setStatusCode(HttpConstants.OK);
-        req.response().headers().add(Constants.CONTENT_TYPE_HEADER, Constants.HTML_CONTENT_TYPE);
+        req.response().headers().add(HttpConstants.CONTENT_TYPE_HEADER, HttpConstants.HTML_CONTENT_TYPE);
         req.response().end(content);
     }
 
