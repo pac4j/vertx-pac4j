@@ -5,7 +5,7 @@
     <groupId>org.pac4j</groupId>
     <artifactId>vertx-pac4j</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <name>vertx-pac4j</name>
 
     <parent>
