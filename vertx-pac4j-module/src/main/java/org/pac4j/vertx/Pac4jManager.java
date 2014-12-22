@@ -1,5 +1,5 @@
 /*
-  Copyright 2014 - 2014 Michael Remond
+  Copyright 2014 - 2014 pac4j organization
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -51,12 +51,15 @@ public class Pac4jManager extends BusModBase {
 
     private String address;
 
+    private EventBusObjectConverter ebConverter;
+
     @Override
     public void start() {
         super.start();
 
-        this.address = getOptionalStringConfig("address", "vertx.pac4j-manager");
-        this.clients = ClientsBuilder.buildClients(getOptionalObjectConfig("clientsConfig", new JsonObject()));
+        address = getOptionalStringConfig("address", "vertx.pac4j-manager");
+        clients = ClientsBuilder.buildClients(getOptionalObjectConfig("clientsConfig", new JsonObject()));
+        ebConverter = getEventBusConverter();
 
         redirectHandler = new Handler<Message<JsonObject>>() {
             @Override
@@ -79,6 +82,18 @@ public class Pac4jManager extends BusModBase {
             }
         };
         eb.registerHandler(address + ".redirectUrls", redirectUrlsHandler);
+    }
+
+    private EventBusObjectConverter getEventBusConverter() {
+        String converterClass = getOptionalStringConfig("ebConverter", null);
+        if (converterClass != null) {
+            try {
+                return (EventBusObjectConverter) Class.forName(converterClass).newInstance();
+            } catch (Exception e) {
+                logger.warn("Error while creating instance of EventBusObjectConvrter", e);
+            }
+        }
+        return new JSerializationEventBusObjectConverter();
     }
 
     @SuppressWarnings("rawtypes")
@@ -130,14 +145,15 @@ public class Pac4jManager extends BusModBase {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void doAuthenticate(final Message<JsonObject> message) {
         final JsonObject json = getMandatoryObject("webContext", message);
+        final String clientName = message.body().getString("clientName");
         VertxWebContext webContext = decodeWebContext(json);
 
         JsonObject response = new JsonObject();
-        final Client client = clients.findClient(webContext);
+        final Client client = (clientName != null) ? clients.findClient(clientName) : clients.findClient(webContext);
         try {
             Credentials credentials = client.getCredentials(webContext);
             UserProfile userProfile = client.getUserProfile(credentials, webContext);
-            response = response.putValue("userProfile", EventBusObjectConverter.encode(userProfile));
+            response = response.putValue("userProfile", ebConverter.encodeObject(userProfile));
         } catch (RequiresHttpAction e) {
             logger.debug("requires HTTP action : " + e.getCode());
         }
@@ -161,7 +177,9 @@ public class Pac4jManager extends BusModBase {
     private VertxWebContext decodeWebContext(final JsonObject json) {
         VertxWebContext webContext = new VertxWebContext(json.getString("method"), json.getString("serverName"),
                 json.getInteger("serverPort"), json.getString("fullUrl"), json.getString("scheme"),
-                json.getObject("headers"), json.getObject("parameters"), json.getObject("sessionAttributes"));
+                json.getObject("headers"), json.getObject("parameters"), json.getObject("sessionAttributes"),
+                ebConverter);
+
         return webContext;
     }
 

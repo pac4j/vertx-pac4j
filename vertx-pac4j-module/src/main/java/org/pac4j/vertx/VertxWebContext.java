@@ -1,5 +1,5 @@
 /*
-  Copyright 2014 - 2014 Michael Remond
+  Copyright 2014 - 2014 pac4j organization
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -31,22 +31,31 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class VertxWebContext implements WebContext {
 
-    private final JsonObject sessionAttributes;
-    private String method;
-    private String serverName;
-    private int serverPort;
-    private String fullUrl;
-    private String scheme;
-    private JsonObject headers;
-    private JsonObject parameters;
-    private Map<String, String[]> mapParameters;
+    private final EventBusObjectConverter ebConverter;
 
-    private JsonObject outHeaders = new JsonObject();
-    private StringBuilder sb = new StringBuilder();
+    private final JsonObject sessionAttributes;
+    private final String method;
+    private final String serverName;
+    private final int serverPort;
+    private final String fullUrl;
+    private final String scheme;
+    private final JsonObject headers;
+    private final JsonObject parameters;
+    private final Map<String, String[]> mapParameters;
+
+    private final JsonObject outHeaders = new JsonObject();
+    private final StringBuilder sb = new StringBuilder();
     private int code;
 
     public VertxWebContext(String method, String serverName, int serverPort, String fullUrl, String scheme,
             JsonObject headers, JsonObject parameters, JsonObject sessionAttributes) {
+        this(method, serverName, serverPort, fullUrl, scheme, headers, parameters, sessionAttributes,
+                new JSerializationEventBusObjectConverter());
+    }
+
+    public VertxWebContext(String method, String serverName, int serverPort, String fullUrl, String scheme,
+            JsonObject headers, JsonObject parameters, JsonObject sessionAttributes, EventBusObjectConverter ebConverter) {
+        this.ebConverter = ebConverter;
         this.method = method;
         this.serverName = serverName;
         this.serverPort = serverPort;
@@ -89,12 +98,12 @@ public class VertxWebContext implements WebContext {
 
     @Override
     public void setSessionAttribute(String name, Object value) {
-        sessionAttributes.putValue(name, EventBusObjectConverter.encode(value));
+        sessionAttributes.putValue(name, ebConverter.encodeObject(value));
     }
 
     @Override
     public Object getSessionAttribute(String name) {
-        return EventBusObjectConverter.decode(sessionAttributes.getValue(name));
+        return ebConverter.decodeObject(sessionAttributes.getValue(name));
     }
 
     public JsonObject getSessionAttributes() {

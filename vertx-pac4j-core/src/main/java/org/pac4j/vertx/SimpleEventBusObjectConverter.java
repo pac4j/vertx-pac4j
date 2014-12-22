@@ -1,5 +1,5 @@
 /*
-  Copyright 2014 - 2014 Michael Remond
+  Copyright 2014 - 2014 pac4j organization
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,19 +25,18 @@ import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 /**
- * Utility class for encoding and decoding objects for the event bus. This is required for
- * session attributes and the user profile.<br>
+ * {@link EventBusObjectConverter} implementation using registered converters to transform Java object into Vert.x {@link JsonObject}.<br>
  * Custom converters can be registered with the addConverter method. 
  * 
  * @author Michael Remond
- * @since 1.0.0
+ * @since 1.1.0
  *
  */
-public class EventBusObjectConverter {
+public class SimpleEventBusObjectConverter implements EventBusObjectConverter {
 
-    private static Map<String, Converter<? extends Object>> map;
+    private final Map<String, Converter<? extends Object>> map;
 
-    static {
+    public SimpleEventBusObjectConverter() {
         map = new HashMap<>();
         map.put("org.scribe.model.Token", new TokenConverter());
         map.put("org.pac4j.core.profile.UserProfile", new UserProfileConverter());
@@ -49,7 +48,7 @@ public class EventBusObjectConverter {
      * @param className
      * @param converter
      */
-    public static void addConverter(String className, Converter<? extends Object> converter) {
+    public void addConverter(String className, Converter<? extends Object> converter) {
         if (!map.containsKey(className)) {
             map.put(className, converter);
         }
@@ -62,7 +61,8 @@ public class EventBusObjectConverter {
      * @return
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public static Object encode(Object value) {
+    @Override
+    public Object encodeObject(Object value) {
         if (value == null) {
             return null;
         }
@@ -75,7 +75,38 @@ public class EventBusObjectConverter {
         }
     }
 
-    private static Converter<? extends Object> getConverter(Object value) {
+    /**
+     * Decode given object using the corresponding decoder if available. Returns a String representation otherwise.
+     * 
+     * @param value
+     * @return
+     */
+    @Override
+    public Object decodeObject(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof JsonObject) {
+            JsonObject json = (JsonObject) value;
+            Converter<? extends Object> converter = getConverter(json.getString("class"));
+            if (converter != null) {
+                return converter.decode(json.getValue("value"));
+            }
+        }
+        return value.toString();
+    }
+
+    private Converter<? extends Object> getConverter(Object value) {
+        // Try to find an exact match
+        for (Entry<String, Converter<? extends Object>> entry : map.entrySet()) {
+            try {
+                if (Class.forName(entry.getKey()).equals(value.getClass())) {
+                    return entry.getValue();
+                }
+            } catch (ClassNotFoundException e) {
+            }
+        }
+        // Try to find a compatible match
         for (Entry<String, Converter<? extends Object>> entry : map.entrySet()) {
             try {
                 if (Class.forName(entry.getKey()).isInstance(value)) {
@@ -87,24 +118,26 @@ public class EventBusObjectConverter {
         return null;
     }
 
-    /**
-     * Decode given object using the corresponding decoder if available. Returns a String representation otherwise.
-     * 
-     * @param value
-     * @return
-     */
-    public static Object decode(Object value) {
-        if (value == null) {
-            return null;
-        }
-        if (value instanceof JsonObject) {
-            JsonObject json = (JsonObject) value;
-            Converter<? extends Object> converter = map.get(json.getString("class"));
-            if (converter != null) {
-                return converter.decode(json.getValue("value"));
+    private Converter<? extends Object> getConverter(String className) {
+        // Try to find an exact match
+        for (Entry<String, Converter<? extends Object>> entry : map.entrySet()) {
+            try {
+                if (entry.getKey().equals(className)) {
+                    return entry.getValue();
+                }
+            } catch (Exception e) {
             }
         }
-        return value.toString();
+        // Try to find a compatible match
+        for (Entry<String, Converter<? extends Object>> entry : map.entrySet()) {
+            try {
+                if (Class.forName(entry.getKey()).isAssignableFrom(Class.forName(className))) {
+                    return entry.getValue();
+                }
+            } catch (Exception e) {
+            }
+        }
+        return null;
     }
 
     /**
@@ -123,7 +156,7 @@ public class EventBusObjectConverter {
     /**
      * Converter for the scribe Token type.
      */
-    private static class TokenConverter implements Converter<Token> {
+    private class TokenConverter implements Converter<Token> {
 
         @Override
         public Object encode(Token t) {
@@ -141,7 +174,7 @@ public class EventBusObjectConverter {
     /**
      * Converter for the UserProfile type.
      */
-    private static class UserProfileConverter implements Converter<UserProfile> {
+    private class UserProfileConverter implements Converter<UserProfile> {
 
         @Override
         public Object encode(UserProfile t) {
@@ -151,7 +184,7 @@ public class EventBusObjectConverter {
             Map<String, Object> attributes = t.getAttributes();
             JsonObject jsonAttr = new JsonObject();
             for (Entry<String, Object> entry : attributes.entrySet()) {
-                jsonAttr.putValue(entry.getKey(), EventBusObjectConverter.encode(entry.getValue()));
+                jsonAttr.putValue(entry.getKey(), encodeObject(entry.getValue()));
             }
             json.putObject("attributes", jsonAttr);
             return json;
@@ -171,7 +204,7 @@ public class EventBusObjectConverter {
             }
             JsonObject jsonAttributes = json.getObject("attributes");
             for (String name : jsonAttributes.getFieldNames()) {
-                profile.addAttribute(name, EventBusObjectConverter.decode(jsonAttributes.getValue(name)));
+                profile.addAttribute(name, decodeObject(jsonAttributes.getValue(name)));
             }
             return profile;
         }

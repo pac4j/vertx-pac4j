@@ -1,5 +1,5 @@
 /*
-  Copyright 2014 - 2014 Michael Remond
+  Copyright 2014 - 2014 pac4j organization
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 package org.pac4j.vertx.handlers;
 
 import org.pac4j.core.context.BaseConfig;
-import org.pac4j.core.context.HttpConstants;
-import org.pac4j.vertx.Constants;
+import org.pac4j.vertx.AuthHttpServerRequest;
 import org.pac4j.vertx.HttpResponseHelper;
 import org.pac4j.vertx.Pac4jHelper;
 import org.slf4j.Logger;
@@ -30,91 +29,56 @@ import org.vertx.java.core.json.JsonObject;
 import com.campudus.vertx.sessionmanager.java.SessionHelper;
 
 /**
- * Callback handler for Vert.x pac4j binding. This handler finishes the authentication process.
- * <br>
- * This handler is in two parts:
- * <ul>
- * <li>the real handler which is called either directly if there's no data in the request (e.g. GET)
- *  or by the request endHanlder otherwise (e.g. POST)</li>
- *  <li>the handler which makes the decision based on the HTTP method and the Content-Type header</li>
- *  </ul>
+ * Callback handler for Vert.x pac4j binding. This handler finishes the stateful authentication process.
  * 
  * @author Michael Remond
  * @since 1.0.0
  *
  */
-public class CallbackHandler implements Handler<HttpServerRequest> {
+public class CallbackHandler extends RequiresAuthenticationHandler {
+
+    public CallbackHandler(String clientName, Handler<HttpServerRequest> delegate, Pac4jHelper pac4jHelper,
+            SessionHelper sessionHelper) {
+        super(clientName, delegate, pac4jHelper, sessionHelper);
+    }
+
+    public CallbackHandler(Pac4jHelper pac4jHelper, SessionHelper sessionHelper) {
+        this(null, null, pac4jHelper, sessionHelper);
+    }
 
     protected static final Logger logger = LoggerFactory.getLogger(CallbackHandler.class);
 
-    private final Handler<HttpServerRequest> handler;
+    @Override
+    protected void retrieveUserProfile(HttpServerRequest req, String sessionId, JsonObject sessionAttributes,
+            Handler<Message<JsonObject>> handler) {
 
-    public CallbackHandler(Pac4jHelper pac4jHelper, SessionHelper sessionHelper) {
-        this.handler = new CBHandler(pac4jHelper, sessionHelper);
+        super.authenticate(req, sessionId, sessionAttributes, handler);
     }
 
     @Override
-    public void handle(final HttpServerRequest req) {
-        // get form urlencoded data
-        String contentType = req.headers().get(HttpConstants.CONTENT_TYPE_HEADER);
-        if ("POST".equals(req.method()) && contentType != null
-                && Constants.FORM_URLENCODED_CONTENT_TYPE.equals(contentType)) {
-            req.expectMultiPart(true);
-            req.params().add(Constants.FORM_ATTRIBUTES, "true");
-            req.endHandler(new Handler<Void>() {
-                @Override
-                public void handle(Void event) {
-                    handler.handle(req);
-                }
-            });
-        } else {
-            handler.handle(req);
-        }
+    protected void authenticationSuccess(AuthHttpServerRequest req, String sessionId, JsonObject sessionAttributes) {
+
+        redirectToTarget(req, sessionId, sessionAttributes);
     }
 
-    private static class CBHandler extends SessionAwareHandler {
+    @Override
+    protected void authenticationFailure(HttpServerRequest req, String sessionId, JsonObject sessionAttributes) {
 
-        private final Pac4jHelper pac4jHelper;
+        redirectToTarget(req, sessionId, sessionAttributes);
+    }
 
-        public CBHandler(Pac4jHelper pac4jHelper, SessionHelper sessionHelper) {
-            super(sessionHelper);
-            this.pac4jHelper = pac4jHelper;
-        }
+    private void redirectToTarget(final HttpServerRequest req, String sessionId, JsonObject sessionAttributes) {
 
-        @Override
-        protected void doHandle(final HttpServerRequest req, final String sessionId, final JsonObject sessionAttributes) {
-            this.pac4jHelper.authenticate(req, sessionAttributes, new Handler<Message<JsonObject>>() {
+        String requestedUrl = retrieveOriginalUrl(req, sessionAttributes);
+        saveUrl(null, sessionAttributes);
+        final String redirectUrl = defaultUrl(requestedUrl, BaseConfig.getDefaultSuccessUrl());
 
-                @Override
-                public void handle(final Message<JsonObject> msg) {
-                    final JsonObject response = msg.body();
-                    JsonObject sessionAttributes = pac4jHelper.getSessionAttributes(response);
-                    if (pac4jHelper.isRequiresHttpAction(response)) {
-                        saveSessionAttributes(sessionId, sessionAttributes, new Handler<JsonObject>() {
-                            @Override
-                            public void handle(JsonObject event) {
-                                pac4jHelper.sendResponse(req.response(), response);
-                            }
-                        });
-                        return;
-                    }
-                    Object userProfile = pac4jHelper.getUserProfile(response);
-                    if (userProfile != null) {
-                        sessionAttributes.putValue(HttpConstants.USER_PROFILE, userProfile);
-                    }
-                    final String requestedUrl = sessionAttributes.getString(HttpConstants.REQUESTED_URL);
-                    sessionAttributes.putString(HttpConstants.REQUESTED_URL, null);
-                    final String redirectUrl = defaultUrl(requestedUrl, BaseConfig.getDefaultSuccessUrl());
-
-                    saveSessionAttributes(sessionId, sessionAttributes, new Handler<JsonObject>() {
-                        @Override
-                        public void handle(JsonObject event) {
-                            HttpResponseHelper.redirect(req, redirectUrl);
-                        }
-                    });
-                }
-            });
-        }
+        saveSessionAttributes(sessionId, sessionAttributes, new Handler<JsonObject>() {
+            @Override
+            public void handle(JsonObject event) {
+                HttpResponseHelper.redirect(req, redirectUrl);
+            }
+        });
     }
 
     /**
