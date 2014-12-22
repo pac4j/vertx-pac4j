@@ -21,7 +21,7 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.http.HttpServerRequest;
 
 /**
- * Callback handler for Vert.x pac4j binding. This handler finishes the stateful authentication process.
+ * Useful handler helpers for Vert.x pac4j binding.
  * 
  * @author Michael Remond
  * @since 1.1.0
