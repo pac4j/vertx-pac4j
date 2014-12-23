@@ -1,20 +1,36 @@
-vertx-pac4j
-===========
+Pac4j module for Vert.x [![Build Status](https://travis-ci.org/pac4j/vertx-pac4j.png?branch=master)](https://travis-ci.org/pac4j/vertx-pac4j)
+=======================
 
-The **vertx-pac4j** library is a multi-protocols authentication and authorization client for the Vert.x platform.
+**vertx-pac4j** is a Profile & Authentication Client, it's a general security library to authenticate users, get their profiles, manage their authorizations in order to secure Vert.x web applications.
 
-It supports these 7 authentication mechanisms on client side :
+### Supported authentication methods
+
+Although **pac4j** historically targets external authentication protocols, it supports direct authentication methods as well. See the [authentication flows](https://github.com/pac4j/pac4j/wiki/Authentication-flows).
+
+#### External/stateful authentication protocols
+
+1. From the client application, save the requested url and redirect the user to the identity provider for authentication (HTTP 302)
+2. After a successful authentication, redirect back the user from the identity provider to the client application (HTTP 302) and get the user credentials
+3. With these credentials, get the profile of the authenticated user (direct call from the client application to the identity provider)
+4. Redirect the user to the originally requested url and allow or disallow the access.
+
+Supported protocols are:
 
 1. OAuth (1.0 & 2.0)
 2. CAS (1.0, 2.0, SAML, logout & proxy)
 3. HTTP (form & basic auth authentications)
 4. OpenID
 5. SAML (2.0)
-6. GAE UserService
+6. Google App Engine UserService
 7. OpenID Connect 1.0
 
-It's available under the Apache 2 license and based on the [pac4j](https://github.com/pac4j/pac4j) library.
+[Example of the CAS flow](https://github.com/pac4j/pac4j/wiki/CAS-flow)
 
+#### Stateless authentication protocols (REST operations)
+
+The current HTTP request contains the required credentials to validate the user identity and retrieve his profile. It works from a basic authentication.
+
+It relies on specific **Authenticator** to validate user credentials and **ProfileCreator** to create user profiles.
 
 ## Providers supported
 
@@ -36,6 +52,7 @@ It's available under the Apache 2 license and based on the [pac4j](https://githu
 <tr><td>Foursquare</td><td>OAuth 2.0</td><td>pac4j-oauth</td><td>FoursquareClient</td><td>FoursquareProfile</td></tr>
 <tr><td>Bitbucket</td><td>OAuth 1.0</td><td>pac4j-oauth</td><td>BitbucketClient</td><td>BitbucketProfile</td></tr>
 <tr><td>ORCiD</td><td>OAuth 2.0</td><td>pac4j-oauth</td><td>OrcidClient</td><td>OrcidProfile</td></tr>
+<tr><td>Strava</td><td>OAuth 2.0</td><td>pac4j-oauth</td><td>StravaClient</td><td>StravaProfile</td></tr>
 <tr><td>Web sites with basic auth authentication</td><td>HTTP</td><td>pac4j-http</td><td>BasicAuthClient</td><td>HttpProfile</td></tr>
 <tr><td>Web sites with form authentication</td><td>HTTP</td><td>pac4j-http</td><td>FormClient</td><td>HttpProfile</td></tr>
 <tr><td>Google - Deprecated</td><td>OpenID</td><td>pac4j-openid</td><td>GoogleOpenIdClient</td><td>GoogleOpenIdProfile</td></tr>
@@ -50,6 +67,8 @@ It's available under the Apache 2 license and based on the [pac4j](https://githu
 vertx-pac4j consists of two maven modules:
 * **[Pac4j Manager module for Vertx](#pac4j-manager-module)** to deploy as a busmod
 * **[Pac4j Vertx Helper module](#pac4j-vertx-helper)** to import as a dependency in your application Verticles
+
+<img src="http://www.pac4j.org/img/vertx-pac4j-diagram.png" />
 
 # Pac4j Manager Module
 
@@ -200,7 +219,6 @@ If the authentication information in the web context are valid the following rep
     } 
     
 Where `userProfile` is a Json Object representing the authenticated user; it must be serialized in some way (see [Serialization Methods](#Serialization Methods)).
-If your application is stateful, it is the application responsibility to store the user profile in session in order not to ask the user for authentication for the next requests.
 
 ## Serialization Methods
 
@@ -228,10 +246,11 @@ Import the following dependency in your Vertx project:
 
 ## Main Classes
 
-* **org.pac4j.vertx.Pac4jHelper** this class has methods to send messages to the busmod based on the `HttpServerRequest` object.
+* **org.pac4j.vertx.Pac4jHelper** this class has methods to send messages to the busmod based on the `HttpServerRequest` object
+* **org.pac4j.vertx.AuthHttpServerRequest** this class wraps a standard `HttpServerRequest` object and allows to attach the current User Profile. This is useful in the handlers behind the `RequiresAuthenticationHandler` in order to retrieve the User Profile
 * **org.pac4j.vertx.handlers.HandlerHelper** this class allows to detect a form POST request and forward to the next handler when the data are available. It is recommended to add this handler at the root of your server if you target to use form based authentication or SAML
 * **org.pac4j.vertx.handlers.RequiresAuthenticationHandler** this class encapsulates another handler. It forwards the request to the handler if the user is already authenticated or redirects the user to the authentication provider otherwise
-* **org.pac4j.vertx.handlers.CallbackHandler** this class finishes the authentication process if stateful, by validating the authentication information (e.g. a form with username and password) to the busmod and stores the user profile in session
+* **org.pac4j.vertx.handlers.CallbackHandler** this class finishes the authentication process if stateful, by validating the authentication information (e.g. a form with username and password) and storing the user profile in session
 * **org.pac4j.vertx.handlers.LogoutHandler** this class removes the user profile from the session
 
 The last three classes inherit from the `org.pac4j.vertx.handlers.SessionAwareHandler` which uses a modified version of the session-manager helper from campudus.

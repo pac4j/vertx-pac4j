@@ -31,9 +31,9 @@ import org.vertx.java.core.json.JsonObject;
 import com.campudus.vertx.sessionmanager.java.SessionHelper;
 
 /**
- * Wrapper handler acting as a security barrier. If the user is authenticated, the next handler in the chain is called.
- * Otherwise the user is redirected to the pac4j client security provider if stateful or an unauthorized response is sent if stateless.<br>
- * The pac4j client to use is selected with the clientName attributes. 
+ * <p>Wrapper handler acting as a security barrier. If the user is authenticated, the next handler in the chain is called.
+ * Otherwise the user is redirected to the pac4j client security provider if stateful or an unauthorized response is sent if stateless.</p>
+ * <p>The pac4j client to use is selected with the clientName attributes.</p> 
  * 
  * @author Michael Remond
  * @since 1.0.0

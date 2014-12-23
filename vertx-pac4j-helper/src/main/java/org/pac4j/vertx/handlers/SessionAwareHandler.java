@@ -26,15 +26,26 @@ import com.campudus.vertx.sessionmanager.java.SessionHelper;
  * <p>Wrapper handler providing all session attributes for the next handler in the chain.</p>
  * <p>This handler uses the sessionHelper from campudus for session creation, attributes saving and retrieval.
  * It is the next handler responsibility to save the updated session attributes by calling the saveSessionAttributes method.</p>
- * <p>The stateless field indicates wether we should really relies on a session management system:<br>
- *  - stateless = false requires a valid sessionHelper and a deployed session manager module
- *  - stateless = true does not require any sessionHelper neither a session manager module
+ * <p>The stateless field indicates wether we should really relies on a session management system:
+ * <ul>
+ * <li>stateless = false requires a valid sessionHelper and a deployed session manager module</li>
+ * <li>stateless = true does not require any sessionHelper neither a session manager module</li>
+ * </ul>
+ * </p>
  * 
  * @author Michael Remond
  * @since 1.0.0
  *
  */
 public abstract class SessionAwareHandler implements Handler<HttpServerRequest> {
+
+    private static final String STATUS_ATTRIBUTE = "status";
+
+    private static final String SUCCESS_STATUS = "ok";
+
+    private static final String DATA_ATTRIBUTE = "data";
+
+    private static final String ERROR_STATUS = "error";
 
     private static final String SESSION_ATTRIBUTES = "session_attributes";
 
@@ -60,8 +71,8 @@ public abstract class SessionAwareHandler implements Handler<HttpServerRequest> 
                     new Handler<JsonObject>() {
                         @Override
                         public void handle(JsonObject event) {
-                            if ("error".equals(event.getString("status"))
-                                    && "SESSION_GONE".equals(event.getString("error"))) {
+                            if (ERROR_STATUS.equals(event.getString(STATUS_ATTRIBUTE))
+                                    && "SESSION_GONE".equals(event.getString(ERROR_STATUS))) {
                                 sessionHelper.startSession(req, new Handler<String>() {
 
                                     @Override
@@ -69,8 +80,8 @@ public abstract class SessionAwareHandler implements Handler<HttpServerRequest> 
                                         doHandle(req, sessionId, new JsonObject());
                                     }
                                 });
-                            } else if ("ok".equals(event.getString("status"))) {
-                                JsonObject data = event.getObject("data").getObject(SESSION_ATTRIBUTES);
+                            } else if (SUCCESS_STATUS.equals(event.getString(STATUS_ATTRIBUTE))) {
+                                JsonObject data = event.getObject(DATA_ATTRIBUTE).getObject(SESSION_ATTRIBUTES);
                                 if (data == null) {
                                     data = new JsonObject();
                                 }
