@@ -1,5 +1,5 @@
 /*
-  Copyright 2014 - 2014 Michael Remond
+  Copyright 2014 - 2014 pac4j organization
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ package org.pac4j.vertx;
 import java.util.List;
 
 import org.pac4j.core.context.BaseConfig;
+import org.pac4j.core.context.HttpConstants;
+import org.pac4j.core.profile.UserProfile;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.eventbus.Message;
@@ -41,17 +43,22 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class Pac4jHelper {
 
+    private static final String SESSION_ATTRIBUTES = "sessionAttributes";
+
     private final Vertx vertx;
 
     private final String address;
 
+    private final EventBusObjectConverter ebConverter;
+
     public Pac4jHelper(Vertx vertx) {
-        this(vertx, "vertx.pac4j-manager");
+        this(vertx, "vertx.pac4j-manager", new JSerializationEventBusObjectConverter());
     }
 
-    public Pac4jHelper(Vertx vertx, String address) {
+    public Pac4jHelper(Vertx vertx, String address, EventBusObjectConverter ebConverter) {
         this.vertx = vertx;
         this.address = address;
+        this.ebConverter = ebConverter;
     }
 
     /**
@@ -61,11 +68,11 @@ public class Pac4jHelper {
      * @param sessionAttributes
      * @param clientName
      * @param protectedResource
-     * @param isAjax
+     * @param isAjax 
      * @param handler
      */
     public void redirect(HttpServerRequest req, JsonObject sessionAttributes, String clientName,
-            boolean protectedResource, Boolean isAjax, final Handler<Message<JsonObject>> handler) {
+            boolean protectedResource, boolean isAjax, final Handler<Message<JsonObject>> handler) {
 
         JsonObject webContext = buildWebContext(req, sessionAttributes);
         JsonObject msg = new JsonObject().putString("clientName", clientName)
@@ -100,11 +107,12 @@ public class Pac4jHelper {
      * @param req
      * @param sessionAttributes
      * @param handler
+     * @param clientName 
      */
-    public void authenticate(HttpServerRequest req, JsonObject sessionAttributes,
+    public void authenticate(HttpServerRequest req, JsonObject sessionAttributes, String clientName,
             final Handler<Message<JsonObject>> handler) {
         JsonObject webContext = buildWebContext(req, sessionAttributes);
-        JsonObject msg = new JsonObject().putObject("webContext", webContext);
+        JsonObject msg = new JsonObject().putString("clientName", clientName).putObject("webContext", webContext);
 
         vertx.eventBus().send(address + ".authenticate", msg, handler);
 
@@ -183,16 +191,33 @@ public class Pac4jHelper {
         return new JsonObject().putString("method", method).putString("serverName", serverName)
                 .putNumber("serverPort", serverPort).putString("fullUrl", fullUrl).putString("scheme", scheme)
                 .putObject("headers", headers).putObject("parameters", parameters)
-                .putObject("sessionAttributes", sessionAttributes);
+                .putObject(SESSION_ATTRIBUTES, sessionAttributes);
 
     }
 
-    public Object getUserProfile(JsonObject response) {
+    public Object getUserProfileFromResponse(JsonObject response) {
         return response.getValue("userProfile");
     }
 
+    public UserProfile getUserProfileFromSession(JsonObject session) {
+        return decodeUserProfile(session.getValue(HttpConstants.USER_PROFILE));
+    }
+
+    public void saveUserProfileInSession(Object profile, JsonObject session) {
+        session.putValue(HttpConstants.USER_PROFILE, profile);
+    }
+
+    public UserProfile decodeUserProfile(Object profile) {
+        return (UserProfile) ebConverter.decodeObject(profile);
+    }
+
+    public JsonObject buildUserProfileResponse(Object profile, JsonObject sessionAttributes) {
+        return new JsonObject().putValue("userProfile", profile).putNumber("code", 0)
+                .putObject(SESSION_ATTRIBUTES, sessionAttributes);
+    }
+
     public JsonObject getSessionAttributes(JsonObject response) {
-        return response.getObject("sessionAttributes");
+        return response.getObject(SESSION_ATTRIBUTES);
     }
 
     public boolean isRequiresHttpAction(JsonObject response) {

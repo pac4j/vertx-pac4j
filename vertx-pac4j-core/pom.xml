@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>
 <!--
    Copyright 2014 - 2014 pac4j organization
 
@@ -14,25 +14,35 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+    xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
-
-    <artifactId>vertx-pac4j-helper</artifactId>
-    <packaging>jar</packaging>
-    <name>vertx-pac4j-helper</name>
-
     <parent>
         <groupId>org.pac4j</groupId>
         <artifactId>vertx-pac4j</artifactId>
         <version>1.1.0-SNAPSHOT</version>
     </parent>
-
+    
+    <artifactId>vertx-pac4j-core</artifactId>
+    <name>vertx-pac4j-core</name>
+    <url>http://maven.apache.org</url>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
     <dependencies>
+
+        <!-- Pac4j -->
         <dependency>
             <groupId>org.pac4j</groupId>
-            <artifactId>vertx-pac4j-core</artifactId>
-            <version>${project.version}</version>
+            <artifactId>pac4j-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.pac4j</groupId>
+            <artifactId>pac4j-oauth</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
         <!--Vertx provided dependencies -->
         <dependency>
             <groupId>io.vertx</groupId>
@@ -40,8 +50,12 @@
             <version>${vertx.version}</version>
             <scope>provided</scope>
         </dependency>
-    </dependencies>
 
-    <build>
-    </build>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>

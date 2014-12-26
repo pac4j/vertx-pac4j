@@ -13,21 +13,33 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
+
 package org.pac4j.vertx;
 
 /**
- * Pac4j constants for Vert.x binding.
+ * Interface for encoding and decoding objects for the event bus. This is required for
+ * session attributes and the user profile.
  * 
  * @author Michael Remond
- * @since 1.0.0
+ * @since 1.1.0
  *
  */
-public interface Constants {
+public interface EventBusObjectConverter {
 
-    public static final String HOST_HEADER = "Host";
+    /**
+     * Encode the given object in a compatible form for the event bus. 
+     * 
+     * @param value
+     * @return
+     */
+    Object encodeObject(Object value);
 
-    public final static String FORM_ATTRIBUTES = "pac4jFormAttributes";
-
-    public final static String FORM_URLENCODED_CONTENT_TYPE = "application/x-www-form-urlencoded";
+    /**
+     * Decode the given object encoded with the encodeObject method.
+     * 
+     * @param value
+     * @return
+     */
+    Object decodeObject(Object value);
 
 }
