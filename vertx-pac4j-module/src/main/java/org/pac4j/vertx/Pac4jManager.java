@@ -93,7 +93,7 @@ public class Pac4jManager extends BusModBase {
                 logger.warn("Error while creating instance of EventBusObjectConvrter", e);
             }
         }
-        return new JSerializationEventBusObjectConverter();
+        return new DefaultEventBusObjectConverter();
     }
 
     @SuppressWarnings("rawtypes")

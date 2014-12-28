@@ -52,7 +52,7 @@ public class Pac4jHelper {
     private final EventBusObjectConverter ebConverter;
 
     public Pac4jHelper(Vertx vertx) {
-        this(vertx, "vertx.pac4j-manager", new JSerializationEventBusObjectConverter());
+        this(vertx, "vertx.pac4j-manager", new DefaultEventBusObjectConverter());
     }
 
     public Pac4jHelper(Vertx vertx, String address, EventBusObjectConverter ebConverter) {

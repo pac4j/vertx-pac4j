@@ -42,6 +42,11 @@
             <artifactId>pac4j-oauth</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.pac4j</groupId>
+            <artifactId>pac4j-oidc</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
         <!--Vertx provided dependencies -->
         <dependency>
@@ -54,7 +59,6 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>3.8.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
