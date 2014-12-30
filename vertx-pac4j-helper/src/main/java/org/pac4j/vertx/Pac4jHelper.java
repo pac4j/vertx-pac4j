@@ -145,9 +145,9 @@ public class Pac4jHelper {
      * @param response
      * @param event
      */
-    public void sendErrorResponse(HttpServerResponse response, String msg) {
-        response.setStatusCode(500);
-        response.end(msg);
+    public void sendErrorResponse(HttpServerResponse serverResponse, JsonObject response) {
+        serverResponse.setStatusCode(500);
+        serverResponse.end(response.getString("message"));
     }
 
     /**
@@ -233,6 +233,10 @@ public class Pac4jHelper {
 
     public boolean isRequiresHttpAction(JsonObject response) {
         return response.getInteger("code") != 0;
+    }
+
+    public boolean isErrorMessage(JsonObject response) {
+        return "error".equals(response.getString("status"));
     }
 
 }
