@@ -223,11 +223,11 @@ Where `userProfile` is a Json Object representing the authenticated user; it mus
 ## Serialization Methods
 
 The Vert.x architecture requires some objects to be (de)serialized between the front verticles serving the HTTP requests and the pac4j manager module. These objects are the session attributes and the User Profile.
-By default, the Java serialization is used (`org.pac4j.vertx.JSerializationEventBusObjectConverter`) but a more portable (however less robust) converter is also provided (`org.pac4j.vertx.SimpleEventBusObjectConverter`) if your verticles are written in another language than Java.
+By default, a serialization based on Jackson is used (`org.pac4j.vertx.DefaultEventBusObjectConverter`).
 In order to pass in a custom converter, add the `ebConverter` parameter to the pac4j manager module:
 
     {
-        "ebConverter": "org.pac4j.vertx.SimpleEventBusObjectConverter"
+        "ebConverter": "org.pac4j.vertx.MyCustomObjectConverter"
     }
 
 # Pac4j Vertx Helper

@@ -25,18 +25,17 @@ import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.nimbusds.oauth2.sdk.Scope;
+import com.nimbusds.oauth2.sdk.Scope.Value.Requirement;
+import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 
 /**
@@ -46,7 +45,7 @@ import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
  * <li>For primitive types (String, Number and Boolean), return as is</li>
  * <li>For arrays, convert to JsonArray</li>
  * <li>Otherwise, convert to a JsonObject with the class name in the "class" attribute and the serialized form with Jackson in the "value" attribute.
- * Custom deserializers can be registered using the <code>addDeserializer(type, deserializer)</code> method</li>
+ * The (de)serialization Jackson process can be customized using the <code>addMixIn(target, mixinSource)</code> method</li>
  * </ul>
  * </p>
  * 
@@ -57,20 +56,19 @@ import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 public class DefaultEventBusObjectConverter implements EventBusObjectConverter {
 
     private final ObjectMapper mapper = new ObjectMapper();
-    private final SimpleModule module = new SimpleModule();
 
     public DefaultEventBusObjectConverter() {
         mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
         mapper.setVisibility(PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
+        mapper.setVisibility(PropertyAccessor.IS_GETTER, JsonAutoDetect.Visibility.NONE);
 
-        module.addDeserializer(Token.class, new TokenDeserializer());
-        module.addDeserializer(BearerAccessToken.class, new BearerAccessTokenDeserializer());
-        mapper.registerModule(module);
+        addMixIn(BearerAccessToken.class, BearerAccessTokenMixin.class);
+        addMixIn(Scope.Value.class, ValueMixin.class);
+        addMixIn(Token.class, TokenMixin.class);
     }
 
-    public <T> void addDeserializer(Class<T> type, JsonDeserializer<? extends T> deser) {
-        module.addDeserializer(type, deser);
-        mapper.registerModule(module);
+    public void addMixIn(Class<?> target, Class<?> mixinSource) {
+        mapper.addMixInAnnotations(target, mixinSource);
     }
 
     @Override
@@ -88,8 +86,8 @@ public class DefaultEventBusObjectConverter implements EventBusObjectConverter {
             return new JsonArray(list);
         } else {
             try {
-                return new JsonObject().putString("class", value.getClass().getName())
-                        .putString("value", encode(value));
+                return new JsonObject().putString("class", value.getClass().getName()).putObject("value",
+                        new JsonObject(encode(value)));
             } catch (Exception e) {
                 throw new RuntimeException("Error while encoding object", e);
             }
@@ -112,7 +110,7 @@ public class DefaultEventBusObjectConverter implements EventBusObjectConverter {
         } else if (value instanceof JsonObject) {
             JsonObject src = (JsonObject) value;
             try {
-                return decode(src.getString("value"), Class.forName(src.getString("class")));
+                return decode(src.getObject("value").encode(), Class.forName(src.getString("class")));
             } catch (Exception e) {
                 throw new RuntimeException("Error while decoding object", e);
             }
@@ -133,29 +131,27 @@ public class DefaultEventBusObjectConverter implements EventBusObjectConverter {
         return (T) mapper.readValue(string, clazz);
     }
 
-    private static class TokenDeserializer extends JsonDeserializer<Token> {
+    public static class BearerAccessTokenMixin {
+        @JsonIgnore
+        private AccessTokenType type;
 
-        @Override
-        public Token deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException,
-                JsonProcessingException {
-            JsonNode node = jp.getCodec().readTree(jp);
-            String token = node.get("token").asText();
-            String secret = node.get("secret").asText();
-            String rawResponse = node.get("rawResponse").asText();
-            return new Token(token, secret, rawResponse);
-        }
-
+        @JsonCreator
+        public BearerAccessTokenMixin(@JsonProperty("value") String value, @JsonProperty("lifetime") long lifetime,
+                @JsonProperty("scope") Scope scope) {
+        };
     }
 
-    private static class BearerAccessTokenDeserializer extends JsonDeserializer<BearerAccessToken> {
+    public static class ValueMixin {
+        @JsonCreator
+        public ValueMixin(@JsonProperty("value") String value, @JsonProperty("requirement") Requirement requirement) {
+        };
+    }
 
-        @Override
-        public BearerAccessToken deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException,
-                JsonProcessingException {
-            JsonNode node = jp.getCodec().readTree(jp);
-            return new BearerAccessToken(node.get("value").asText(), node.get("lifetime").asLong(), new Scope());
-        }
-
+    public static class TokenMixin {
+        @JsonCreator
+        public TokenMixin(@JsonProperty("token") String token, @JsonProperty("secret") String secret,
+                @JsonProperty("rawResponse") String rawResponse) {
+        };
     }
 
 }

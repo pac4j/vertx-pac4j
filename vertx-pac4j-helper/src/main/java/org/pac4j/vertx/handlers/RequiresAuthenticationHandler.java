@@ -86,6 +86,11 @@ public class RequiresAuthenticationHandler extends SessionAwareHandler {
             @Override
             public void handle(Message<JsonObject> event) {
                 final JsonObject response = event.body();
+                if ("error".equals(response.getString("status"))) {
+                    pac4jHelper.sendErrorResponse(req.response(), response.getString("message"));
+                    return;
+                }
+
                 JsonObject sessionAttributes = pac4jHelper.getSessionAttributes(response);
                 // HttpAction is required ?
                 if (pac4jHelper.isRequiresHttpAction(response)) {
@@ -230,6 +235,11 @@ public class RequiresAuthenticationHandler extends SessionAwareHandler {
                     @Override
                     public void handle(final Message<JsonObject> msg) {
                         final JsonObject response = msg.body();
+                        if ("error".equals(response.getString("status"))) {
+                            pac4jHelper.sendErrorResponse(req.response(), response.getString("message"));
+                            return;
+                        }
+
                         JsonObject sessionAttributes = pac4jHelper.getSessionAttributes(response);
 
                         saveSessionAttributes(sessionId, sessionAttributes, new Handler<JsonObject>() {

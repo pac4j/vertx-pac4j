@@ -140,6 +140,17 @@ public class Pac4jHelper {
     }
 
     /**
+     * Generate an error response.
+     * 
+     * @param response
+     * @param event
+     */
+    public void sendErrorResponse(HttpServerResponse response, String msg) {
+        response.setStatusCode(500);
+        response.end(msg);
+    }
+
+    /**
      * Get the full url from the given request.
      * 
      * @param request
