@@ -15,6 +15,7 @@
  */
 package org.pac4j.vertx.handlers;
 
+import org.pac4j.vertx.Constants;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonArray;
@@ -39,13 +40,7 @@ import com.campudus.vertx.sessionmanager.java.SessionHelper;
  */
 public abstract class SessionAwareHandler implements Handler<HttpServerRequest> {
 
-    private static final String STATUS_ATTRIBUTE = "status";
-
-    private static final String SUCCESS_STATUS = "ok";
-
     private static final String DATA_ATTRIBUTE = "data";
-
-    private static final String ERROR_STATUS = "error";
 
     private static final String SESSION_ATTRIBUTES = "session_attributes";
 
@@ -71,8 +66,8 @@ public abstract class SessionAwareHandler implements Handler<HttpServerRequest> 
                     new Handler<JsonObject>() {
                         @Override
                         public void handle(JsonObject event) {
-                            if (ERROR_STATUS.equals(event.getString(STATUS_ATTRIBUTE))
-                                    && "SESSION_GONE".equals(event.getString(ERROR_STATUS))) {
+                            if (Constants.ERROR_STATUS.equals(event.getString(Constants.STATUS_ATTRIBUTE))
+                                    && "SESSION_GONE".equals(event.getString(Constants.ERROR_STATUS))) {
                                 sessionHelper.startSession(req, new Handler<String>() {
 
                                     @Override
@@ -80,7 +75,7 @@ public abstract class SessionAwareHandler implements Handler<HttpServerRequest> 
                                         doHandle(req, sessionId, new JsonObject());
                                     }
                                 });
-                            } else if (SUCCESS_STATUS.equals(event.getString(STATUS_ATTRIBUTE))) {
+                            } else if (Constants.SUCCESS_STATUS.equals(event.getString(Constants.STATUS_ATTRIBUTE))) {
                                 JsonObject data = event.getObject(DATA_ATTRIBUTE).getObject(SESSION_ATTRIBUTES);
                                 if (data == null) {
                                     data = new JsonObject();

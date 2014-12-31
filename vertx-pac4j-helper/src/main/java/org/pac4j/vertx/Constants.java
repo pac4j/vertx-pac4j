@@ -30,4 +30,12 @@ public interface Constants {
 
     public final static String FORM_URLENCODED_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
+    public static final String STATUS_ATTRIBUTE = "status";
+
+    public static final String SUCCESS_STATUS = "ok";
+
+    public static final String ERROR_STATUS = "error";
+
+    public static final String ERROR_MESSAGE_ATTRIBUTE = "message";
+
 }
