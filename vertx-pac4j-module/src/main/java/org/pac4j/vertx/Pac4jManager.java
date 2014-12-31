@@ -93,7 +93,7 @@ public class Pac4jManager extends BusModBase {
                 logger.warn("Error while creating instance of EventBusObjectConvrter", e);
             }
         }
-        return new JSerializationEventBusObjectConverter();
+        return new DefaultEventBusObjectConverter();
     }
 
     @SuppressWarnings("rawtypes")
@@ -111,6 +111,10 @@ public class Pac4jManager extends BusModBase {
             client.redirect(webContext, protectedResource, isAjax);
         } catch (RequiresHttpAction e) {
             logger.debug("extra HTTP action required : " + e.getCode());
+        } catch (RuntimeException e) {
+            logger.error("unexpected exception during doRedirect", e);
+            sendError(message, e.getMessage());
+            return;
         }
 
         JsonObject response = encodeWebContext(webContext);
@@ -134,6 +138,10 @@ public class Pac4jManager extends BusModBase {
                 response.putString((String) clientName, action.getLocation());
             } catch (RequiresHttpAction e) {
 
+            } catch (RuntimeException e) {
+                logger.error("unexpected exception during doRedirectUrls", e);
+                sendError(message, e.getMessage());
+                return;
             }
         }
 
@@ -156,6 +164,10 @@ public class Pac4jManager extends BusModBase {
             response = response.putValue("userProfile", ebConverter.encodeObject(userProfile));
         } catch (RequiresHttpAction e) {
             logger.debug("requires HTTP action : " + e.getCode());
+        } catch (RuntimeException e) {
+            logger.error("unexpected exception during doAuthenticate", e);
+            sendError(message, e.getMessage());
+            return;
         }
         response = encodeWebContext(webContext, response);
 

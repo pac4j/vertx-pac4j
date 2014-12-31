@@ -43,7 +43,11 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class Pac4jHelper {
 
-    private static final String SESSION_ATTRIBUTES = "sessionAttributes";
+    private static final String CODE_ATTRIBUTE = "code";
+
+    private static final String USER_PROFILE_ATTRIBUTE = "userProfile";
+
+    private static final String SESSION_ATTRIBUTES_ATTRIBUTE = "sessionAttributes";
 
     private final Vertx vertx;
 
@@ -52,7 +56,7 @@ public class Pac4jHelper {
     private final EventBusObjectConverter ebConverter;
 
     public Pac4jHelper(Vertx vertx) {
-        this(vertx, "vertx.pac4j-manager", new JSerializationEventBusObjectConverter());
+        this(vertx, "vertx.pac4j-manager", new DefaultEventBusObjectConverter());
     }
 
     public Pac4jHelper(Vertx vertx, String address, EventBusObjectConverter ebConverter) {
@@ -125,7 +129,7 @@ public class Pac4jHelper {
      * @param event
      */
     public void sendResponse(HttpServerResponse response, JsonObject event) {
-        Integer code = event.getInteger("code");
+        Integer code = event.getInteger(CODE_ATTRIBUTE);
         response.setStatusCode(code);
         for (String name : event.getObject("headers").getFieldNames()) {
             response.putHeader(name, event.getObject("headers").getString(name));
@@ -137,6 +141,17 @@ public class Pac4jHelper {
             content = BaseConfig.getErrorPage403();
         }
         response.end(content);
+    }
+
+    /**
+     * Generate an error response.
+     * 
+     * @param response
+     * @param event
+     */
+    public void sendErrorResponse(HttpServerResponse serverResponse, JsonObject response) {
+        serverResponse.setStatusCode(500);
+        serverResponse.end(response.getString(Constants.ERROR_MESSAGE_ATTRIBUTE));
     }
 
     /**
@@ -191,12 +206,12 @@ public class Pac4jHelper {
         return new JsonObject().putString("method", method).putString("serverName", serverName)
                 .putNumber("serverPort", serverPort).putString("fullUrl", fullUrl).putString("scheme", scheme)
                 .putObject("headers", headers).putObject("parameters", parameters)
-                .putObject(SESSION_ATTRIBUTES, sessionAttributes);
+                .putObject(SESSION_ATTRIBUTES_ATTRIBUTE, sessionAttributes);
 
     }
 
     public Object getUserProfileFromResponse(JsonObject response) {
-        return response.getValue("userProfile");
+        return response.getValue(USER_PROFILE_ATTRIBUTE);
     }
 
     public UserProfile getUserProfileFromSession(JsonObject session) {
@@ -212,16 +227,20 @@ public class Pac4jHelper {
     }
 
     public JsonObject buildUserProfileResponse(Object profile, JsonObject sessionAttributes) {
-        return new JsonObject().putValue("userProfile", profile).putNumber("code", 0)
-                .putObject(SESSION_ATTRIBUTES, sessionAttributes);
+        return new JsonObject().putValue(USER_PROFILE_ATTRIBUTE, profile).putNumber(CODE_ATTRIBUTE, 0)
+                .putObject(SESSION_ATTRIBUTES_ATTRIBUTE, sessionAttributes);
     }
 
     public JsonObject getSessionAttributes(JsonObject response) {
-        return response.getObject(SESSION_ATTRIBUTES);
+        return response.getObject(SESSION_ATTRIBUTES_ATTRIBUTE);
     }
 
     public boolean isRequiresHttpAction(JsonObject response) {
-        return response.getInteger("code") != 0;
+        return response.getInteger(CODE_ATTRIBUTE) != 0;
+    }
+
+    public boolean isErrorMessage(JsonObject response) {
+        return Constants.ERROR_STATUS.equals(response.getString(Constants.STATUS_ATTRIBUTE));
     }
 
 }

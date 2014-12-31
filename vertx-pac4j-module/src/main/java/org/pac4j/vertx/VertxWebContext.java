@@ -50,7 +50,7 @@ public class VertxWebContext implements WebContext {
     public VertxWebContext(String method, String serverName, int serverPort, String fullUrl, String scheme,
             JsonObject headers, JsonObject parameters, JsonObject sessionAttributes) {
         this(method, serverName, serverPort, fullUrl, scheme, headers, parameters, sessionAttributes,
-                new JSerializationEventBusObjectConverter());
+                new DefaultEventBusObjectConverter());
     }
 
     public VertxWebContext(String method, String serverName, int serverPort, String fullUrl, String scheme,
