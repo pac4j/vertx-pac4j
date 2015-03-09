@@ -46,7 +46,7 @@
 
         <!--Dependency versions -->
         <pac4j.version>1.7.0-SNAPSHOT</pac4j.version>
-        <vertx.version>2.1RC2</vertx.version>
+        <vertx.version>2.1.5</vertx.version>
         <vertx.testtools.version>2.0.3-final</vertx.testtools.version>
         <junit.version>4.11</junit.version>
 
@@ -140,6 +140,18 @@
                         <target>1.7</target>
                     </configuration>
                 </plugin>
+ <plugin>
+		<groupId>org.apache.maven.plugins</groupId>
+		<artifactId>maven-source-plugin</artifactId>
+		<executions>
+			<execution>
+				<id>attach-sources</id>
+				<goals>
+					<goal>jar</goal>
+				</goals>
+			</execution>
+		</executions>
+	   </plugin>
             </plugins>
         </pluginManagement>
     </build>
