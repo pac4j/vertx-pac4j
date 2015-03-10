@@ -4,3 +4,6 @@
 target
 mods
 bin
+*.iml
+*.ipr
+*.iws
