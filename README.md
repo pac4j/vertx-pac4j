@@ -78,15 +78,13 @@ In order to facilitate the communication between your application verticles and 
 
 A stateful authentication process requires an http session, we suggest you then to use the excellent session-manager from campudus.
 
-You can look at a complete integration example in the [pac4j vertx demo app](https://github.com/pac4j/vertx-pac4j-demo/).
-
 ## Dependencies
 
 When using a stateful authentication mechanism (OAuth, CAS...), this busmod requires some session mechanism like the session-manager from campudus.
 
 ## Name
 
-The module name is `org.pac4j~vertx-pac4j-module~1.1.0-SNAPSHOT`.
+The module name is `org.pac4j~vertx-pac4j-module~1.1.0`.
 
 ## Configuration
 
@@ -332,5 +330,28 @@ Define the application verticle:
 
     }
 
-}
+### Demo
 
+A demo with Facebook, Twitter, CAS, form authentication and basic auth authentication providers is available with [vertx-pac4j-demo](https://github.com/pac4j/vertx-pac4j-demo).
+
+
+## Versions
+
+The current version **1.1.1-SNAPSHOT** is under development. It's available on the [Sonatype snapshots repository](https://oss.sonatype.org/content/repositories/snapshots/org/pac4j) as a Maven dependency:
+
+The latest release of the **vertx-pac4j** project is the **1.1.0** version:
+
+    <dependency>
+        <groupId>org.pac4j</groupId>
+        <artifactId>vertx-pac4j-helper</artifactId>
+        <version>1.1.0</version>
+    </dependency>
+
+See the [release notes](https://github.com/pac4j/vertx-pac4j/wiki/Release-notes).
+
+
+## Contact
+
+If you have any question, please use the following mailing lists:
+- [pac4j users](https://groups.google.com/forum/?hl=en#!forum/pac4j-users)
+- [pac4j developers](https://groups.google.com/forum/?hl=en#!forum/pac4j-dev)
