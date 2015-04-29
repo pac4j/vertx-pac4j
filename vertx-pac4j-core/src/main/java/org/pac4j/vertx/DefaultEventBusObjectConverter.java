@@ -40,14 +40,13 @@ import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 
 /**
  * <p>Default eventbus object converter</p>
- * <p>The serialization strategy is:
+ * <p>The serialization strategy is:</p>
  * <ul>
  * <li>For primitive types (String, Number and Boolean), return as is</li>
  * <li>For arrays, convert to JsonArray</li>
  * <li>Otherwise, convert to a JsonObject with the class name in the "class" attribute and the serialized form with Jackson in the "value" attribute.
  * The (de)serialization Jackson process can be customized using the <code>addMixIn(target, mixinSource)</code> method</li>
  * </ul>
- * </p>
  * 
  * @author Michael Remond
  * @since 1.1.0
