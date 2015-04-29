@@ -47,8 +47,8 @@ public class ClientsBuilder {
     /**
      * Return a {@link Clients} object configured by the Json configuration. 
      * 
-     * @param conf
-     * @return
+     * @param conf the JSON configuration
+     * @return the built clients
      */
     public static Clients buildClients(JsonObject conf) {
         String callbackUrl = conf.getString("callbackUrl");

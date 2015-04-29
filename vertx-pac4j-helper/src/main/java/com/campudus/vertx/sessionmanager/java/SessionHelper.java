@@ -64,6 +64,7 @@ public class SessionHelper {
      *            The address on which the session manager is listening on.
      * @param cookieField
      *            The name of the generated field in the cookie for the client.
+     * @param cookiePath the path of the cookie
      */
     public SessionHelper(Vertx vertx, String sessionManagerAddress, String cookieField, String cookiePath) {
         this.smAddress = sessionManagerAddress;

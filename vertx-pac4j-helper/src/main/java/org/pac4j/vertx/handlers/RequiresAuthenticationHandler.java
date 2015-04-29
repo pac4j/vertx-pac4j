@@ -124,10 +124,10 @@ public class RequiresAuthenticationHandler extends SessionAwareHandler {
     /**
      * Returns the User Profile from the session if stateful or from the credentials if stateless.
      * 
-     * @param req
-     * @param sessionId
-     * @param sessionAttributes
-     * @param handler
+     * @param req the HTTP request
+     * @param sessionId the session identifier
+     * @param sessionAttributes the session attributes
+     * @param handler the handler
      */
     protected void retrieveUserProfile(HttpServerRequest req, String sessionId, JsonObject sessionAttributes,
             Handler<Message<JsonObject>> handler) {
@@ -144,10 +144,10 @@ public class RequiresAuthenticationHandler extends SessionAwareHandler {
     /**
      * Authenticates the given request.
      * 
-     * @param req
-     * @param sessionId
-     * @param sessionAttributes
-     * @param handler
+     * @param req the HTTP request
+     * @param sessionId the session identifier
+     * @param sessionAttributes the session attributes
+     * @param handler the handler
      */
     protected void authenticate(HttpServerRequest req, String sessionId, JsonObject sessionAttributes,
             Handler<Message<JsonObject>> handler) {
@@ -160,9 +160,9 @@ public class RequiresAuthenticationHandler extends SessionAwareHandler {
      * Default authentication success strategy; forwards the request to the next handler if the user has a granted access,
      * sends a 403 forbidden response otherwise.
      * 
-     * @param req
-     * @param sessionId
-     * @param sessionAttributes
+     * @param req the HTTP request
+     * @param sessionId the session identifier
+     * @param sessionAttributes the session attributes
      */
     protected void authenticationSuccess(AuthHttpServerRequest req, String sessionId, JsonObject sessionAttributes) {
         if (hasAccess(req.getProfile(), req)) {
@@ -176,9 +176,9 @@ public class RequiresAuthenticationHandler extends SessionAwareHandler {
      * Default authentication failure strategy; save the original url in session and redirects to the Identity Provider if stateful.
      * Sends an unauthorized response if stateless.
      * 
-     * @param req
-     * @param sessionId
-     * @param sessionAttributes
+     * @param req the HTTP request
+     * @param sessionId the session identifier
+     * @param sessionAttributes the session attributes
      */
     protected void authenticationFailure(HttpServerRequest req, String sessionId, JsonObject sessionAttributes) {
         if (isStateless()) {
@@ -195,9 +195,9 @@ public class RequiresAuthenticationHandler extends SessionAwareHandler {
     /**
      * Default access strategy based on the hasAccess method from the {@link UserProfile}.
      * 
-     * @param profile
-     * @param req
-     * @return
+     * @param profile the user profile
+     * @param req the HTTP request
+     * @return whether the user has accessed
      */
     protected boolean hasAccess(UserProfile profile, HttpServerRequest req) {
         return profile.hasAccess(requireAnyRole, requireAllRoles);
@@ -206,10 +206,10 @@ public class RequiresAuthenticationHandler extends SessionAwareHandler {
     /**
      * Save User Profile in session if stateful. Wraps and returns the current {@link HttpServerRequest} in an {@link AuthHttpServerRequest}.
      * 
-     * @param profile
-     * @param req
-     * @param sessionAttributes
-     * @return
+     * @param profile the user profile
+     * @param req the HTTP request
+     * @param sessionAttributes the session attributes
+     * @return the authenticated HTTP request
      */
     protected AuthHttpServerRequest saveUserProfile(Object profile, HttpServerRequest req, JsonObject sessionAttributes) {
         AuthHttpServerRequest authReq = new AuthHttpServerRequest(req);
@@ -223,9 +223,9 @@ public class RequiresAuthenticationHandler extends SessionAwareHandler {
     /**
      * Redirects to the configured Identity Provider.
      * 
-     * @param req
-     * @param sessionId
-     * @param sessionAttributes
+     * @param req the HTTP request
+     * @param sessionId the session identifier
+     * @param sessionAttributes the session attributes
      */
     protected void redirectToIdentityProvider(final HttpServerRequest req, final String sessionId,
             JsonObject sessionAttributes) {
@@ -255,8 +255,8 @@ public class RequiresAuthenticationHandler extends SessionAwareHandler {
     /**
      * Is the current request an Ajax request.
      * 
-     * @param req
-     * @return
+     * @param req the HTTP request
+     * @return whether it is an AJAX call
      */
     protected boolean isAjaxRequest(HttpServerRequest req) {
         return isAjax;
@@ -265,8 +265,8 @@ public class RequiresAuthenticationHandler extends SessionAwareHandler {
     /**
      * Save the original url in session if the request is not Ajax.
      * 
-     * @param req
-     * @param sessionAttributes
+     * @param req the HTTP request
+     * @param sessionAttributes the session attributes
      */
     protected void saveOriginalUrl(HttpServerRequest req, JsonObject sessionAttributes) {
         if (!isAjaxRequest(req)) {

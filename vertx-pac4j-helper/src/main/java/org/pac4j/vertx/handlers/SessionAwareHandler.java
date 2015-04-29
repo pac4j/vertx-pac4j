@@ -27,12 +27,11 @@ import com.campudus.vertx.sessionmanager.java.SessionHelper;
  * <p>Wrapper handler providing all session attributes for the next handler in the chain.</p>
  * <p>This handler uses the sessionHelper from campudus for session creation, attributes saving and retrieval.
  * It is the next handler responsibility to save the updated session attributes by calling the saveSessionAttributes method.</p>
- * <p>The stateless field indicates wether we should really relies on a session management system:
+ * <p>The stateless field indicates wether we should really relies on a session management system:</p>
  * <ul>
  * <li>stateless = false requires a valid sessionHelper and a deployed session manager module</li>
  * <li>stateless = true does not require any sessionHelper neither a session manager module</li>
  * </ul>
- * </p>
  * 
  * @author Michael Remond
  * @since 1.0.0

@@ -29,16 +29,16 @@ public interface EventBusObjectConverter {
     /**
      * Encode the given object in a compatible form for the event bus. 
      * 
-     * @param value
-     * @return
+     * @param value the value to encode
+     * @return the encoded object
      */
     Object encodeObject(Object value);
 
     /**
      * Decode the given object encoded with the encodeObject method.
      * 
-     * @param value
-     * @return
+     * @param value the value to decode
+     * @return the decoded object
      */
     Object decodeObject(Object value);
 

@@ -45,8 +45,8 @@ public class SimpleEventBusObjectConverter implements EventBusObjectConverter {
     /**
      * Add the given converter for encoding/decoding the given class name. 
      * 
-     * @param className
-     * @param converter
+     * @param className the class name
+     * @param converter the converter
      */
     public void addConverter(String className, Converter<? extends Object> converter) {
         if (!map.containsKey(className)) {
@@ -57,8 +57,8 @@ public class SimpleEventBusObjectConverter implements EventBusObjectConverter {
     /**
      * Encode the given object using the corresponding encoder if available. Returns the String representation otherwise. 
      * 
-     * @param value
-     * @return
+     * @param value the value to encode
+     * @return the encoded object
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
@@ -78,8 +78,8 @@ public class SimpleEventBusObjectConverter implements EventBusObjectConverter {
     /**
      * Decode given object using the corresponding decoder if available. Returns a String representation otherwise.
      * 
-     * @param value
-     * @return
+     * @param value the value to decode
+     * @return the decoded object
      */
     @Override
     public Object decodeObject(Object value) {
@@ -143,7 +143,7 @@ public class SimpleEventBusObjectConverter implements EventBusObjectConverter {
     /**
      * The converter interface for type T.
      *
-     * @param <T>
+     * @param <T> the type to convert
      */
     public static interface Converter<T extends Object> {
 

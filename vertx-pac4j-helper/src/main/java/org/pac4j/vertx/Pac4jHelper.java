@@ -68,12 +68,12 @@ public class Pac4jHelper {
     /**
      * Send a redirect message to the pac4j manager. The response will contain the http information to send back to the user.
      * 
-     * @param req
-     * @param sessionAttributes
-     * @param clientName
-     * @param protectedResource
-     * @param isAjax 
-     * @param handler
+     * @param req the HTTP request
+     * @param sessionAttributes the session attributes
+     * @param clientName the client name
+     * @param protectedResource whether it is a protected resource
+     * @param isAjax whether it is an AJAX call
+     * @param handler the handler
      */
     public void redirect(HttpServerRequest req, JsonObject sessionAttributes, String clientName,
             boolean protectedResource, boolean isAjax, final Handler<Message<JsonObject>> handler) {
@@ -90,10 +90,10 @@ public class Pac4jHelper {
     /**
      * Get the redirection urls for the given client names.
      * 
-     * @param req
-     * @param sessionAttributes
-     * @param handler
-     * @param clients
+     * @param req the HTTP request
+     * @param sessionAttributes the session attributes
+     * @param handler the handler
+     * @param clients the pac4j clients
      */
     public void getRedirectUrls(HttpServerRequest req, JsonObject sessionAttributes,
             Handler<Message<JsonObject>> handler, String... clients) {
@@ -108,10 +108,10 @@ public class Pac4jHelper {
      * Send an authenticate message to the pac4j manager. The response will contain the user profile if the authentication succeeds or the
      * http information to send back to the user otherwise.
      * 
-     * @param req
-     * @param sessionAttributes
-     * @param handler
-     * @param clientName 
+     * @param req the HTTP request
+     * @param sessionAttributes the session attributes
+     * @param handler the handler
+     * @param clientName the client name
      */
     public void authenticate(HttpServerRequest req, JsonObject sessionAttributes, String clientName,
             final Handler<Message<JsonObject>> handler) {
@@ -125,8 +125,8 @@ public class Pac4jHelper {
     /**
      * Generate the Vertx response based on the pac4j manager response.
      * 
-     * @param response
-     * @param event
+     * @param response the HTTP response
+     * @param event the event
      */
     public void sendResponse(HttpServerResponse response, JsonObject event) {
         Integer code = event.getInteger(CODE_ATTRIBUTE);
@@ -146,8 +146,8 @@ public class Pac4jHelper {
     /**
      * Generate an error response.
      * 
-     * @param response
-     * @param event
+     * @param serverResponse the HTTP response
+     * @param response the message response
      */
     public void sendErrorResponse(HttpServerResponse serverResponse, JsonObject response) {
         serverResponse.setStatusCode(500);
@@ -157,8 +157,8 @@ public class Pac4jHelper {
     /**
      * Get the full url from the given request.
      * 
-     * @param request
-     * @return
+     * @param request the HTTP request
+     * @return the current full url
      */
     public String getFullRequestURL(HttpServerRequest request) {
         String scheme = request.absoluteURI().getScheme();

@@ -32,8 +32,8 @@ public class HandlerHelper {
     /**
      * Add form parsing capabilities to the wrapped handler.
      * 
-     * @param toWrap
-     * @return
+     * @param toWrap the handler
+     * @return an handler
      */
     public static Handler<HttpServerRequest> addFormParsing(final Handler<HttpServerRequest> toWrap) {
         return new Handler<HttpServerRequest>() {
