@@ -24,13 +24,14 @@ Supported protocols are:
 6. Google App Engine UserService
 7. OpenID Connect 1.0
 
-[Example of the CAS flow](https://github.com/pac4j/pac4j/wiki/CAS-flow)
-
 #### Stateless authentication protocols (REST operations)
 
 The current HTTP request contains the required credentials to validate the user identity and retrieve his profile. It works from a basic authentication.
 
 It relies on specific **Authenticator** to validate user credentials and **ProfileCreator** to create user profiles.
+
+[Authentication flows](https://github.com/pac4j/pac4j/wiki/Authentication-flows)
+
 
 ## Providers supported
 
