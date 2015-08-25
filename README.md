@@ -3,6 +3,10 @@ Pac4j module for Vert.x [![Build Status](https://travis-ci.org/pac4j/vertx-pac4j
 
 **vertx-pac4j** is a Profile & Authentication Client, it's a general security library to authenticate users, get their profiles, manage their authorizations in order to secure Vert.x web applications.
 
+### Vert.x version compatibility
+For vert.x 2 and previous use vertx-pac4j 1.1.x
+For vert.x 3 and subsequent use vertx-pac4j 2.0.x
+
 ### Supported authentication methods
 
 Although **pac4j** historically targets external authentication protocols, it supports direct authentication methods as well. See the [authentication flows](https://github.com/pac4j/pac4j/wiki/Authentication-flows).
