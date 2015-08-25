@@ -134,6 +134,12 @@ public class VertxWebContext implements WebContext {
     return sessionAttributes.getCustomAttributes().get(name);
   }
 
+  @Override
+  public void invalidateSession() {
+      this.sessionAttributes.setUserProfile(null);
+      this.sessionAttributes.getCustomAttributes().clear();
+  }
+
   public Pac4jSessionAttributes getSessionAttributes() {
     return sessionAttributes;
   }
