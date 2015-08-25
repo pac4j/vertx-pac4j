@@ -5,6 +5,7 @@ Pac4j module for Vert.x [![Build Status](https://travis-ci.org/pac4j/vertx-pac4j
 
 ### Vert.x version compatibility
 For vert.x 2 and previous use vertx-pac4j 1.1.x
+
 For vert.x 3 and subsequent use vertx-pac4j 2.0.x
 
 ### Supported authentication methods
