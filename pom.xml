@@ -10,6 +10,12 @@
   <name>vertx-pac4j</name>
   <url>http://maven.apache.org</url>
 
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <vertx.version>3.0.0</vertx.version>
