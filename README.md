@@ -157,7 +157,7 @@ Define the application verticle:
         // Note that use of a stateful handler automatically configures the callback url
         router.route(HttpMethod.GET, "/facebook/index.html").handler(authHandler);
         // index page
-        router.route(HttpMethod.GET, "/", new Handler());
+        router.route(HttpMethod.GET, "/").handler(new Handler());
                 
         vertx.createHttpServer()
             .requestHandler(router::accept)
@@ -165,7 +165,7 @@ Define the application verticle:
         
     }}
 
-## Stateless application (still requires revision)
+## Stateless application
 
 Define the application verticle:
 
@@ -174,14 +174,20 @@ Define the application verticle:
     @Override
     public void start() {
 
-        Pac4jHelper pac4jHelper = new Pac4jHelper(vertx);
+        Router router = Router.router(vertx);
+        // Construct pac4j Clients object and asynchronous pac4j wrapper
+        Clients clients = ...; 
+        Pac4jWrapper wrapper = new Pac4jWrapper(vertx, clients);
+        final Pac4jAuthProvider authProvider = new StatelessPac4jAuthProviderImpl();
+        final Pac4jAuthHandlerOptions options = new Pac4jAuthHandlerOptions("BasicAuthClient");
+        final StatelessPac4jAuthHandler handler =  new StatelessPac4jAuthHandler(wrapper, authProvider, options);
+        router.route(HttpMethod.GET, "/").handler(handler);
 
         RouteMatcher rm = new RouteMatcher();
 
-        rm.get("/", new RequiresAuthenticationHandler("BasicAuthClient", new DemoHandlers.AuthenticatedJsonHandler(),
-                pac4jHelper, true));
-
-        vertx.createHttpServer().requestHandler(rm).listen(8080, "localhost");
+        vertx.createHttpServer()
+            .requestHandler(router::accept)
+            .listen(8080, "localhost");
 
     }
 
