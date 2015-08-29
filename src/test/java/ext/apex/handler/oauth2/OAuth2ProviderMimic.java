@@ -32,6 +32,11 @@ public class OAuth2ProviderMimic extends AbstractVerticle {
   private static final String LOCATION_HEADER = "location";
 
   private Map<String, String> pendingCodes = new HashMap<>();
+  private final String userIdToReturn;
+
+  public OAuth2ProviderMimic(final String userIdToReturn) {
+    this.userIdToReturn = userIdToReturn;
+  }
 
   @Override
   public void start() throws Exception {
@@ -101,7 +106,7 @@ public class OAuth2ProviderMimic extends AbstractVerticle {
 
   private Handler<RoutingContext> profileHandler() {
     return rc -> {
-      final JsonObject responseBody = new JsonObject().put("id", "testUser1");
+      final JsonObject responseBody = new JsonObject().put("id", userIdToReturn);
       rc.response().setStatusCode(200).end(responseBody.toString());
     };
   }

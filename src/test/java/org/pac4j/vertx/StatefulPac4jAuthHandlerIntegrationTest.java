@@ -8,11 +8,11 @@ import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.AuthHandler;
 import io.vertx.ext.web.handler.CookieHandler;
 import io.vertx.ext.web.handler.SessionHandler;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.vertx.ext.web.sstore.SessionStore;
-import org.junit.Before;
 import org.junit.Test;
 import org.pac4j.core.client.Client;
 import org.pac4j.core.client.Clients;
@@ -27,6 +27,7 @@ import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 /**
  * User: jez
@@ -44,65 +45,90 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
   // This will be our session cookie header for use by requests
   protected AtomicReference<String> sessionCookie = new AtomicReference<>();
 
-  @Before
-  public void startOAuth2ProviderMimic() throws Exception {
+  public void startOAuth2ProviderMimic(final String userIdToReturn) throws Exception {
     CountDownLatch latch = new CountDownLatch(1);
+    final OAuth2ProviderMimic mimic = new OAuth2ProviderMimic(userIdToReturn);
 
-    vertx.deployVerticle(OAuth2ProviderMimic.class.getName(), result -> latch.countDown());
+    vertx.deployVerticle(mimic, result -> latch.countDown());
     latch.await(2, TimeUnit.SECONDS);
   }
 
   @Test
-  public void testSuccessfulOAuth2Login() throws Exception {
+  public void testSuccessfulOAuth2LoginWithoutAuthorities() throws Exception {
 
+    startOAuth2ProviderMimic("testUser1");
     startWebServer(TEST_OAUTH2_SUCCESS_URL);
-    loginSuccessfully(new VoidHandler() {
+    loginSuccessfullyExpectingAuthorizedUser(new VoidHandler() {
       @Override
       protected void handle() {
         testComplete();
+
       }
     });
 
     await(1, TimeUnit.SECONDS);
   }
-
-  @Test
-  public void testSubsequentAccessAfterSuccessfulLogin() {
-
+  
+  private void loginSuccessfullyExpectingAuthorizedUser(final VoidHandler subsequentActions) throws Exception {
+    loginSuccessfully(finalRedirectResponse -> {
+      assertEquals(200, finalRedirectResponse.statusCode());
+      finalRedirectResponse.bodyHandler(body -> {
+        assertEquals("authenticationSuccess", body.toString());
+        subsequentActions.handle(null);
+      });
+    });
   }
 
-  private void loginSuccessfully(final VoidHandler subsequentActions) throws Exception {
+  private void loginSuccessfullyExpectingUnauthorizedUser(final VoidHandler subsequentActions) throws Exception {
+    loginSuccessfully(finalRedirectResponse -> {
+      assertEquals(403, finalRedirectResponse.statusCode());
+      subsequentActions.handle(null);
+    });
+  }
+
+  private void loginSuccessfully(final Handler<HttpClientResponse> finalResponseHandler) throws Exception {
     HttpClient client = vertx.createHttpClient();
     // Attempt to get a private url
     final HttpClientRequest successfulRequest = client.get(8080, "localhost", "/private/success.html");
-    successfulRequest.handler(resp -> {
-      // First we expect a redirect to our handler
-      assertEquals(302, resp.statusCode());
-      final String setCookie = resp.headers().get("set-cookie");
+
+    successfulRequest.handler(
+      // redirect to auth handler
+      expectAndHandleRedirect(client,
+        extractCookie(),
+        // redirect to auth response handler
+        expectAndHandleRedirect(client, clientResponse -> {},
+          // redirect to original url if authorized
+          expectAndHandleRedirect(client, httpClientResponse -> {},
+            finalResponseHandler::handle)))
+    )
+      .end();
+  }
+
+  private Consumer<HttpClientResponse> extractCookie() {
+    return clientResponse -> {
+      final String setCookie = clientResponse.headers().get("set-cookie");
       assertNotNull(setCookie);
       sessionCookie.set(setCookie); // We're going to want to use this subsequently
-      final String redirectToUrl = resp.getHeader("location");
-      redirectToUrl(redirectToUrl, client, redirectResponse -> {
-        assertEquals(302, redirectResponse.statusCode());
-        String postAuthRedirectionUrl = redirectResponse.getHeader("location");
-        redirectToUrl(postAuthRedirectionUrl, client, postAuthRedirectResponse -> {
-          assertEquals(302, postAuthRedirectResponse.statusCode()); // should redirect us back to our original url, but this time we should get there ok
-          final String originalUrl = postAuthRedirectResponse.getHeader("location");
-          redirectToUrl(originalUrl, client, finalRedirectResponse -> {
-            assertEquals(200, finalRedirectResponse.statusCode());
-            finalRedirectResponse.bodyHandler(body -> {
-              assertEquals("authenticationSuccess", body.toString());
-              subsequentActions.handle(null);
-            });
-          });
-        });
-      });
-    });
-    successfulRequest.end();
+    };
+  }
 
+  private Handler<HttpClientResponse> expectAndHandleRedirect(final HttpClient client,
+                                                              final Consumer<HttpClientResponse> responseConsumer,
+                                                              final Handler<HttpClientResponse> redirectResultHandler) {
+    return response -> {
+      assertEquals(302, response.statusCode());
+      responseConsumer.accept(response);
+      final String redirectToUrl = response.getHeader("location");
+      redirectToUrl(redirectToUrl, client, redirectResultHandler);
+    };
   }
 
   private void startWebServer(final String baseAuthUrl) {
+    startWebServer(baseAuthUrl, handler -> {
+    });
+  }
+
+  private void startWebServer(final String baseAuthUrl, final Consumer<AuthHandler> handlerDecorator) {
     Router router = Router.router(vertx);
     SessionStore sessionStore = sessionStore();
 
@@ -110,6 +136,7 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     router.route().handler(sessionHandler(sessionStore));
 
     StatefulPac4jAuthHandler pac4jAuthHandler = authHandler(router, sessionStore, baseAuthUrl);
+    handlerDecorator.accept(pac4jAuthHandler);
 
     startWebServer(router, pac4jAuthHandler);
   }
@@ -123,7 +150,7 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
   }
 
   private void redirectToUrl(final String redirectUrl, final HttpClient client, final Handler<HttpClientResponse> resultHandler) {
-    final HttpClientRequest request = client.getAbs(redirectUrl.toString());
+    final HttpClientRequest request = client.getAbs(redirectUrl);
     getSessionCookie().ifPresent(cookie -> request.putHeader("cookie", cookie));
     request.handler(resultHandler);
     request.end();
@@ -160,7 +187,7 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     clients.setClients(client);
     return clients;
   }
-  
+
   private TestOAuth2Client client(final String baseAuthUrl) {
     TestOAuth2Client client = new TestOAuth2Client();
     client.setCallbackUrl("http://localhost:8080/authResult");
