@@ -85,6 +85,19 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     await(1, TimeUnit.SECONDS);
   }
 
+  @Test
+  public void testSuccessfulOAuth2LoginWithSufficientAuthorities() throws Exception {
+    startOAuth2ProviderMimic("testUser2");
+    startWebServer(TEST_OAUTH2_SUCCESS_URL, "permission1");
+    loginSuccessfullyExpectingAuthorizedUser(new VoidHandler() {
+
+      @Override
+      protected void handle() {
+        testComplete();
+      }
+    });
+    await(1, TimeUnit.SECONDS);
+  }
 
   private void loginSuccessfullyExpectingAuthorizedUser(final VoidHandler subsequentActions) throws Exception {
     loginSuccessfully(finalRedirectResponse -> {
@@ -140,13 +153,13 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     };
   }
 
-  private void startWebServer(final String baseAuthUrl, final String requiredPermission) {
+  private void startWebServer(final String baseAuthUrl, final String requiredPermission) throws Exception {
     startWebServer(baseAuthUrl, requiredPermission, handler -> {
     });
   }
 
   private void startWebServer(final String baseAuthUrl, final String requiredPermission,
-                              final Consumer<AuthHandler> handlerDecorator) {
+                              final Consumer<AuthHandler> handlerDecorator) throws Exception {
     Router router = Router.router(vertx);
     SessionStore sessionStore = sessionStore();
 

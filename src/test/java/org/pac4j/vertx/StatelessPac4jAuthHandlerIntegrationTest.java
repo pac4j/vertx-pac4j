@@ -1,5 +1,6 @@
 package org.pac4j.vertx;
 
+import io.vertx.core.VoidHandler;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.ext.web.Router;
@@ -28,25 +29,32 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
 
   @Test
   public void testSuccessfulLogin() throws Exception {
+
+    VoidHandler test = new VoidHandler() {
+      @Override
+      protected void handle() {
+        HttpClient client = vertx.createHttpClient();
+        // Attempt to get a private url
+        final HttpClientRequest successfulRequest = client.get(8080, "localhost", "/private/success.html")
+          .putHeader(AUTH_HEADER_NAME, TEST_BASIC_AUTH_HEADER);
+        // This should get the desired result straight away rather than operating through redirects
+        successfulRequest.handler(response -> {
+          assertEquals(200, response.statusCode());
+          response.bodyHandler(body -> {
+            assertEquals("authenticationSuccess", body.toString());
+            testComplete();
+          });
+        });
+        successfulRequest.end();
+        await(1, TimeUnit.SECONDS);
+      }
+    };
+
     startWebServer();
-    HttpClient client = vertx.createHttpClient();
-    // Attempt to get a private url
-    final HttpClientRequest successfulRequest = client.get(8080, "localhost", "/private/success.html")
-      .putHeader(AUTH_HEADER_NAME, TEST_BASIC_AUTH_HEADER);
-    // This should get the desired result straight away rather than operating through redirects
-    successfulRequest.handler(response -> {
-      assertEquals(200, response.statusCode());
-      response.bodyHandler(body -> {
-        assertEquals("authenticationSuccess", body.toString());
-        testComplete();
-      });
-    });
-    successfulRequest.end();
-    await(1, TimeUnit.SECONDS);
 
   }
 
-  private void startWebServer() {
+  private void startWebServer() throws Exception {
 
     final Router router = Router.router(vertx);
     // Configure a pac4j stateless handler configured for basic http auth
