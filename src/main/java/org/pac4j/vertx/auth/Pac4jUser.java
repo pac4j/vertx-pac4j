@@ -24,9 +24,9 @@ public class Pac4jUser extends AbstractUser {
   @Override
   protected void doIsPermitted(String permission, Handler<AsyncResult<Boolean>> resultHandler) {
     if (userProfile.getPermissions().contains(permission)) {
-      resultHandler.handle(Future.succeededFuture());
+      resultHandler.handle(Future.succeededFuture(true));
     } else {
-      resultHandler.handle(Future.failedFuture("Not authorized"));
+      resultHandler.handle(Future.succeededFuture(false));
     }
   }
 

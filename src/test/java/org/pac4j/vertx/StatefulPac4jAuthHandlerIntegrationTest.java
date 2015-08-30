@@ -18,6 +18,7 @@ import org.pac4j.core.client.Client;
 import org.pac4j.core.client.Clients;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
 import org.pac4j.vertx.auth.StatefulPac4jAuthProvider;
+import org.pac4j.vertx.client.TestOAuth2AuthorizationGenerator;
 import org.pac4j.vertx.client.TestOAuth2Client;
 import org.pac4j.vertx.core.DefaultJsonConverter;
 import org.pac4j.vertx.handler.impl.Pac4jAuthHandlerOptions;
@@ -57,7 +58,8 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
   public void testSuccessfulOAuth2LoginWithoutAuthorities() throws Exception {
 
     startOAuth2ProviderMimic("testUser1");
-    startWebServer(TEST_OAUTH2_SUCCESS_URL);
+    // Start a web server with no required authorities (i.e. only authentication required) for the secured resource
+    startWebServer(TEST_OAUTH2_SUCCESS_URL, null);
     loginSuccessfullyExpectingAuthorizedUser(new VoidHandler() {
       @Override
       protected void handle() {
@@ -68,7 +70,22 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
 
     await(1, TimeUnit.SECONDS);
   }
-  
+
+  @Test
+  public void testSuccessfulOAuth2LoginWithInsufficientAuthorities() throws Exception {
+    startOAuth2ProviderMimic("testUser2");
+    startWebServer(TEST_OAUTH2_SUCCESS_URL, "permission2");
+    loginSuccessfullyExpectingUnauthorizedUser(new VoidHandler() {
+
+      @Override
+      protected void handle() {
+        testComplete();
+      }
+    });
+    await(1, TimeUnit.SECONDS);
+  }
+
+
   private void loginSuccessfullyExpectingAuthorizedUser(final VoidHandler subsequentActions) throws Exception {
     loginSuccessfully(finalRedirectResponse -> {
       assertEquals(200, finalRedirectResponse.statusCode());
@@ -123,12 +140,13 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     };
   }
 
-  private void startWebServer(final String baseAuthUrl) {
-    startWebServer(baseAuthUrl, handler -> {
+  private void startWebServer(final String baseAuthUrl, final String requiredPermission) {
+    startWebServer(baseAuthUrl, requiredPermission, handler -> {
     });
   }
 
-  private void startWebServer(final String baseAuthUrl, final Consumer<AuthHandler> handlerDecorator) {
+  private void startWebServer(final String baseAuthUrl, final String requiredPermission,
+                              final Consumer<AuthHandler> handlerDecorator) {
     Router router = Router.router(vertx);
     SessionStore sessionStore = sessionStore();
 
@@ -136,12 +154,15 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     router.route().handler(sessionHandler(sessionStore));
 
     StatefulPac4jAuthHandler pac4jAuthHandler = authHandler(router, sessionStore, baseAuthUrl);
+    Optional.ofNullable(requiredPermission).ifPresent(pac4jAuthHandler::addAuthority);
     handlerDecorator.accept(pac4jAuthHandler);
 
     startWebServer(router, pac4jAuthHandler);
   }
 
-  private StatefulPac4jAuthHandler authHandler(final Router router, final SessionStore sessionStore, final String baseAuthUrl) {
+  private StatefulPac4jAuthHandler authHandler(final Router router,
+                                               final SessionStore sessionStore,
+                                               final String baseAuthUrl) {
     DefaultJsonConverter ebConverter = new DefaultJsonConverter();
     Pac4jWrapper wrapper = new Pac4jWrapper(vertx, clients(client(baseAuthUrl)));
     Pac4jAuthProvider authProvider = StatefulPac4jAuthProvider.create(sessionStore, ebConverter);
@@ -179,7 +200,6 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
       .put("key", TEST_CLIENT_ID)
       .put("secret", TEST_CLIENT_SECRET)
       .put("authorizationUrlTemplate", baseAuthUrl + "?client_id=%s&redirect_uri=%s&state=%s");
-//      .put("authorizationUrlTemplate", "http://localhost:9292/authSuccess?client_id=%s&redirect_uri=%s&state=%s");
   }
 
   private Clients clients(final Client client) {
@@ -194,6 +214,7 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     client.setKey(TEST_CLIENT_ID);
     client.setSecret(TEST_CLIENT_SECRET);
     client.setAuthorizationUrlTemplate(baseAuthUrl + "?client_id=%s&redirect_uri=%s&state=%s");
+    client.addAuthorizationGenerator(new TestOAuth2AuthorizationGenerator());
     return client;
   }
 

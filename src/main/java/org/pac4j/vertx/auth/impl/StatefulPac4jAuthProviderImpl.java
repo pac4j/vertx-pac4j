@@ -72,7 +72,7 @@ public class StatefulPac4jAuthProviderImpl implements org.pac4j.vertx.auth.State
           .flatMap(profile -> Optional.of(new Pac4jUser(profile, provider)));
 
         if (user.isPresent()) {
-          resultHandler.handle(Future.succeededFuture());
+          resultHandler.handle(Future.<User>succeededFuture(user.get()));
         } else {
           resultHandler.handle(Future.failedFuture("Token not present"));
         }

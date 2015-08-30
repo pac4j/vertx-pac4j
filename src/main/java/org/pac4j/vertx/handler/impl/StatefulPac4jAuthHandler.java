@@ -4,14 +4,11 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.AuthHandler;
 import org.pac4j.vertx.Pac4jAuthenticationResponse;
 import org.pac4j.vertx.Pac4jSessionAttributes;
 import org.pac4j.vertx.Pac4jWrapper;
 import org.pac4j.vertx.VertxWebContext;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
-
-import java.util.Set;
 
 /**
  * @author jez
@@ -31,16 +28,6 @@ public class StatefulPac4jAuthHandler extends BasePac4JAuthHandler {
 
   private Handler<RoutingContext> authResultHandler(Pac4jAuthHandlerOptions options) {
     return new CallbackHandler(this.wrapper, this.pac4jAuthProvider, options);
-  }
-
-  @Override
-  public AuthHandler addAuthority(String authority) {
-    return this;
-  }
-
-  @Override
-  public AuthHandler addAuthorities(Set<String> authorities) {
-    return this;
   }
 
   @Override
