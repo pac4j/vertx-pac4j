@@ -2,7 +2,6 @@ package org.pac4j.vertx;
 
 import ext.apex.handler.oauth2.OAuth2ProviderMimic;
 import io.vertx.core.Handler;
-import io.vertx.core.VoidHandler;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
@@ -60,14 +59,7 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     startOAuth2ProviderMimic("testUser1");
     // Start a web server with no required authorities (i.e. only authentication required) for the secured resource
     startWebServer(TEST_OAUTH2_SUCCESS_URL, null);
-    loginSuccessfullyExpectingAuthorizedUser(new VoidHandler() {
-      @Override
-      protected void handle() {
-        testComplete();
-
-      }
-    });
-
+    loginSuccessfullyExpectingAuthorizedUser(Void -> testComplete());
     await(1, TimeUnit.SECONDS);
   }
 
@@ -75,13 +67,7 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
   public void testSuccessfulOAuth2LoginWithInsufficientAuthorities() throws Exception {
     startOAuth2ProviderMimic("testUser2");
     startWebServer(TEST_OAUTH2_SUCCESS_URL, "permission2");
-    loginSuccessfullyExpectingUnauthorizedUser(new VoidHandler() {
-
-      @Override
-      protected void handle() {
-        testComplete();
-      }
-    });
+    loginSuccessfullyExpectingUnauthorizedUser(Void -> testComplete());
     await(1, TimeUnit.SECONDS);
   }
 
@@ -89,38 +75,63 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
   public void testSuccessfulOAuth2LoginWithSufficientAuthorities() throws Exception {
     startOAuth2ProviderMimic("testUser2");
     startWebServer(TEST_OAUTH2_SUCCESS_URL, "permission1");
-    loginSuccessfullyExpectingAuthorizedUser(new VoidHandler() {
+    loginSuccessfullyExpectingAuthorizedUser(Void -> testComplete());
+    await(1, TimeUnit.SECONDS);
+  }
 
-      @Override
-      protected void handle() {
-        testComplete();
-      }
+  // Test that subsequent access following successful login doesn't require another set of redirects, assuming session
+  // is maintained
+  @Test
+  public void testSubsequentAccessFollowingSuccessfulLogin() throws Exception {
+    startOAuth2ProviderMimic("testUser1");
+    // Start a web server with no required authorities (i.e. only authentication required) for the secured resource
+    startWebServer(TEST_OAUTH2_SUCCESS_URL, null);
+    HttpClient client = vertx.createHttpClient();
+    loginSuccessfullyExpectingAuthorizedUser(client, Void -> {
+
+      final HttpClientRequest successfulRequest = client.get(8080, "localhost", "/private/success.html");
+      getSessionCookie().ifPresent(cookie -> successfulRequest.putHeader("cookie", cookie));
+      successfulRequest.handler(resp -> {
+
+        assertEquals(200, resp.statusCode());
+        resp.bodyHandler(body -> {
+          assertEquals("authenticationSuccess", body.toString());
+          testComplete();
+        });
+      }).end();
     });
     await(1, TimeUnit.SECONDS);
   }
 
-  private void loginSuccessfullyExpectingAuthorizedUser(final VoidHandler subsequentActions) throws Exception {
-    loginSuccessfully(finalRedirectResponse -> {
+  private void loginSuccessfullyExpectingAuthorizedUser(final Consumer<Void> subsequentActions) throws Exception {
+    loginSuccessfullyExpectingAuthorizedUser(vertx.createHttpClient(), subsequentActions);
+  }
+
+  private void loginSuccessfullyExpectingAuthorizedUser(final HttpClient client, final Consumer<Void> subsequentActions) throws Exception {
+    loginSuccessfully(client, finalRedirectResponse -> {
       assertEquals(200, finalRedirectResponse.statusCode());
       finalRedirectResponse.bodyHandler(body -> {
         assertEquals("authenticationSuccess", body.toString());
-        subsequentActions.handle(null);
+        subsequentActions.accept(null);
       });
     });
   }
 
-  private void loginSuccessfullyExpectingUnauthorizedUser(final VoidHandler subsequentActions) throws Exception {
+  private void loginSuccessfullyExpectingUnauthorizedUser(final Consumer<Void> subsequentActions) throws Exception {
     loginSuccessfully(finalRedirectResponse -> {
       assertEquals(403, finalRedirectResponse.statusCode());
-      subsequentActions.handle(null);
+      subsequentActions.accept(null);
     });
   }
 
   private void loginSuccessfully(final Handler<HttpClientResponse> finalResponseHandler) throws Exception {
     HttpClient client = vertx.createHttpClient();
+    loginSuccessfully(client, finalResponseHandler);
+  }
+
+  private void loginSuccessfully(final HttpClient client, final Handler<HttpClientResponse> finalResponseHandler) throws Exception {
     // Attempt to get a private url
     final HttpClientRequest successfulRequest = client.get(8080, "localhost", "/private/success.html");
-
     successfulRequest.handler(
       // redirect to auth handler
       expectAndHandleRedirect(client,
@@ -132,6 +143,7 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
             finalResponseHandler::handle)))
     )
       .end();
+
   }
 
   private Consumer<HttpClientResponse> extractCookie() {
