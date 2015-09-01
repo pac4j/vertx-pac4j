@@ -38,7 +38,7 @@ public class CallbackHandler extends BasePac4JAuthHandler {
 
   protected static final Logger logger = LoggerFactory.getLogger(CallbackHandler.class);
 
-    public CallbackHandler(final Pac4jWrapper wrapper, Pac4jAuthProvider authProvider, Pac4jAuthHandlerOptions options) {
+    public CallbackHandler(final Pac4jWrapper wrapper, final Pac4jAuthProvider authProvider, final Pac4jAuthHandlerOptions options) {
         super(wrapper, authProvider, options);
     }
 

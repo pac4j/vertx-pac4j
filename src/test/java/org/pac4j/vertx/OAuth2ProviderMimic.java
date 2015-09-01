@@ -1,4 +1,4 @@
-package ext.apex.handler.oauth2;
+package org.pac4j.vertx;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;

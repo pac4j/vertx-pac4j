@@ -114,7 +114,6 @@ Import the following dependency in your Vertx project:
 
 ## Main Classes
 
-* **org.pac4j.vertx.Pac4jWrapper**Asynchronous wrapper for the blocking Pac4j calls, to keep the blocking calls off the vert.x event loop
 * **org.pac4j.vertx.impl.StatefulPac4jAuthProviderImpl** implementation of the vert.x AuthProvider interface for stateful (session-based) Pac4j handling
 * **org.pac4j.vertx.impl.StatelessPac4jAuthProviderImpl** implementation of the vert.x AuthProvider interface for stateless Pac4j handling
 * **org.pac4j.vertx.handler.impl.StatefulPac4jAuthHandler** this class implements the vert.x AuthHandler interface for stateful authentication. It forwards the request to the next handler if the user is already authenticated or redirects the user to the authentication provider otherwise

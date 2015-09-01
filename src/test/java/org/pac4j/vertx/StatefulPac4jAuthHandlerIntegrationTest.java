@@ -1,6 +1,5 @@
 package org.pac4j.vertx;
 
-import ext.apex.handler.oauth2.OAuth2ProviderMimic;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
@@ -189,10 +188,9 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
                                                final SessionStore sessionStore,
                                                final String baseAuthUrl) {
     DefaultJsonConverter ebConverter = new DefaultJsonConverter();
-    Pac4jWrapper wrapper = new Pac4jWrapper(vertx, clients(client(baseAuthUrl)));
     Pac4jAuthProvider authProvider = StatefulPac4jAuthProvider.create(sessionStore, ebConverter);
     Pac4jAuthHandlerOptions options = new Pac4jAuthHandlerOptions(TEST_CLIENT_NAME);
-    return new StatefulPac4jAuthHandler(router, wrapper, authProvider, options);
+    return new StatefulPac4jAuthHandler(vertx, clients(client(baseAuthUrl)), router, authProvider, options);
   }
 
   private void redirectToUrl(final String redirectUrl, final HttpClient client, final Handler<HttpClientResponse> resultHandler) {

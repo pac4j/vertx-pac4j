@@ -1,10 +1,11 @@
 package org.pac4j.vertx.handler.impl;
 
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
+import org.pac4j.core.client.Clients;
 import org.pac4j.vertx.Pac4jAuthenticationResponse;
 import org.pac4j.vertx.Pac4jSessionAttributes;
-import org.pac4j.vertx.Pac4jWrapper;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
 
 // Port of stateless Pac4J auth to a handler in vert.x 3. Note that a review of the stateful scenario is
@@ -13,16 +14,12 @@ import org.pac4j.vertx.auth.Pac4jAuthProvider;
 // then move things out to the provider
 public class StatelessPac4jAuthHandler extends BasePac4JAuthHandler {
 
-  public StatelessPac4jAuthHandler(final Pac4jWrapper pac4jWrapper,
+  public StatelessPac4jAuthHandler(final Vertx vertx,
+                                   final Clients clients,
                                    final Pac4jAuthProvider authProvider,
                                    final Pac4jAuthHandlerOptions options) {
-    super(pac4jWrapper, authProvider, options);
+    super(vertx, clients, authProvider, options);
 
-  }
-
-  @Override
-  public void handle(final RoutingContext routingContext) {
-    super.handle(routingContext);
   }
 
   @Override

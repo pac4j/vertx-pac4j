@@ -1,6 +1,7 @@
 package org.pac4j.vertx.handler.impl;
 
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.logging.Logger;
@@ -8,6 +9,7 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.impl.AuthHandlerImpl;
+import org.pac4j.core.client.Clients;
 import org.pac4j.core.context.BaseConfig;
 import org.pac4j.core.context.Pac4jConstants;
 import org.pac4j.core.profile.UserProfile;
@@ -33,7 +35,14 @@ public abstract class BasePac4JAuthHandler extends AuthHandlerImpl implements Pa
   protected final String clientName;
   protected final Pac4jAuthProvider pac4jAuthProvider;
 
-  public BasePac4JAuthHandler(Pac4jWrapper wrapper, Pac4jAuthProvider authProvider, Pac4jAuthHandlerOptions options) {
+  public BasePac4JAuthHandler(final Vertx vertx, final Clients clients, final Pac4jAuthProvider authProvider,
+                              final Pac4jAuthHandlerOptions options) {
+    this(new Pac4jWrapper(vertx, clients), authProvider, options);
+  }
+
+  public BasePac4JAuthHandler(final Pac4jWrapper wrapper,
+                              final Pac4jAuthProvider authProvider,
+                              final Pac4jAuthHandlerOptions options) {
     super(authProvider);
     clientName = options.clientName();
     this.pac4jAuthProvider = authProvider;
@@ -136,7 +145,7 @@ public abstract class BasePac4JAuthHandler extends AuthHandlerImpl implements Pa
    */
   protected void redirectToIdentityProvider(final RoutingContext routingContext,
                                             final Pac4jSessionAttributes sessionAttributes) {
-    wrapper.redirect(routingContext,  clientName, sessionAttributes,true, isAjaxRequest(),
+    wrapper.redirect(routingContext, clientName, sessionAttributes, true, isAjaxRequest(),
       response -> {
 
         Pac4jSessionAttributes sessionAttributes1 = response.getSessionAttributes();

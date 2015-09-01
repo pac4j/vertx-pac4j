@@ -58,10 +58,9 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
 
     final Router router = Router.router(vertx);
     // Configure a pac4j stateless handler configured for basic http auth
-    Pac4jWrapper wrapper = new Pac4jWrapper(vertx, clients());
     final Pac4jAuthProvider authProvider = new StatelessPac4jAuthProviderImpl();
     Pac4jAuthHandlerOptions options = new Pac4jAuthHandlerOptions("BasicAuthClient");
-    final StatelessPac4jAuthHandler handler =  new StatelessPac4jAuthHandler(wrapper, authProvider, options);
+    final StatelessPac4jAuthHandler handler =  new StatelessPac4jAuthHandler(vertx, clients(), authProvider, options);
     startWebServer(router, handler);
 
   }
