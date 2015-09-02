@@ -8,7 +8,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
 import org.pac4j.core.client.Client;
 import org.pac4j.core.client.Clients;
-import org.pac4j.http.client.direct.BasicAuthClient;
+import org.pac4j.http.client.direct.DirectBasicAuthClient;
 import org.pac4j.http.credentials.authenticator.test.SimpleTestUsernamePasswordAuthenticator;
 import org.pac4j.http.profile.creator.test.SimpleTestUsernameProfileCreator;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
@@ -70,7 +70,7 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
   }
 
   private Client client() {
-    BasicAuthClient client = new BasicAuthClient();
+    DirectBasicAuthClient client = new DirectBasicAuthClient();
     client.setAuthenticator(new SimpleTestUsernamePasswordAuthenticator());
     client.setProfileCreator(new SimpleTestUsernameProfileCreator());
     return client;
