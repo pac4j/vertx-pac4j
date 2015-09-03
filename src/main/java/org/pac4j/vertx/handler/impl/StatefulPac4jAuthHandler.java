@@ -5,7 +5,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import org.pac4j.core.client.Clients;
+import org.pac4j.core.config.Config;
 import org.pac4j.vertx.Pac4jAuthenticationResponse;
 import org.pac4j.vertx.Pac4jSessionAttributes;
 import org.pac4j.vertx.VertxWebContext;
@@ -18,11 +18,11 @@ public class StatefulPac4jAuthHandler extends BasePac4JAuthHandler {
 
   // Consider coalescing the manager options into the handler options and then generating the manageroptions from them
   public StatefulPac4jAuthHandler(final Vertx vertx,
-                                  final Clients clients,
+                                  final Config config,
                                   final Router router,
                                   final Pac4jAuthProvider authProvider,
                                   final Pac4jAuthHandlerOptions options) {
-    super(vertx, clients, authProvider, options);
+    super(vertx, config, authProvider, options);
 
     // Start manager verticle
     router.route(HttpMethod.GET, "/authResult").handler(authResultHandler(options));

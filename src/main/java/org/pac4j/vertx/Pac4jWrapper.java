@@ -8,8 +8,8 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 import org.pac4j.core.client.Client;
-import org.pac4j.core.client.Clients;
 import org.pac4j.core.client.IndirectClient;
+import org.pac4j.core.config.Config;
 import org.pac4j.core.credentials.Credentials;
 import org.pac4j.core.exception.RequiresHttpAction;
 import org.pac4j.core.profile.UserProfile;
@@ -27,15 +27,15 @@ public class Pac4jWrapper {
 
   private static final Logger LOG = LoggerFactory.getLogger(Pac4jWrapper.class);
 
-  private final Clients clients;
+  private final Config config;
   private final Vertx vertx;
 
-  public Pac4jWrapper(final Vertx vertx, final Clients clients) {
+  public Pac4jWrapper(final Vertx vertx, final Config config) {
     this.vertx = vertx;
-    if (clients.findAllClients().size() == 0) {
+    if (config.getClients().findAllClients().size() == 0) {
       throw new RuntimeException("Pac4jWrapper requires at least one pac4j client to be used");
     }
-    this.clients = clients;
+    this.config = config;
   }
 
   public boolean requiresHttpAction(Pac4jResponse response) {
@@ -62,11 +62,11 @@ public class Pac4jWrapper {
       Objects.requireNonNull(sessionAttributes);
       VertxWebContext webContext = new VertxWebContext(routingContext, sessionAttributes);
 
-      Client client = clients.findClient(clientName);
+      Client client = config.getClients().findClient(clientName);
       LOG.debug("client : " + client);
 
       try {
-        client.redirect(webContext, protectedResource, isAjax);
+        client.redirect(webContext, protectedResource);
       } catch (RequiresHttpAction e) {
         LOG.debug("extra HTTP action required : " + e.getCode());
       } catch (RuntimeException e) {
@@ -98,12 +98,13 @@ public class Pac4jWrapper {
     Objects.requireNonNull(webContext);
 
     return Arrays.asList(clientNames).stream()
-      .map(clientName -> clients.findClient((String) clientName))
+      .map(clientName -> config.getClients().findClient((String) clientName))
       .filter(client -> client instanceof IndirectClient)
       .map(client -> (IndirectClient) client)
       .map(indirectClient -> {
         try {
-          return Optional.ofNullable(indirectClient.getRedirectAction(webContext, false, false).getLocation());
+          return Optional.ofNullable(indirectClient.getRedirectAction(webContext, false
+          ).getLocation());
         } catch (RequiresHttpAction requiresHttpAction) {
           return Optional.<String>empty();
         }
@@ -130,7 +131,7 @@ public class Pac4jWrapper {
       VertxWebContext webContext = new VertxWebContext(routingContext, sessionAttributes);
 
       final Pac4jAuthenticationResponse authResponse = new Pac4jAuthenticationResponse(webContext);
-      final Client client = (clientName != null) ? clients.findClient(clientName) : clients.findClient(webContext);
+      final Client client = (clientName != null) ? config.getClients().findClient(clientName) : config.getClients().findClient(webContext);
 
       try {
         Credentials credentials = client.getCredentials(webContext);

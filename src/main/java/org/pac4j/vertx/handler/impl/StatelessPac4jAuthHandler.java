@@ -3,7 +3,7 @@ package org.pac4j.vertx.handler.impl;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
-import org.pac4j.core.client.Clients;
+import org.pac4j.core.config.Config;
 import org.pac4j.vertx.Pac4jAuthenticationResponse;
 import org.pac4j.vertx.Pac4jSessionAttributes;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
@@ -15,10 +15,10 @@ import org.pac4j.vertx.auth.Pac4jAuthProvider;
 public class StatelessPac4jAuthHandler extends BasePac4JAuthHandler {
 
   public StatelessPac4jAuthHandler(final Vertx vertx,
-                                   final Clients clients,
+                                   final Config config,
                                    final Pac4jAuthProvider authProvider,
                                    final Pac4jAuthHandlerOptions options) {
-    super(vertx, clients, authProvider, options);
+    super(vertx, config, authProvider, options);
 
   }
 
