@@ -9,7 +9,7 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.impl.AuthHandlerImpl;
-import org.pac4j.core.client.Clients;
+import org.pac4j.core.config.Config;
 import org.pac4j.core.context.BaseConfig;
 import org.pac4j.core.context.Pac4jConstants;
 import org.pac4j.core.profile.UserProfile;
@@ -35,9 +35,9 @@ public abstract class BasePac4JAuthHandler extends AuthHandlerImpl implements Pa
   protected final String clientName;
   protected final Pac4jAuthProvider pac4jAuthProvider;
 
-  public BasePac4JAuthHandler(final Vertx vertx, final Clients clients, final Pac4jAuthProvider authProvider,
+  public BasePac4JAuthHandler(final Vertx vertx, final Config config, final Pac4jAuthProvider authProvider,
                               final Pac4jAuthHandlerOptions options) {
-    this(new Pac4jWrapper(vertx, clients), authProvider, options);
+    this(new Pac4jWrapper(vertx, config), authProvider, options);
   }
 
   public BasePac4JAuthHandler(final Pac4jWrapper wrapper,

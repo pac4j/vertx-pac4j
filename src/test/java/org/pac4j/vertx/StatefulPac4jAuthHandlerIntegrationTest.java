@@ -4,7 +4,6 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.AuthHandler;
 import io.vertx.ext.web.handler.CookieHandler;
@@ -14,6 +13,7 @@ import io.vertx.ext.web.sstore.SessionStore;
 import org.junit.Test;
 import org.pac4j.core.client.Client;
 import org.pac4j.core.client.Clients;
+import org.pac4j.core.config.Config;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
 import org.pac4j.vertx.auth.StatefulPac4jAuthProvider;
 import org.pac4j.vertx.client.TestOAuth2AuthorizationGenerator;
@@ -190,7 +190,7 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     DefaultJsonConverter ebConverter = new DefaultJsonConverter();
     Pac4jAuthProvider authProvider = StatefulPac4jAuthProvider.create(sessionStore, ebConverter);
     Pac4jAuthHandlerOptions options = new Pac4jAuthHandlerOptions(TEST_CLIENT_NAME);
-    return new StatefulPac4jAuthHandler(vertx, clients(client(baseAuthUrl)), router, authProvider, options);
+    return new StatefulPac4jAuthHandler(vertx, config(client(baseAuthUrl)), router, authProvider, options);
   }
 
   private void redirectToUrl(final String redirectUrl, final HttpClient client, final Handler<HttpClientResponse> resultHandler) {
@@ -204,31 +204,10 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     return Optional.ofNullable(sessionCookie.get());
   }
 
-
-  private JsonObject clientConfig(final String baseAuthUrl) {
-    return new JsonObject()
-      .put("callbackUrl", "http://localhost:8080/authResult")
-      .put("clients", clients(baseAuthUrl));
-  }
-
-  private JsonObject clients(final String baseAuthUrl) {
-    return new JsonObject()
-      .put("testClient", new JsonObject()
-        .put("class", TestOAuth2Client.class.getName())
-        .put("props", testClientProps(baseAuthUrl)));
-  }
-
-  private JsonObject testClientProps(final String baseAuthUrl) {
-    return new JsonObject()
-      .put("key", TEST_CLIENT_ID)
-      .put("secret", TEST_CLIENT_SECRET)
-      .put("authorizationUrlTemplate", baseAuthUrl + "?client_id=%s&redirect_uri=%s&state=%s");
-  }
-
-  private Clients clients(final Client client) {
-    Clients clients = new Clients();
+  private Config config(final Client client) {
+    final Clients clients = new Clients();
     clients.setClients(client);
-    return clients;
+    return new Config(clients);
   }
 
   private TestOAuth2Client client(final String baseAuthUrl) {

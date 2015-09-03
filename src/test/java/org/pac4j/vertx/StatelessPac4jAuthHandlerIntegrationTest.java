@@ -8,6 +8,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
 import org.pac4j.core.client.Client;
 import org.pac4j.core.client.Clients;
+import org.pac4j.core.config.Config;
 import org.pac4j.http.client.direct.DirectBasicAuthClient;
 import org.pac4j.http.credentials.authenticator.test.SimpleTestUsernamePasswordAuthenticator;
 import org.pac4j.http.profile.creator.test.SimpleTestUsernameProfileCreator;
@@ -60,13 +61,14 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
     // Configure a pac4j stateless handler configured for basic http auth
     final Pac4jAuthProvider authProvider = new StatelessPac4jAuthProviderImpl();
     Pac4jAuthHandlerOptions options = new Pac4jAuthHandlerOptions("BasicAuthClient");
-    final StatelessPac4jAuthHandler handler =  new StatelessPac4jAuthHandler(vertx, clients(), authProvider, options);
+    final StatelessPac4jAuthHandler handler =  new StatelessPac4jAuthHandler(vertx, config(), authProvider, options);
     startWebServer(router, handler);
 
   }
 
-  private Clients clients() {
-    return new Clients(client());
+  private Config config() {
+    final Clients clients = new Clients(client());
+    return new Config(clients);
   }
 
   private Client client() {
