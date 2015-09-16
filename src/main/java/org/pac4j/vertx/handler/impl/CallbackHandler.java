@@ -16,16 +16,22 @@
 package org.pac4j.vertx.handler.impl;
 
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
-import org.pac4j.core.context.BaseConfig;
+import org.pac4j.core.client.Client;
+import org.pac4j.core.config.Config;
 import org.pac4j.core.context.Pac4jConstants;
-import org.pac4j.vertx.HttpResponseHelper;
-import org.pac4j.vertx.Pac4jAuthenticationResponse;
-import org.pac4j.vertx.Pac4jSessionAttributes;
-import org.pac4j.vertx.Pac4jWrapper;
-import org.pac4j.vertx.auth.Pac4jAuthProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.pac4j.core.credentials.Credentials;
+import org.pac4j.core.exception.RequiresHttpAction;
+import org.pac4j.core.profile.CommonProfile;
+import org.pac4j.core.profile.ProfileManager;
+import org.pac4j.core.util.CommonHelper;
+import org.pac4j.vertx.VertxWebContext;
+import org.pac4j.vertx.handler.HttpActionHandler;
+
+import java.util.Optional;
 
 /**
  * Callback handler for Vert.x pac4j binding. This handler finishes the stateful authentication process.
@@ -34,75 +40,67 @@ import org.slf4j.LoggerFactory;
  * @since 1.0.0
  *
  */
-public class CallbackHandler extends BasePac4JAuthHandler {
+public class CallbackHandler implements Handler<RoutingContext> {
 
-  protected static final Logger logger = LoggerFactory.getLogger(CallbackHandler.class);
+  protected static final Logger LOG = LoggerFactory.getLogger(CallbackHandler.class);
 
-    public CallbackHandler(final Pac4jWrapper wrapper, final Pac4jAuthProvider authProvider, final Pac4jAuthHandlerOptions options) {
-        super(wrapper, authProvider, options);
-    }
+  private final HttpActionHandler httpActionHandler = new DefaultHttpActionHandler();
+  private final Vertx vertx;
+  private final Config config;
 
-  /**
-   * Authenticates the given request.
-   *
-   * @param routingContext the vertx-web routing context for the request
-   * @param sessionAttributes the session attributes
-   * @param handler the handler
-   */
-  protected void authenticate(final RoutingContext routingContext, final Pac4jSessionAttributes sessionAttributes,
-                              final Handler<Pac4jAuthenticationResponse> handler) {
+  protected String defaultUrl = Pac4jConstants.DEFAULT_URL_VALUE;
 
-    wrapper.authenticate(routingContext, clientName, sessionAttributes, handler);
-
+  public CallbackHandler(final Vertx vertx,
+                           final Config config) {
+      this.vertx = vertx;
+      this.config = config;
   }
 
   @Override
-  protected void retrieveUserProfile(final RoutingContext routingContext, final Pac4jSessionAttributes sessionAttributes,
-                                     final Handler<Pac4jAuthenticationResponse> handler) {
-    authenticate(routingContext, sessionAttributes, handler);
+  public void handle(RoutingContext event) {
+
+    // Can we complete the authentication process here?
+    final VertxWebContext webContext = new VertxWebContext(event);
+    final ProfileManager profileManager = new ProfileManager(webContext);
+    final Client client = config.getClients().findClient(webContext);
+
+    CommonHelper.assertNotNull("client", client);
+
+    final Credentials credentials;
+    try {
+      credentials = client.getCredentials(webContext);
+    } catch (final RequiresHttpAction e) {
+      LOG.warn("Requires http action: " + e.getCode());
+      httpActionHandler.handle(e.getCode(), webContext);
+      return;
+    }
+    vertx.<CommonProfile>executeBlocking(future -> {
+      final CommonProfile profile = (CommonProfile) client.getUserProfile(credentials, webContext);
+      future.complete(profile);
+    }, result -> {
+      if (result.succeeded()) {
+        Optional.ofNullable(result.result()).ifPresent(commonProfile -> {
+          profileManager.save(true, commonProfile);
+        });
+        redirectToOriginallyRequestedUrl(webContext);
+      } else {
+        event.fail(new RuntimeException("Failed to retrieve user profile"));
+      }
+    });
   }
 
-  @Override
-    protected void authenticationSuccess(final RoutingContext routingContext, final Pac4jSessionAttributes sessionAttributes) {
-
-        redirectToTarget(routingContext, sessionAttributes);
+  private void redirectToOriginallyRequestedUrl(final VertxWebContext webContext) {
+    final String requestedUrl = (String) webContext.getSessionAttribute(Pac4jConstants.REQUESTED_URL);
+    LOG.debug("requestedUrl: " + requestedUrl);
+    if (CommonHelper.isNotBlank(requestedUrl)) {
+      webContext.setSessionAttribute(Pac4jConstants.REQUESTED_URL, null);
+      webContext.setResponseStatus(302);
+      webContext.setResponseHeader("location", requestedUrl);
+      webContext.completeResponse();
+    } else {
+      webContext.setResponseHeader("location", this.defaultUrl);
     }
-
-    protected void authenticationFailure(final RoutingContext routingContext, final Pac4jSessionAttributes sessionAttributes) {
-
-        redirectToTarget(routingContext, sessionAttributes);
-    }
-
-    private void redirectToTarget(final RoutingContext routingContext, final Pac4jSessionAttributes sessionAttributes) {
-
-      String requestedUrl = retrieveOriginalUrl(sessionAttributes);
-      saveUrl(null, sessionAttributes);
-      final String redirectUrl = defaultUrl(requestedUrl, BaseConfig.getDefaultSuccessUrl());
-      pac4jAuthProvider.saveSessionAttributes(routingContext, sessionAttributes);
-      HttpResponseHelper.redirect(routingContext.request(), redirectUrl);
-
-    }
-
-  /**
-   * This method returns the default url from a specified url compared with a default url.
-   *
-   * @param url a specific url
-   * @param defaultUrl the default url
-   * @return the default url
-   */
-  public static String defaultUrl(final String url, final String defaultUrl) {
-    String redirectUrl = defaultUrl;
-    if (url != null && !"".equals(url)) {
-      redirectUrl = url;
-    }
-    logger.debug("defaultUrl : {}", redirectUrl);
-    return redirectUrl;
   }
-
-  protected String retrieveOriginalUrl(final Pac4jSessionAttributes sessionAttributes) {
-    return (String) sessionAttributes.getCustomAttributes().get(Pac4jConstants.REQUESTED_URL);
-  }
-
 
 
 }

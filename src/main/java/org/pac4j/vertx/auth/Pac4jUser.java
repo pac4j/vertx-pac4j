@@ -14,11 +14,9 @@ import org.pac4j.core.profile.UserProfile;
 public class Pac4jUser extends AbstractUser {
 
   private final UserProfile userProfile;
-  private final Pac4jAuthProvider authProvider;
 
-  public Pac4jUser(UserProfile userProfile, Pac4jAuthProvider authProvider) {
+  public Pac4jUser(UserProfile userProfile) {
     this.userProfile = userProfile;
-    this.authProvider = authProvider;
   }
 
   @Override

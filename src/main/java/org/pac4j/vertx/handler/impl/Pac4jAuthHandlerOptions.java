@@ -6,9 +6,7 @@ package org.pac4j.vertx.handler.impl;
 public class Pac4jAuthHandlerOptions {
 
   private final String clientName;
-  private boolean isAjax = false;
-  private String requireAnyRole = "";
-  private String requireAllRoles = "";
+  private boolean allowDynamicClientSelection = false;
 
   public Pac4jAuthHandlerOptions(String clientName) {
     if (clientName == null) {
@@ -17,16 +15,16 @@ public class Pac4jAuthHandlerOptions {
     this.clientName = clientName;
   }
 
-  public boolean isAjax() {
-    return isAjax;
+  public String clientName() {
+    return clientName;
   }
 
-  public Pac4jAuthHandlerOptions setIsAjax(boolean isAjax) {
-    this.isAjax = isAjax;
+  public Pac4jAuthHandlerOptions setAllowDynamicClientSelection(final boolean allowDynamicClientSelection) {
+    this.allowDynamicClientSelection = allowDynamicClientSelection;
     return this;
   }
 
-  public String clientName() {
-    return clientName;
+  public boolean allowDynamicClientSelection() {
+    return allowDynamicClientSelection;
   }
 }
