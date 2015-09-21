@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 /**
  * @author jez
  */
-public abstract class RequiresAuthenticationHandler extends AuthHandlerImpl {
+public class RequiresAuthenticationHandler extends AuthHandlerImpl {
 
   private static final Logger LOG = LoggerFactory.getLogger(RequiresAuthenticationHandler.class);
   protected final Config config;
