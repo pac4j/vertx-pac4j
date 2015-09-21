@@ -4,6 +4,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.AuthHandler;
 import io.vertx.ext.web.handler.CookieHandler;
@@ -15,12 +17,10 @@ import org.pac4j.core.client.Client;
 import org.pac4j.core.client.Clients;
 import org.pac4j.core.config.Config;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
-import org.pac4j.vertx.auth.StatefulPac4jAuthProvider;
 import org.pac4j.vertx.client.TestOAuth2AuthorizationGenerator;
 import org.pac4j.vertx.client.TestOAuth2Client;
-import org.pac4j.vertx.core.DefaultJsonConverter;
+import org.pac4j.vertx.handler.impl.CallbackDeployingPac4jAuthHandler;
 import org.pac4j.vertx.handler.impl.Pac4jAuthHandlerOptions;
-import org.pac4j.vertx.handler.impl.StatefulPac4jAuthHandler;
 
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
@@ -41,6 +41,8 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
   private static final String AUTH_RESULT_HANDLER_URL = APPLICATION_SERVER + "/authResult";
   private static final String SESSION_PARAM_TOKEN = "testOAuth2Token";
 
+  private static final Logger LOG = LoggerFactory.getLogger(StatefulPac4jAuthHandlerIntegrationTest.class);
+
   // This will be our session cookie header for use by requests
   protected AtomicReference<String> sessionCookie = new AtomicReference<>();
 
@@ -55,6 +57,8 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
   @Test
   public void testSuccessfulOAuth2LoginWithoutAuthorities() throws Exception {
 
+    LOG.info("testSuccessfulOAuth2LoginWithoutAuthorities");
+    LOG.debug("Starting auth provider mimic");
     startOAuth2ProviderMimic("testUser1");
     // Start a web server with no required authorities (i.e. only authentication required) for the secured resource
     startWebServer(TEST_OAUTH2_SUCCESS_URL, null);
@@ -160,6 +164,7 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
       assertEquals(302, response.statusCode());
       responseConsumer.accept(response);
       final String redirectToUrl = response.getHeader("location");
+      LOG.info("Redirecting to " + redirectToUrl);
       redirectToUrl(redirectToUrl, client, redirectResultHandler);
     };
   }
@@ -177,20 +182,18 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     router.route().handler(CookieHandler.create());
     router.route().handler(sessionHandler(sessionStore));
 
-    StatefulPac4jAuthHandler pac4jAuthHandler = authHandler(router, sessionStore, baseAuthUrl);
+    CallbackDeployingPac4jAuthHandler pac4jAuthHandler = authHandler(router, baseAuthUrl);
     Optional.ofNullable(requiredPermission).ifPresent(pac4jAuthHandler::addAuthority);
     handlerDecorator.accept(pac4jAuthHandler);
 
     startWebServer(router, pac4jAuthHandler);
   }
 
-  private StatefulPac4jAuthHandler authHandler(final Router router,
-                                               final SessionStore sessionStore,
+  private CallbackDeployingPac4jAuthHandler authHandler(final Router router,
                                                final String baseAuthUrl) {
-    DefaultJsonConverter ebConverter = new DefaultJsonConverter();
-    Pac4jAuthProvider authProvider = StatefulPac4jAuthProvider.create(sessionStore, ebConverter);
+    Pac4jAuthProvider authProvider = new Pac4jAuthProvider();
     Pac4jAuthHandlerOptions options = new Pac4jAuthHandlerOptions(TEST_CLIENT_NAME);
-    return new StatefulPac4jAuthHandler(vertx, config(client(baseAuthUrl)), router, authProvider, options);
+    return new CallbackDeployingPac4jAuthHandler(vertx, config(client(baseAuthUrl)), router, authProvider, options);
   }
 
   private void redirectToUrl(final String redirectUrl, final HttpClient client, final Handler<HttpClientResponse> resultHandler) {
@@ -207,6 +210,7 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
   private Config config(final Client client) {
     final Clients clients = new Clients();
     clients.setClients(client);
+    clients.setCallbackUrl("http://localhost:8080/authResult");
     return new Config(clients);
   }
 
@@ -215,6 +219,8 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     client.setCallbackUrl("http://localhost:8080/authResult");
     client.setKey(TEST_CLIENT_ID);
     client.setSecret(TEST_CLIENT_SECRET);
+    client.setName("TestOAuth2Client");
+    client.setIncludeClientNameInCallbackUrl(true);
     client.setAuthorizationUrlTemplate(baseAuthUrl + "?client_id=%s&redirect_uri=%s&state=%s");
     client.addAuthorizationGenerator(new TestOAuth2AuthorizationGenerator());
     return client;

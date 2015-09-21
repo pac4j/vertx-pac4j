@@ -13,9 +13,8 @@ import org.pac4j.http.client.direct.DirectBasicAuthClient;
 import org.pac4j.http.credentials.authenticator.test.SimpleTestUsernamePasswordAuthenticator;
 import org.pac4j.http.profile.creator.test.SimpleTestUsernameProfileCreator;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
-import org.pac4j.vertx.auth.impl.StatelessPac4jAuthProviderImpl;
 import org.pac4j.vertx.handler.impl.Pac4jAuthHandlerOptions;
-import org.pac4j.vertx.handler.impl.StatelessPac4jAuthHandler;
+import org.pac4j.vertx.handler.impl.RequiresAuthenticationHandler;
 
 import java.util.concurrent.TimeUnit;
 
@@ -52,6 +51,8 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
     };
 
     startWebServer();
+    test.handle(null);
+
 
   }
 
@@ -59,9 +60,10 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
 
     final Router router = Router.router(vertx);
     // Configure a pac4j stateless handler configured for basic http auth
-    final Pac4jAuthProvider authProvider = new StatelessPac4jAuthProviderImpl();
+    final Pac4jAuthProvider authProvider = new Pac4jAuthProvider();
     Pac4jAuthHandlerOptions options = new Pac4jAuthHandlerOptions("BasicAuthClient");
-    final StatelessPac4jAuthHandler handler =  new StatelessPac4jAuthHandler(vertx, config(), authProvider, options);
+    final RequiresAuthenticationHandler handler =  new RequiresAuthenticationHandler(vertx, config(), authProvider, options) {
+    };
     startWebServer(router, handler);
 
   }
@@ -73,6 +75,7 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
 
   private Client client() {
     DirectBasicAuthClient client = new DirectBasicAuthClient();
+    client.setName("BasicAuthClient");
     client.setAuthenticator(new SimpleTestUsernamePasswordAuthenticator());
     client.setProfileCreator(new SimpleTestUsernameProfileCreator());
     return client;

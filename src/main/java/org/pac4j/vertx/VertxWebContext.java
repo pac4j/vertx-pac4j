@@ -19,7 +19,9 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.Session;
 import org.pac4j.core.context.WebContext;
+import org.pac4j.vertx.core.DefaultJsonConverter;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -37,7 +39,6 @@ import java.util.Map;
  */
 public class VertxWebContext implements WebContext {
 
-  private final Pac4jSessionAttributes sessionAttributes;
   private final RoutingContext routingContext;
   private final String method;
   private final String serverName;
@@ -53,7 +54,7 @@ public class VertxWebContext implements WebContext {
   private final StringBuilder sb = new StringBuilder();
   private int code;
 
-  public VertxWebContext(final RoutingContext routingContext, final Pac4jSessionAttributes sessionAttributes) {
+  public VertxWebContext(final RoutingContext routingContext) {
     final HttpServerRequest request = routingContext.request();
     this.routingContext = routingContext;
     this.method = request.method().toString();
@@ -92,7 +93,10 @@ public class VertxWebContext implements WebContext {
       mapParameters.put(name, values);
     }
 
-    this.sessionAttributes = sessionAttributes;
+  }
+
+  public void completeResponse() {
+    routingContext.response().end();
   }
 
   @Override
@@ -126,23 +130,39 @@ public class VertxWebContext implements WebContext {
 
   @Override
   public void setSessionAttribute(String name, Object value) {
-    sessionAttributes.getCustomAttributes().put(name, value);
+    Session session = routingContext.session();
+    if (session == null) {
+      throw new IllegalStateException("Session required for use of getSessionAttribute");
+    }
+    // Need to convert to something that can be passed round a distributed vert.x session cleanly
+    session.put(name, DefaultJsonConverter.getInstance().encodeObject(value));
   }
 
   @Override
   public Object getSessionAttribute(String name) {
-    return sessionAttributes.getCustomAttributes().get(name);
+    Session session = routingContext.session();
+    if (session == null) {
+      throw new IllegalStateException("Session required for use of getSessionAttribute");
+    }
+    // Need to convert to/from something that can be passed round a distributed vert.x session cleanly
+    return DefaultJsonConverter.getInstance().decodeObject(session.get(name));
   }
 
   @Override
   public void invalidateSession() {
-      this.sessionAttributes.setUserProfile(null);
-      this.sessionAttributes.getCustomAttributes().clear();
+//      this.sessionAttributes.setUserProfile(null);
+//      this.sessionAttributes.getCustomAttributes().clear();
+    routingContext.session().destroy();
   }
 
-  public Pac4jSessionAttributes getSessionAttributes() {
-    return sessionAttributes;
+  @Override
+  public Object getSessionIdentifier() {
+    return routingContext.session().id();
   }
+
+//  public Pac4jSessionAttributes getSessionAttributes() {
+//    return sessionAttributes;
+//  }
 
   @Override
   public String getRequestMethod() {
@@ -156,30 +176,40 @@ public class VertxWebContext implements WebContext {
 
   @Override
   public void writeResponseContent(String content) {
-    sb.append(content);
-  }
-
-  public String getResponseContent() {
-    return sb.toString();
+    routingContext.response().write(content);
   }
 
   @Override
   public void setResponseStatus(int code) {
-    this.code = code;
+
+//    this.code = code;
+    routingContext.response().setStatusCode(code);
   }
 
-  public int getResponseStatus() {
-    return code;
-  }
+//  public int getResponseStatus() {
+//    return code;
+//  }
 
   @Override
   public void setResponseHeader(String name, String value) {
-    outHeaders.put(name, value);
+
+//    outHeaders.put(name, value);
+    routingContext.response().putHeader(name, value);
   }
 
-  public JsonObject getResponseHeaders() {
-    return outHeaders;
+  @Override
+  public void setResponseCharacterEncoding(String s) {
+    routingContext.response().headers().add("Content-Encoding", s);
   }
+
+  @Override
+  public void setResponseContentType(String s) {
+    routingContext.response().headers().add("Content-Type", s);
+  }
+
+//  public JsonObject getResponseHeaders() {
+//    return outHeaders;
+//  }
 
   @Override
   public String getServerName() {

@@ -116,7 +116,7 @@ Import the following dependency in your Vertx project:
 
 * **org.pac4j.vertx.impl.StatefulPac4jAuthProviderImpl** implementation of the vert.x AuthProvider interface for stateful (session-based) Pac4j handling
 * **org.pac4j.vertx.impl.StatelessPac4jAuthProviderImpl** implementation of the vert.x AuthProvider interface for stateless Pac4j handling
-* **org.pac4j.vertx.handler.impl.StatefulPac4jAuthHandler** this class implements the vert.x AuthHandler interface for stateful authentication. It forwards the request to the next handler if the user is already authenticated or redirects the user to the authentication provider otherwise
+* **org.pac4j.vertx.handler.impl.CallbackDeployingPac4jAuthHandler** this class implements the vert.x AuthHandler interface for stateful authentication. It forwards the request to the next handler if the user is already authenticated or redirects the user to the authentication provider otherwise
 * **org.pac4j.vertx.handler.impl.StatelessPac4jAuthHandler** this class implements the vert.x AuthHandler interface for stateless authentication. 
 * **org.pac4j.vertx.handler.impl.CallbackHandler** this class finishes the authentication process if stateful, by validating the authentication information (e.g. a form with username and password) and storing the user profile in session
 * **org.pac4j.vertx.handler.impl.LogoutHandler** this class removes the user profile from the session

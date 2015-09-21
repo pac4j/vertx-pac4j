@@ -54,6 +54,11 @@ import java.util.List;
 public class DefaultJsonConverter implements JsonConverter {
 
     private final ObjectMapper mapper = new ObjectMapper();
+    private static final DefaultJsonConverter INSTANCE = new DefaultJsonConverter();
+
+    public static final JsonConverter getInstance() {
+        return INSTANCE;
+    }
 
     public DefaultJsonConverter() {
         mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
