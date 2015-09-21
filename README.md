@@ -114,10 +114,11 @@ Import the following dependency in your Vertx project:
 
 ## Main Classes
 
-* **org.pac4j.vertx.impl.StatefulPac4jAuthProviderImpl** implementation of the vert.x AuthProvider interface for stateful (session-based) Pac4j handling
-* **org.pac4j.vertx.impl.StatelessPac4jAuthProviderImpl** implementation of the vert.x AuthProvider interface for stateless Pac4j handling
-* **org.pac4j.vertx.handler.impl.CallbackDeployingPac4jAuthHandler** this class implements the vert.x AuthHandler interface for stateful authentication. It forwards the request to the next handler if the user is already authenticated or redirects the user to the authentication provider otherwise
-* **org.pac4j.vertx.handler.impl.StatelessPac4jAuthHandler** this class implements the vert.x AuthHandler interface for stateless authentication. 
+* **org.pac4j.vertx.impl.Pac4jAuthProvider** implementation of the vert.x AuthProvider interface for Pac4j handling. It simply delegates everything to Pac4j
+* **org.pac4j.vertx.handler.impl.RequiresAuthenticationHandler** this class implements the vert.x AuthHandler interface for Pac4j authentication.
+* **org.pac4j.vertx.handler.impl.CallbackDeployingPac4jAuthHandler** this class extends RequiresAuthenticationHandler to auto-deploy a callback handler rather than writing additional code to do so
+* **org.pac4j.vertx.flow.DirectClientAuthenticationFlow** abstracts the authentication flow for direct clients
+* **org.pac4j.vertx.flow.IndirectClientAuthenticationFlow** abstracts the beginning of the authentication flow for indirect clients
 * **org.pac4j.vertx.handler.impl.CallbackHandler** this class finishes the authentication process if stateful, by validating the authentication information (e.g. a form with username and password) and storing the user profile in session
 * **org.pac4j.vertx.handler.impl.LogoutHandler** this class removes the user profile from the session
 
@@ -145,14 +146,16 @@ Define the application verticle:
         router.route().handler(CookieHandler.create());
         router.route().handler(SessionHandler.create(sessionStore).setSessionCookieName("oAuth2Consumer.session"));
         
-        // Construct pac4j Clients object and asynchronous pac4j wrapper
+        // Construct pac4j Clients object and wrap in a Config
         Clients clients = ...; 
-        Pac4jWrapper wrapper = new Pac4jWrapper(vertx, clients);
+        Config config = ...;
 
         DefaultJsonConverter ebConverter = new DefaultJsonConverter();
-        Pac4jAuthProvider authProvider = StatefulPac4jAuthProvider.create(sessionStore, ebConverter);        
-        Pac4jAuthHandlerOptions options = new Pac4jAuthHandlerOptions("FacebookClient");
-        StatefulPac4jAuthHandler authHandler = new StatefulPac4jAuthHandler(router, wrapper, authProvider, options);
+        Pac4jAuthProvider authProvider = new Pac4jAuthProvider();
+        Pac4jAuthHandlerOptions options = new Pac4jAuthHandlerOptions(TEST_CLIENT_NAME);
+        // The next line could be separated into deployment of a separate RequiresAuthenticationHandler
+        // and CallbackHandler if preferred. 
+        CallbackDeployingPac4jAuthHandler authHandler = CallbackDeployingPac4jAuthHandler(vertx, config, router, authProvider, options);
         // Note that use of a stateful handler automatically configures the callback url
         router.route(HttpMethod.GET, "/facebook/index.html").handler(authHandler);
         // index page
@@ -174,12 +177,13 @@ Define the application verticle:
     public void start() {
 
         Router router = Router.router(vertx);
-        // Construct pac4j Clients object and asynchronous pac4j wrapper
+        // Construct pac4j Clients object and wrap in a Config
         Clients clients = ...; 
-        Pac4jWrapper wrapper = new Pac4jWrapper(vertx, clients);
-        final Pac4jAuthProvider authProvider = new StatelessPac4jAuthProviderImpl();
+        Config config = ...;
+
+        final Pac4jAuthProvider authProvider = new Pac4jAuthProvider();
         final Pac4jAuthHandlerOptions options = new Pac4jAuthHandlerOptions("BasicAuthClient");
-        final StatelessPac4jAuthHandler handler =  new StatelessPac4jAuthHandler(wrapper, authProvider, options);
+        final RequiresAuthenticationHandler handler =  new RequiresAuthenticationHandler(vertx, config), authProvider, options);
         router.route(HttpMethod.GET, "/").handler(handler);
 
         RouteMatcher rm = new RouteMatcher();
