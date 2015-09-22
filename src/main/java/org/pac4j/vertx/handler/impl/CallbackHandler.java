@@ -25,6 +25,7 @@ import org.pac4j.core.config.Config;
 import org.pac4j.core.context.Pac4jConstants;
 import org.pac4j.core.credentials.Credentials;
 import org.pac4j.core.exception.RequiresHttpAction;
+import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.core.profile.ProfileManager;
 import org.pac4j.core.util.CommonHelper;
@@ -85,7 +86,7 @@ public class CallbackHandler implements Handler<RoutingContext> {
         });
         redirectToOriginallyRequestedUrl(webContext);
       } else {
-        event.fail(new RuntimeException("Failed to retrieve user profile"));
+        event.fail(new TechnicalException("Failed to retrieve user profile"));
       }
     });
   }

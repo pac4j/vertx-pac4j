@@ -16,11 +16,7 @@
 
 package org.pac4j.vertx.core;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -31,6 +27,7 @@ import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.pac4j.core.exception.TechnicalException;
 import org.scribe.model.Token;
 
 import java.io.IOException;
@@ -92,7 +89,7 @@ public class DefaultJsonConverter implements JsonConverter {
                 return new JsonObject().put("class", value.getClass().getName()).put("value",
                         new JsonObject(encode(value)));
             } catch (Exception e) {
-                throw new RuntimeException("Error while encoding object", e);
+                throw new TechnicalException("Error while encoding object", e);
             }
         }
     }
@@ -115,7 +112,7 @@ public class DefaultJsonConverter implements JsonConverter {
             try {
                 return decode(src.getJsonObject("value").encode(), Class.forName(src.getString("class")));
             } catch (Exception e) {
-                throw new RuntimeException("Error while decoding object", e);
+                throw new TechnicalException("Error while decoding object", e);
             }
         }
         return null;
