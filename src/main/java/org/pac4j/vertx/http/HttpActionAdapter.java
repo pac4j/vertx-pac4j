@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package org.pac4j.vertx.handler;
+package org.pac4j.vertx.http;
 
 import org.pac4j.core.client.RedirectAction;
 import org.pac4j.vertx.VertxWebContext;
@@ -22,7 +22,7 @@ import org.pac4j.vertx.VertxWebContext;
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public interface HttpActionHandler {
+public interface HttpActionAdapter {
 
   /**
    * Handle HTTP action.

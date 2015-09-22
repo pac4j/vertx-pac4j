@@ -29,7 +29,8 @@ import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.core.profile.ProfileManager;
 import org.pac4j.core.util.CommonHelper;
 import org.pac4j.vertx.VertxWebContext;
-import org.pac4j.vertx.handler.HttpActionHandler;
+import org.pac4j.vertx.http.DefaultHttpActionAdapter;
+import org.pac4j.vertx.http.HttpActionAdapter;
 
 import java.util.Optional;
 
@@ -44,7 +45,7 @@ public class CallbackHandler implements Handler<RoutingContext> {
 
   protected static final Logger LOG = LoggerFactory.getLogger(CallbackHandler.class);
 
-  private final HttpActionHandler httpActionHandler = new DefaultHttpActionHandler();
+  private final HttpActionAdapter httpActionHandler = new DefaultHttpActionAdapter();
   private final Vertx vertx;
   private final Config config;
 

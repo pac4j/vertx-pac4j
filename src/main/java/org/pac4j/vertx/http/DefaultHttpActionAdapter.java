@@ -13,22 +13,21 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package org.pac4j.vertx.handler.impl;
+package org.pac4j.vertx.http;
 
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.pac4j.core.client.RedirectAction;
 import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.vertx.VertxWebContext;
-import org.pac4j.vertx.handler.HttpActionHandler;
 
 /**
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public class DefaultHttpActionHandler implements HttpActionHandler {
+public class DefaultHttpActionAdapter implements HttpActionAdapter {
 
-  private static final Logger LOG = LoggerFactory.getLogger(DefaultHttpActionHandler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DefaultHttpActionAdapter.class);
 
   @Override
   public void handle(int code, VertxWebContext context) {
