@@ -19,7 +19,8 @@ import org.pac4j.core.authorization.AuthorizationGenerator;
 import org.pac4j.vertx.profile.TestOAuth2Profile;
 
 /**
- * @author jez
+ * @author Jeremy Prime
+ * @since 2.0.0
  */
 public class TestOAuth2AuthorizationGenerator implements AuthorizationGenerator<TestOAuth2Profile> {
 

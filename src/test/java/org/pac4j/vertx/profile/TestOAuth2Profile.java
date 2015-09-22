@@ -18,7 +18,8 @@ package org.pac4j.vertx.profile;
 import org.pac4j.oauth.profile.OAuth20Profile;
 
 /**
- * @author jez
+ * @author Jeremy Prime
+ * @since 2.0.0
  */
 public class TestOAuth2Profile extends OAuth20Profile{
 

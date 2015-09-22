@@ -30,7 +30,9 @@ import java.util.function.Consumer;
  * when initiating authentication for a direct or indirect client (the former actually needs to
  * carry out authentication, the latter initiates the authentication flow by issuing a redirect
  * response
- * @author jez
+ *
+ * @author Jeremy Prime
+ * @since 2.0.0
  */
 public interface AuthenticationFlow<T extends Client> {
 

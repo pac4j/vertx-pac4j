@@ -30,6 +30,9 @@ import org.scribe.oauth.StateOAuth20ServiceImpl;
 
 /**
  * Dumbed down OAuth2 client just to be used for testing purposes.
+ *
+ * @author Jeremy Prime
+ * @since 2.0.0
  */
 public class TestOAuth2Client extends BaseOAuth20Client<TestOAuth2Profile> {
 

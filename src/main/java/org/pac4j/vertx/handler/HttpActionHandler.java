@@ -19,7 +19,8 @@ import org.pac4j.core.client.RedirectAction;
 import org.pac4j.vertx.VertxWebContext;
 
 /**
- * @author jez
+ * @author Jeremy Prime
+ * @since 2.0.0
  */
 public interface HttpActionHandler {
 

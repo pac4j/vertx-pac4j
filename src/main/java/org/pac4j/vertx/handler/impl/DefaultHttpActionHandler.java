@@ -23,7 +23,8 @@ import org.pac4j.vertx.VertxWebContext;
 import org.pac4j.vertx.handler.HttpActionHandler;
 
 /**
- * @author jez
+ * @author Jeremy Prime
+ * @since 2.0.0
  */
 public class DefaultHttpActionHandler implements HttpActionHandler {
 

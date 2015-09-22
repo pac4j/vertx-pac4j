@@ -34,8 +34,7 @@ import java.util.Map;
  * WebContext implementation for Vert.x 3.
  *
  * @author Jeremy Prime
- * @since 1.0.0
- *
+ * @since 2.0.0
  */
 public class VertxWebContext implements WebContext {
 

@@ -33,7 +33,8 @@ import org.pac4j.vertx.handler.impl.RequiresAuthenticationHandler;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author jez
+ * @author Jeremy Prime
+ * @since 2.0.0
  */
 public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIntegrationTestBase {
 

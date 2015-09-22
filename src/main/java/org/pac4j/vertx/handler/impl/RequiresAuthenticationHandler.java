@@ -34,7 +34,8 @@ import org.pac4j.vertx.flow.AuthenticationFlow;
 import java.util.function.Consumer;
 
 /**
- * @author jez
+ * @author Jeremy Prime
+ * @since 2.0.0
  */
 public class RequiresAuthenticationHandler extends AuthHandlerImpl {
 

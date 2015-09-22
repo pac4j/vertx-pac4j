@@ -33,6 +33,9 @@ import java.util.UUID;
  * Http server implementation to mimic an OAuth2 provider's possible authentication outcomes. By default this will
  * be based on the endpoint used for authentication, and we will construct different handlers in the tests to
  * redirect to different endpoints to mimic the possible outcomes.
+ *
+ * @author Jeremy Prime
+ * @since 2.0.0
  */
 public class OAuth2ProviderMimic extends AbstractVerticle {
 

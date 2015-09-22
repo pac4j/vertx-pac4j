@@ -24,7 +24,8 @@ import org.pac4j.core.config.Config;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
 
 /**
- * @author jez
+ * @author Jeremy Prime
+ * @since 2.0.0
  */
 public class CallbackDeployingPac4jAuthHandler extends RequiresAuthenticationHandler {
 

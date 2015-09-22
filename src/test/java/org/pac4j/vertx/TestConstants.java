@@ -15,6 +15,10 @@
  */
 package org.pac4j.vertx;
 
+/**
+ * @author Jeremy Prime
+ * @since 2.0.0
+ */
 public interface TestConstants {
     // User 1, with no permissions
     public static final String USER_1 = "testUser1";

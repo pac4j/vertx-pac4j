@@ -26,7 +26,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author jez
+ * @author Jeremy Prime
+ * @since 2.0.0
  */
 public abstract class Pac4jAuthHandlerIntegrationTestBase extends VertxTestBase {
 

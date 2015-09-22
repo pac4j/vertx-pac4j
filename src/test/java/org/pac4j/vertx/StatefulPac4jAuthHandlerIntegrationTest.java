@@ -44,7 +44,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 /**
- * User: jez
+ * @author Jeremy Prime
+ * @since 2.0.0
  */
 public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIntegrationTestBase {
 

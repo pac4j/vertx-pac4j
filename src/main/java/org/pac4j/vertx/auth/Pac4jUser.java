@@ -24,7 +24,8 @@ import io.vertx.ext.auth.AuthProvider;
 import org.pac4j.core.profile.UserProfile;
 
 /**
- * @author jez
+ * @author Jeremy Prime
+ * @since 2.0.0
  */
 public class Pac4jUser extends AbstractUser {
 

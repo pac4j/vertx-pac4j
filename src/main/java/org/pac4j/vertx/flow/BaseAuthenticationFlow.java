@@ -21,7 +21,8 @@ import org.pac4j.vertx.handler.HttpActionHandler;
 import org.pac4j.vertx.handler.impl.DefaultHttpActionHandler;
 
 /**
- * @author jez
+ * @author Jeremy Prime
+ * @since 2.0.0
  */
 public abstract class BaseAuthenticationFlow<T extends Client> implements AuthenticationFlow<T> {
 

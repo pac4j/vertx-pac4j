@@ -16,7 +16,8 @@
 package org.pac4j.vertx.handler.impl;
 
 /**
- * @author jez
+ * @author Jeremy Prime
+ * @since 2.0.0
  */
 public class Pac4jAuthHandlerOptions {
 

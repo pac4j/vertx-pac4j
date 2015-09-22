@@ -25,6 +25,9 @@ import io.vertx.ext.auth.User;
 /**
  * Vert.x authprovider for pac4j libraries. In the case of this auth provider we will always
  * just delegate to pac4j via the handler, so this should be sufficient
+ *
+ * @author Jeremy Prime
+ * @since 2.0.0
  */
 public class Pac4jAuthProvider implements AuthProvider {
   @Override

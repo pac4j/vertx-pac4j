@@ -27,7 +27,8 @@ import org.pac4j.vertx.VertxWebContext;
 import java.util.function.Consumer;
 
 /**
- * @author jez
+ * @author Jeremy Prime
+ * @since 2.0.0
  */
 public class DirectClientAuthenticationFlow extends BaseAuthenticationFlow<DirectClient> {
 

@@ -23,7 +23,8 @@ import org.scribe.utils.OAuthEncoder;
 
 
 /**
- * @author jez
+ * @author Jeremy Prime
+ * @since 2.0.0
  */
 public class TestOAuthWrapperApi20 extends StateApi20 {
 
