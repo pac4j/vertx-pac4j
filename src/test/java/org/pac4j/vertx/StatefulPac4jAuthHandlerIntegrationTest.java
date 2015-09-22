@@ -78,7 +78,7 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
         // Start a web server with no required authorities (i.e. only authentication required) for the secured resource
         startWebServer(TEST_OAUTH2_SUCCESS_URL, null);
         loginSuccessfullyExpectingAuthorizedUser(Void -> testComplete());
-        await(1, TimeUnit.SECONDS);
+        await(2, TimeUnit.SECONDS);
     }
 
     @Test
