@@ -26,7 +26,6 @@ import org.pac4j.core.client.Clients;
 import org.pac4j.core.config.Config;
 import org.pac4j.http.client.direct.DirectBasicAuthClient;
 import org.pac4j.http.credentials.authenticator.test.SimpleTestUsernamePasswordAuthenticator;
-import org.pac4j.http.profile.creator.test.SimpleTestUsernameProfileCreator;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
 import org.pac4j.vertx.handler.impl.Pac4jAuthHandlerOptions;
 import org.pac4j.vertx.handler.impl.RequiresAuthenticationHandler;
@@ -91,7 +90,6 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
         DirectBasicAuthClient client = new DirectBasicAuthClient();
         client.setName("BasicAuthClient");
         client.setAuthenticator(new SimpleTestUsernamePasswordAuthenticator());
-        client.setProfileCreator(new SimpleTestUsernameProfileCreator());
         return client;
     }
 
