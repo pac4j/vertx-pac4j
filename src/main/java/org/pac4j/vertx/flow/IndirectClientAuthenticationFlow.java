@@ -35,29 +35,37 @@ import java.util.function.Consumer;
 public class IndirectClientAuthenticationFlow extends BaseAuthenticationFlow<IndirectClient> {
 
 
-  private static final Logger LOG = LoggerFactory.getLogger(IndirectClientAuthenticationFlow.class);
+    private static final Logger LOG = LoggerFactory.getLogger(IndirectClientAuthenticationFlow.class);
 
-  public IndirectClientAuthenticationFlow(final Vertx vertx, final IndirectClient client) {
-    super(vertx, client);
-  }
-
-  @Override
-  public void initiate(final VertxWebContext webContext,
-                       final Consumer<UserProfile> authResultHandler) {
-    // To initiate the flow for an indirect client, we need to redirect the browser, we don't
-    // care about the handler as the callback part must take care of authorization
-    webContext.setSessionAttribute(Pac4jConstants.REQUESTED_URL, webContext.getFullRequestURL());
-    try {
-      final RedirectAction redirectAction = client.getRedirectAction(webContext, true);
-      httpActionHandler.handleRedirect(redirectAction, webContext);
-    } catch (RequiresHttpAction requiresHttpAction) {
-      requiresHttpAction.printStackTrace();
+    public IndirectClientAuthenticationFlow(final Vertx vertx, final IndirectClient client) {
+        super(vertx, client);
     }
-  }
 
-  @Override
-  public boolean useSession(WebContext context) {
-    return true;
-  }
+    @Override
+    public void initiate(final VertxWebContext webContext,
+                         final Consumer<UserProfile> authResultHandler) {
+        // To initiate the flow for an indirect client, we need to redirect the browser, we don't
+        // care about the handler as the callback part must take care of authorization
+        saveRequestedUrl(webContext);
+        redirectToIdentityProvider(webContext);
+    }
+
+    protected void redirectToIdentityProvider(final VertxWebContext webContext) {
+        try {
+            final RedirectAction redirectAction = client.getRedirectAction(webContext, true);
+            httpActionHandler.handleRedirect(redirectAction, webContext);
+        } catch (RequiresHttpAction requiresHttpAction) {
+            requiresHttpAction.printStackTrace();
+        }
+    }
+
+    protected void saveRequestedUrl(final VertxWebContext webContext) {
+        webContext.setSessionAttribute(Pac4jConstants.REQUESTED_URL, webContext.getFullRequestURL());
+    }
+
+    @Override
+    public boolean useSession(WebContext context) {
+        return true;
+    }
 
 }
