@@ -92,16 +92,18 @@ public class CallbackHandler implements Handler<RoutingContext> {
     }
 
     private void redirectToOriginallyRequestedUrl(final VertxWebContext webContext) {
-        final String requestedUrl = (String) webContext.getSessionAttribute(Pac4jConstants.REQUESTED_URL);
-        LOG.debug("requestedUrl: " + requestedUrl);
-        if (CommonHelper.isNotBlank(requestedUrl)) {
+
+        String redirectToUrl = (String) webContext.getSessionAttribute(Pac4jConstants.REQUESTED_URL);
+        LOG.debug("redirectToUrl: " + redirectToUrl);
+        if (CommonHelper.isNotBlank(redirectToUrl)) {
             webContext.setSessionAttribute(Pac4jConstants.REQUESTED_URL, null);
-            webContext.setResponseStatus(302);
-            webContext.setResponseHeader("location", requestedUrl);
-            webContext.completeResponse();
         } else {
-            webContext.setResponseHeader("location", this.defaultUrl);
+            redirectToUrl = this.defaultUrl;
         }
+        webContext.setResponseStatus(302);
+        webContext.setResponseHeader("location", redirectToUrl);
+        webContext.completeResponse();
+
     }
 
     public String getDefaultUrl() {
