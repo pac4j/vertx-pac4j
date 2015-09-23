@@ -53,9 +53,9 @@ public class IndirectClientAuthenticationFlow extends BaseAuthenticationFlow<Ind
     protected void redirectToIdentityProvider(final VertxWebContext webContext) {
         try {
             final RedirectAction redirectAction = client.getRedirectAction(webContext, true);
-            httpActionHandler.handleRedirect(redirectAction, webContext);
-        } catch (RequiresHttpAction requiresHttpAction) {
-            requiresHttpAction.printStackTrace();
+            httpActionAdapter.handleRedirect(redirectAction, webContext);
+        } catch (final RequiresHttpAction requiresHttpAction) {
+            httpActionAdapter.handle(requiresHttpAction.getCode(), webContext);
         }
     }
 

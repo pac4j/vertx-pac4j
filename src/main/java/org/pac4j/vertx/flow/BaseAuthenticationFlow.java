@@ -26,12 +26,12 @@ import org.pac4j.vertx.http.DefaultHttpActionAdapter;
  */
 public abstract class BaseAuthenticationFlow<T extends Client> implements AuthenticationFlow<T> {
 
-  protected final HttpActionAdapter httpActionHandler;
+  protected final HttpActionAdapter httpActionAdapter;
   protected final Vertx vertx;
   protected final T client;
 
   public BaseAuthenticationFlow(Vertx vertx, T client) {
-    this.httpActionHandler = new DefaultHttpActionAdapter();
+    this.httpActionAdapter = new DefaultHttpActionAdapter();
     this.vertx = vertx;
     this.client = client;
   }
