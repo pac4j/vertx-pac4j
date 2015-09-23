@@ -37,72 +37,79 @@ import java.util.Optional;
 
 /**
  * Callback handler for Vert.x pac4j binding. This handler finishes the stateful authentication process.
- * 
+ *
  * @author Michael Remond
  * @since 1.0.0
  *
  */
 public class CallbackHandler implements Handler<RoutingContext> {
 
-  protected static final Logger LOG = LoggerFactory.getLogger(CallbackHandler.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(CallbackHandler.class);
 
-  private final HttpActionAdapter httpActionHandler = new DefaultHttpActionAdapter();
-  private final Vertx vertx;
-  private final Config config;
+    private final HttpActionAdapter httpActionHandler = new DefaultHttpActionAdapter();
+    private final Vertx vertx;
+    private final Config config;
 
-  protected String defaultUrl = Pac4jConstants.DEFAULT_URL_VALUE;
+    protected String defaultUrl = Pac4jConstants.DEFAULT_URL_VALUE;
 
-  public CallbackHandler(final Vertx vertx,
+    public CallbackHandler(final Vertx vertx,
                            final Config config) {
-      this.vertx = vertx;
-      this.config = config;
-  }
-
-  @Override
-  public void handle(RoutingContext event) {
-
-    // Can we complete the authentication process here?
-    final VertxWebContext webContext = new VertxWebContext(event);
-    final ProfileManager profileManager = new ProfileManager(webContext);
-    final Client client = config.getClients().findClient(webContext);
-
-    CommonHelper.assertNotNull("client", client);
-
-    final Credentials credentials;
-    try {
-      credentials = client.getCredentials(webContext);
-    } catch (final RequiresHttpAction e) {
-      LOG.warn("Requires http action: " + e.getCode());
-      httpActionHandler.handle(e.getCode(), webContext);
-      return;
+        this.vertx = vertx;
+        this.config = config;
     }
-    vertx.<CommonProfile>executeBlocking(future -> {
-      final CommonProfile profile = (CommonProfile) client.getUserProfile(credentials, webContext);
-      future.complete(profile);
-    }, result -> {
-      if (result.succeeded()) {
-        Optional.ofNullable(result.result()).ifPresent(commonProfile -> {
-          profileManager.save(true, commonProfile);
+
+    @Override
+    public void handle(RoutingContext event) {
+
+        // Can we complete the authentication process here?
+        final VertxWebContext webContext = new VertxWebContext(event);
+        final ProfileManager profileManager = new ProfileManager(webContext);
+        final Client client = config.getClients().findClient(webContext);
+
+        CommonHelper.assertNotNull("client", client);
+
+        final Credentials credentials;
+        try {
+            credentials = client.getCredentials(webContext);
+        } catch (final RequiresHttpAction e) {
+            LOG.warn("Requires http action: " + e.getCode());
+            httpActionHandler.handle(e.getCode(), webContext);
+            return;
+        }
+        vertx.<CommonProfile>executeBlocking(future -> {
+            final CommonProfile profile = (CommonProfile) client.getUserProfile(credentials, webContext);
+            future.complete(profile);
+        }, result -> {
+            if (result.succeeded()) {
+                Optional.ofNullable(result.result()).ifPresent(commonProfile -> {
+                    profileManager.save(true, commonProfile);
+                });
+                redirectToOriginallyRequestedUrl(webContext);
+            } else {
+                event.fail(new TechnicalException("Failed to retrieve user profile"));
+            }
         });
-        redirectToOriginallyRequestedUrl(webContext);
-      } else {
-        event.fail(new TechnicalException("Failed to retrieve user profile"));
-      }
-    });
-  }
-
-  private void redirectToOriginallyRequestedUrl(final VertxWebContext webContext) {
-    final String requestedUrl = (String) webContext.getSessionAttribute(Pac4jConstants.REQUESTED_URL);
-    LOG.debug("requestedUrl: " + requestedUrl);
-    if (CommonHelper.isNotBlank(requestedUrl)) {
-      webContext.setSessionAttribute(Pac4jConstants.REQUESTED_URL, null);
-      webContext.setResponseStatus(302);
-      webContext.setResponseHeader("location", requestedUrl);
-      webContext.completeResponse();
-    } else {
-      webContext.setResponseHeader("location", this.defaultUrl);
     }
-  }
 
+    private void redirectToOriginallyRequestedUrl(final VertxWebContext webContext) {
+        final String requestedUrl = (String) webContext.getSessionAttribute(Pac4jConstants.REQUESTED_URL);
+        LOG.debug("requestedUrl: " + requestedUrl);
+        if (CommonHelper.isNotBlank(requestedUrl)) {
+            webContext.setSessionAttribute(Pac4jConstants.REQUESTED_URL, null);
+            webContext.setResponseStatus(302);
+            webContext.setResponseHeader("location", requestedUrl);
+            webContext.completeResponse();
+        } else {
+            webContext.setResponseHeader("location", this.defaultUrl);
+        }
+    }
+
+    public String getDefaultUrl() {
+        return defaultUrl;
+    }
+
+    public void setDefaultUrl(String defaultUrl) {
+        this.defaultUrl = defaultUrl;
+    }
 
 }
