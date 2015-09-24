@@ -21,6 +21,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 import org.pac4j.core.client.Client;
+import org.pac4j.core.client.IndirectClient;
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.Pac4jConstants;
 import org.pac4j.core.credentials.Credentials;
@@ -67,6 +68,7 @@ public class CallbackHandler implements Handler<RoutingContext> {
         final Client client = config.getClients().findClient(webContext);
 
         CommonHelper.assertNotNull("client", client);
+        CommonHelper.assertTrue(client instanceof IndirectClient, "only indirect clients are allowed on the callback url");
 
         final Credentials credentials;
         try {
