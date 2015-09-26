@@ -18,6 +18,7 @@ package org.pac4j.vertx.http;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.pac4j.core.client.RedirectAction;
+import org.pac4j.core.context.HttpConstants;
 import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.vertx.VertxWebContext;
 
@@ -27,30 +28,56 @@ import org.pac4j.vertx.VertxWebContext;
  */
 public class DefaultHttpActionAdapter implements HttpActionAdapter {
 
-  private static final Logger LOG = LoggerFactory.getLogger(DefaultHttpActionAdapter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultHttpActionAdapter.class);
 
-  @Override
-  public void handle(int code, VertxWebContext context) {
+    @Override
+    public void handle(int code, VertxWebContext context) {
+        if (code == HttpConstants.UNAUTHORIZED) {
+            sendResponse(context, HttpConstants.UNAUTHORIZED, "Unauthorized");
+        } else if (code == HttpConstants.FORBIDDEN) {
+            sendResponse(context, HttpConstants.FORBIDDEN, "Forbidden");
+        } else if (code == HttpConstants.TEMP_REDIRECT) {
 
-  }
-
-  @Override
-  public void handleRedirect(final RedirectAction action, final VertxWebContext webContext)
-  {
-    switch (action.getType()) {
-
-      case REDIRECT:
-        // Send a redirect response
-        webContext.setResponseStatus(302);
-        webContext.setResponseHeader("location", action.getLocation());
-        webContext.completeResponse();
-        break;
-
-      case SUCCESS:
-        break;
-
-      default:
-        throw new TechnicalException("Unsupported RedirectAction type: " + action.getType());
+            redirect(context.getResponseLocation(), context);
+        } else if (code == HttpConstants.OK) {
+            // Content should already have been written
+            context.setResponseStatus(HttpConstants.OK);
+            context.setResponseHeader(HttpConstants.CONTENT_TYPE_HEADER, HttpConstants.HTML_CONTENT_TYPE);
+            context.completeResponse();
+        } else {
+            final String message = "Unsupported HTTP action: " + code;
+            LOG.error(message);
+            throw new TechnicalException(message);
+        }
     }
-  }
+
+    @Override
+    public void handleRedirect(final RedirectAction action, final VertxWebContext webContext)
+    {
+        switch (action.getType()) {
+
+            case REDIRECT:
+                // Send a redirect response
+                redirect(action.getLocation(), webContext);
+                break;
+
+            case SUCCESS:
+                break;
+
+            default:
+                throw new TechnicalException("Unsupported RedirectAction type: " + action.getType());
+        }
+    }
+
+    protected void redirect(final String location, final VertxWebContext webContext) {
+        webContext.setResponseStatus(HttpConstants.TEMP_REDIRECT);
+        webContext.setResponseHeader(HttpConstants.LOCATION_HEADER, location);
+        webContext.completeResponse();
+    }
+
+    protected void sendResponse(final VertxWebContext webContext, final int code, final String body) {
+        webContext.setResponseStatus(code);
+        webContext.writeResponseContent(body);
+        webContext.completeResponse();
+    }
 }
