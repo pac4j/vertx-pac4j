@@ -21,17 +21,24 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.impl.AuthHandlerImpl;
-import org.pac4j.core.client.Client;
-import org.pac4j.core.client.Clients;
+import org.pac4j.core.client.*;
 import org.pac4j.core.config.Config;
+import org.pac4j.core.context.HttpConstants;
+import org.pac4j.core.context.Pac4jConstants;
+import org.pac4j.core.context.WebContext;
+import org.pac4j.core.credentials.Credentials;
+import org.pac4j.core.exception.RequiresHttpAction;
+import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.profile.ProfileManager;
 import org.pac4j.core.profile.UserProfile;
 import org.pac4j.vertx.VertxWebContext;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
 import org.pac4j.vertx.auth.Pac4jUser;
-import org.pac4j.vertx.flow.AuthenticationFlow;
+import org.pac4j.vertx.http.DefaultHttpActionAdapter;
+import org.pac4j.vertx.http.HttpActionAdapter;
 
-import java.util.function.Consumer;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * @author Jeremy Prime
@@ -39,73 +46,130 @@ import java.util.function.Consumer;
  */
 public class RequiresAuthenticationHandler extends AuthHandlerImpl {
 
-  private static final Logger LOG = LoggerFactory.getLogger(RequiresAuthenticationHandler.class);
-  protected final Config config;
-  protected final String clientName;
-  protected final Vertx vertx;
-  private final boolean allowDynamicClientSelection;
+    private static final Logger LOG = LoggerFactory.getLogger(RequiresAuthenticationHandler.class);
 
-  public RequiresAuthenticationHandler(final Vertx vertx, final Config config, final Pac4jAuthProvider authProvider,
-                                       final Pac4jAuthHandlerOptions options) {
-    super(authProvider);
-    clientName = options.clientName();
-    allowDynamicClientSelection = options.allowDynamicClientSelection();
-    this.vertx = vertx;
-    this.config = config;
-  }
+    protected final Config config;
+    protected final String clientName;
+    protected final Vertx vertx;
 
-  // Port of Pac4J auth to a handler in vert.x 3.
-  @Override
-  public void handle(RoutingContext routingContext) {
+    protected HttpActionAdapter httpActionAdapter = new DefaultHttpActionAdapter();
+    protected ClientFinder clientFinder = new DefaultClientFinder();
 
-    final User user = routingContext.user();
-    if (user != null) {
-      // Already logged in, just authorise
-      authorise(user, routingContext);
-    } else {
-      final VertxWebContext webContext = new VertxWebContext(routingContext);
-      final Client client = findClient(webContext, this.clientName, allowDynamicClientSelection);
-      final ProfileManager profileManager = new ProfileManager(webContext);
-      final AuthenticationFlow authenticationFlow = getAuthenticationFlow(client);
+    public RequiresAuthenticationHandler(final Vertx vertx, final Config config, final Pac4jAuthProvider authProvider,
+                                         final Pac4jAuthHandlerOptions options) {
+        super(authProvider);
+        clientName = options.clientName();
+        this.vertx = vertx;
+        this.config = config;
+    }
 
-      UserProfile profile = profileManager.get(authenticationFlow.useSession(webContext));
-      if (profile != null) {
-        // We have been authenticated, are we authorized? Use vert.x subsystem for this
-        authorise(new Pac4jUser(profile), routingContext);
-      } else {
-        // We have not been authenticated yet, so start of the authentication process
-        authenticationFlow.initiate(webContext, new Consumer<UserProfile>() {
-          @Override
-          public void accept(UserProfile userProfile) {
-            final Pac4jUser pac4jUser = new Pac4jUser(userProfile);
-            if (userProfile != null) {
-              profileManager.save(authenticationFlow.useSession(webContext), userProfile);
-              // Writing into the routing context now means that if the UserSessionHandler is in use then nothing
-              // else needs to be done to retrieve the user from the session and write to the routing context
-              routingContext.setUser(pac4jUser);
+    // Port of Pac4J auth to a handler in vert.x 3.
+    @Override
+    public void handle(RoutingContext routingContext) {
+
+        final User user = routingContext.user();
+        if (user != null) {
+            // Already logged in, just authorise
+            authorise(user, routingContext);
+        } else {
+            final VertxWebContext webContext = new VertxWebContext(routingContext);
+            final List<Client> currentClients = clientFinder.find(config.getClients(), webContext, this.clientName);
+            final ProfileManager profileManager = new ProfileManager(webContext);
+
+            UserProfile profile = profileManager.get(useSession(webContext, currentClients));
+            if (profile != null) {
+                // We have been authenticated, are we authorized? Use vert.x subsystem for this
+                authorise(new Pac4jUser(profile), routingContext);
+            } else {
+                // We have not been authenticated yet, so start of the authentication process
+                // First try direct clients complying to client name filter, then attempt indirect
+                // authentication
+                vertx.<Optional<UserProfile>>executeBlocking(
+                    future -> {
+                        // Note the following stream should NOT be executed in parallel
+                        // as it may contain blocking operations which could block threads from the
+                        // fork/join pool.
+                        // This needs to be in an executeBlocking segment as it may involve blocking i/o
+                        // so needs to be kept off the vert.x event loop
+                        future.complete(currentClients.stream()
+                            .filter(client -> client instanceof DirectClient)
+                            .map(client -> {
+                                try {
+                                    final Credentials credentials = client.getCredentials(webContext);
+                                    return client.getUserProfile(credentials, webContext);
+                                } catch (RequiresHttpAction requiresHttpAction) {
+                                    throw new TechnicalException("Unexpected HTTP action", requiresHttpAction);
+                                }
+                            })
+                            .filter(userProfile -> userProfile != null)
+                            .findFirst());
+                    },
+                    asyncResult -> {
+                        if (asyncResult.succeeded()){
+
+                            // Non error condition but we might not have a profile
+                            final Optional<UserProfile> profileOption = asyncResult.result();
+                            if (profileOption.isPresent()) {
+                                // We/ve been successfully authenticated so authorise
+                                final UserProfile authenticatedProfile = profileOption.get();
+                                profileManager.save(useSession(webContext, currentClients), authenticatedProfile);
+                                authorise(new Pac4jUser(authenticatedProfile), routingContext);
+                            } else {
+                                // direct authentication failed so attempt indirect authentication if possible,
+                                // otherwise fail authentication
+                                if (startAuthentication(webContext, currentClients)) {
+                                    LOG.debug("Starting authentication");
+                                    saveRequestedUrl(webContext, currentClients);
+                                    redirectToIdentityProvider(webContext, currentClients);
+                                } else {
+                                    LOG.debug("unauthorized");
+                                    unauthorized(webContext, currentClients);
+                                }
+                            }
+
+                        } else {
+                            throw toTechnicalException(asyncResult.cause());
+                        }
+
+                    }
+                );
             }
-            RequiresAuthenticationHandler.this.authorise(pac4jUser, routingContext);
-          }
-        });
-      }
+        }
+
     }
 
-  }
-
-  protected Client findClient(VertxWebContext webContext, String clientName, boolean allowDynamicClientSelection) {
-    final Clients clients = config.getClients();
-    Client client = null;
-    if (allowDynamicClientSelection) {
-      client = clients.findClient(webContext);
+    protected void unauthorized(VertxWebContext webContext, List<Client> currentClients) {
+        httpActionAdapter.handle(HttpConstants.UNAUTHORIZED, webContext);
     }
-    if (client == null) {
-      client = clients.findClient(clientName);
-    }
-    return client;
-  }
 
-  protected AuthenticationFlow getAuthenticationFlow(final Client client) {
-    return AuthenticationFlow.flowFor(vertx, client);
-  }
+    protected boolean startAuthentication(final VertxWebContext context, final List<Client> currentClients) {
+        return currentClients != null && currentClients.size() > 0 && currentClients.get(0) instanceof IndirectClient;
+    }
+
+    protected void saveRequestedUrl(final WebContext context, final List<Client> currentClients) {
+        final String requestedUrl = context.getFullRequestURL();
+        LOG.debug("requestedUrl: " + requestedUrl);
+        context.setSessionAttribute(Pac4jConstants.REQUESTED_URL, requestedUrl);
+    }
+
+    protected void redirectToIdentityProvider(final VertxWebContext webContext, final List<Client> currentClients) {
+        try {
+            final IndirectClient currentClient = (IndirectClient) currentClients.get(0);
+            final RedirectAction action = currentClient.getRedirectAction(webContext, true);
+            LOG.debug("redirectAction: " + action);
+            httpActionAdapter.handleRedirect(action, webContext);
+        } catch (final RequiresHttpAction requiresHttpAction) {
+            LOG.debug("extra HTTP action required: " + requiresHttpAction.getCode());
+            httpActionAdapter.handle(requiresHttpAction.getCode(), webContext);
+        }
+    }
+
+    protected boolean useSession(final WebContext context, final List<Client> currentClients) {
+        return currentClients == null || currentClients.size() == 0 || currentClients.get(0) instanceof IndirectClient;
+    }
+
+    private final TechnicalException toTechnicalException(final Throwable t) {
+        return (t instanceof TechnicalException) ? (TechnicalException) t : new TechnicalException(t);
+    }
 
 }

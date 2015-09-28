@@ -15,7 +15,6 @@
  */
 package org.pac4j.vertx;
 
-import io.vertx.core.VoidHandler;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.ext.web.Router;
@@ -31,6 +30,7 @@ import org.pac4j.vertx.handler.impl.Pac4jAuthHandlerOptions;
 import org.pac4j.vertx.handler.impl.RequiresAuthenticationHandler;
 
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * @author Jeremy Prime
@@ -41,34 +41,48 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
     private static final String AUTH_HEADER_NAME = "Authorization";
     private static final String BASIC_AUTH_PREFIX = "Basic ";
     private static final String TEST_BASIC_AUTH_HEADER = BASIC_AUTH_PREFIX + Base64.encodeBase64String("testUser:testUser".getBytes());
+    private static final String TEST_FAILING_BASIC_AUTH_HEADER = BASIC_AUTH_PREFIX + Base64.encodeBase64String("testUser:testUser2".getBytes());
+    public static final String PROTECTED_RESOURCE_URL = "/private/success.html";
 
     @Test
     public void testSuccessfulLogin() throws Exception {
 
-        VoidHandler test = new VoidHandler() {
-            @Override
-            protected void handle() {
-                HttpClient client = vertx.createHttpClient();
-                // Attempt to get a private url
-                final HttpClientRequest successfulRequest = client.get(8080, "localhost", "/private/success.html")
-                        .putHeader(AUTH_HEADER_NAME, TEST_BASIC_AUTH_HEADER);
-                // This should get the desired result straight away rather than operating through redirects
-                successfulRequest.handler(response -> {
-                    assertEquals(200, response.statusCode());
-                    response.bodyHandler(body -> {
-                        assertEquals("authenticationSuccess", body.toString());
-                        testComplete();
-                    });
-                });
-                successfulRequest.end();
-                await(1, TimeUnit.SECONDS);
-            }
-        };
+        testLoginAttempt(TEST_BASIC_AUTH_HEADER, 200, protectedResourceContentValidator());
 
+    }
+
+    @Test
+    public void testFailedLogin() throws Exception {
+
+        testLoginAttempt(TEST_FAILING_BASIC_AUTH_HEADER, 401, aunauthorizedContentValidator());
+
+    }
+
+    private void testLoginAttempt(final String credentialsHeader, final int expectedHttpStatus, final Consumer<String> bodyValidator) throws Exception {
         startWebServer();
-        test.handle(null);
+        HttpClient client = vertx.createHttpClient();
+        // Attempt to get a private url
+        final HttpClientRequest request = client.get(8080, "localhost", PROTECTED_RESOURCE_URL)
+                .putHeader(AUTH_HEADER_NAME, credentialsHeader);
+        // This should get the desired result straight away rather than operating through redirects
+        request.handler(response -> {
+            assertEquals(expectedHttpStatus, response.statusCode());
+            response.bodyHandler(body -> {
+                final String bodyContent = body.toString();
+                bodyValidator.accept(bodyContent);
+                testComplete();
+            });
+        });
+        request.end();
+        await(1, TimeUnit.SECONDS);
+    }
 
+    private Consumer<String> protectedResourceContentValidator() {
+        return body -> assertEquals("authenticationSuccess", body);
+    }
 
+    private Consumer<String> aunauthorizedContentValidator() {
+        return body -> assertEquals("Unauthorized", body);
     }
 
     private void startWebServer() throws Exception {

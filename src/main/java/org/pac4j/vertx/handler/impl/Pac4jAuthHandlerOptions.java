@@ -22,7 +22,6 @@ package org.pac4j.vertx.handler.impl;
 public class Pac4jAuthHandlerOptions {
 
   private final String clientName;
-  private boolean allowDynamicClientSelection = false;
 
   public Pac4jAuthHandlerOptions(String clientName) {
     if (clientName == null) {
@@ -35,12 +34,4 @@ public class Pac4jAuthHandlerOptions {
     return clientName;
   }
 
-  public Pac4jAuthHandlerOptions setAllowDynamicClientSelection(final boolean allowDynamicClientSelection) {
-    this.allowDynamicClientSelection = allowDynamicClientSelection;
-    return this;
-  }
-
-  public boolean allowDynamicClientSelection() {
-    return allowDynamicClientSelection;
-  }
 }

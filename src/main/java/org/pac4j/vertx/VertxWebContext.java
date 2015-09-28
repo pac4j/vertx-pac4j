@@ -20,8 +20,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
+import org.pac4j.core.context.BaseResponseContext;
 import org.pac4j.core.context.Cookie;
-import org.pac4j.core.context.WebContext;
 import org.pac4j.vertx.core.DefaultJsonConverter;
 
 import java.net.URI;
@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public class VertxWebContext implements WebContext {
+public class VertxWebContext extends BaseResponseContext {
 
     private final RoutingContext routingContext;
     private final String method;
@@ -52,9 +52,7 @@ public class VertxWebContext implements WebContext {
     private final JsonObject parameters;
     private final Map<String, String[]> mapParameters;
 
-    private final JsonObject outHeaders = new JsonObject();
-    private final StringBuilder sb = new StringBuilder();
-    private int code;
+    private boolean contentHasBeenWritten = false; // Need to set chunked before first write of any content
 
     public VertxWebContext(final RoutingContext routingContext) {
         final HttpServerRequest request = routingContext.request();
@@ -152,8 +150,6 @@ public class VertxWebContext implements WebContext {
 
     @Override
     public void invalidateSession() {
-//      this.sessionAttributes.setUserProfile(null);
-//      this.sessionAttributes.getCustomAttributes().clear();
         routingContext.session().destroy();
     }
 
@@ -161,10 +157,6 @@ public class VertxWebContext implements WebContext {
     public Object getSessionIdentifier() {
         return routingContext.session().id();
     }
-
-//  public Pac4jSessionAttributes getSessionAttributes() {
-//    return sessionAttributes;
-//  }
 
     @Override
     public String getRequestMethod() {
@@ -178,19 +170,17 @@ public class VertxWebContext implements WebContext {
 
     @Override
     public void writeResponseContent(String content) {
+        if (!contentHasBeenWritten) {
+            routingContext.response().setChunked(true);
+            contentHasBeenWritten = true;
+        }
         routingContext.response().write(content);
     }
 
     @Override
     public void setResponseStatus(int code) {
-
-//    this.code = code;
         routingContext.response().setStatusCode(code);
     }
-
-//  public int getResponseStatus() {
-//    return code;
-//  }
 
     @Override
     public void setResponseHeader(String name, String value) {
