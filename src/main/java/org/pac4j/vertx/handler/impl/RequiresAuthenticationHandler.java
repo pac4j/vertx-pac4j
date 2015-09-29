@@ -15,12 +15,16 @@
  */
 package org.pac4j.vertx.handler.impl;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.impl.AuthHandlerImpl;
+import org.pac4j.core.authorization.AuthorizationChecker;
+import org.pac4j.core.authorization.DefaultAuthorizationChecker;
 import org.pac4j.core.client.*;
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.HttpConstants;
@@ -50,15 +54,18 @@ public class RequiresAuthenticationHandler extends AuthHandlerImpl {
 
     protected final Config config;
     protected final String clientName;
+    protected final String authorizerName;
     protected final Vertx vertx;
 
     protected HttpActionAdapter httpActionAdapter = new DefaultHttpActionAdapter();
     protected ClientFinder clientFinder = new DefaultClientFinder();
+    protected AuthorizationChecker authorizationChecker = new DefaultAuthorizationChecker();
 
     public RequiresAuthenticationHandler(final Vertx vertx, final Config config, final Pac4jAuthProvider authProvider,
                                          final Pac4jAuthHandlerOptions options) {
         super(authProvider);
         clientName = options.clientName();
+        authorizerName = options.authorizerName();
         this.vertx = vertx;
         this.config = config;
     }
@@ -136,6 +143,33 @@ public class RequiresAuthenticationHandler extends AuthHandlerImpl {
             }
         }
 
+    }
+
+    @Override
+    protected void authorise(final User user, final RoutingContext context) {
+        if (! (user instanceof Pac4jUser)) {
+            throw new TechnicalException("Wrong user type in authorise");
+        }
+
+        Handler<AsyncResult<Boolean>> authHandler = res -> {
+            if (res.succeeded()) {
+                if (res.result()) {
+                    context.next();
+                } else {
+                    context.fail(403);
+                }
+            } else {
+                context.fail(res.cause());
+            }
+        };
+
+        // This needs to be wrapped in execute blocking because our authorizers might trigger
+        // blocking i/o such as database lookups
+        vertx.executeBlocking(future -> {
+                    future.complete(authorizationChecker.isAuthorized(new VertxWebContext(context), ((Pac4jUser) user).pac4jUserProfile(), authorizerName, config.getAuthorizers()));
+                },
+                authHandler
+        );
     }
 
     protected void unauthorized(VertxWebContext webContext, List<Client> currentClients) {

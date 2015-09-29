@@ -15,23 +15,29 @@
  */
 package org.pac4j.vertx.handler.impl;
 
+import java.util.Objects;
+
 /**
  * @author Jeremy Prime
  * @since 2.0.0
  */
 public class Pac4jAuthHandlerOptions {
 
-  private final String clientName;
+    private final String clientName;
+    private final String authorizerName;
 
-  public Pac4jAuthHandlerOptions(String clientName) {
-    if (clientName == null) {
-      throw new IllegalArgumentException("clientName must not be null");
+    public Pac4jAuthHandlerOptions(final String clientName, final String authorizerName) {
+        Objects.requireNonNull(clientName);
+        Objects.requireNonNull(authorizerName);
+        this.clientName = clientName;
+        this.authorizerName = authorizerName;
     }
-    this.clientName = clientName;
-  }
 
-  public String clientName() {
-    return clientName;
-  }
+    public String clientName() {
+        return clientName;
+    }
 
+    public String authorizerName() {
+        return authorizerName;
+    }
 }
