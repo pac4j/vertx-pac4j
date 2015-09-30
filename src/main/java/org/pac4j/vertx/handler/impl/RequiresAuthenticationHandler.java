@@ -72,7 +72,7 @@ public class RequiresAuthenticationHandler extends AuthHandlerImpl {
 
     // Port of Pac4J auth to a handler in vert.x 3.
     @Override
-    public void handle(RoutingContext routingContext) {
+    public void handle(final RoutingContext routingContext) {
 
         final User user = routingContext.user();
         if (user != null) {
@@ -135,7 +135,7 @@ public class RequiresAuthenticationHandler extends AuthHandlerImpl {
                             }
 
                         } else {
-                            throw toTechnicalException(asyncResult.cause());
+                            unexpectedFailure(routingContext, asyncResult.cause());
                         }
 
                     }
@@ -156,10 +156,10 @@ public class RequiresAuthenticationHandler extends AuthHandlerImpl {
                 if (res.result()) {
                     context.next();
                 } else {
-                    context.fail(403);
+                    forbidden(context);
                 }
             } else {
-                context.fail(res.cause());
+                unexpectedFailure(context, res.cause());
             }
         };
 
@@ -172,8 +172,8 @@ public class RequiresAuthenticationHandler extends AuthHandlerImpl {
         );
     }
 
-    protected void unauthorized(VertxWebContext webContext, List<Client> currentClients) {
-        httpActionAdapter.handle(HttpConstants.UNAUTHORIZED, webContext);
+    protected boolean useSession(final WebContext context, final List<Client> currentClients) {
+        return currentClients == null || currentClients.size() == 0 || currentClients.get(0) instanceof IndirectClient;
     }
 
     protected boolean startAuthentication(final VertxWebContext context, final List<Client> currentClients) {
@@ -198,8 +198,16 @@ public class RequiresAuthenticationHandler extends AuthHandlerImpl {
         }
     }
 
-    protected boolean useSession(final WebContext context, final List<Client> currentClients) {
-        return currentClients == null || currentClients.size() == 0 || currentClients.get(0) instanceof IndirectClient;
+    protected void unauthorized(final VertxWebContext webContext, List<Client> currentClients) {
+        httpActionAdapter.handle(HttpConstants.UNAUTHORIZED, webContext);
+    }
+
+    protected void forbidden(final RoutingContext context) {
+        httpActionAdapter.handle(HttpConstants.FORBIDDEN, new VertxWebContext(context));
+    }
+
+    protected void unexpectedFailure(final RoutingContext context, Throwable failure) {
+        context.fail(toTechnicalException(failure));
     }
 
     private final TechnicalException toTechnicalException(final Throwable t) {
