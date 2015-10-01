@@ -21,7 +21,13 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.test.core.VertxTestBase;
+import org.pac4j.core.authorization.Authorizer;
+import org.pac4j.core.authorization.RequireAllPermissionsAuthorizer;
+import org.pac4j.vertx.profile.TestOAuth2Profile;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -32,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 public abstract class Pac4jAuthHandlerIntegrationTestBase extends VertxTestBase {
 
     protected static final String TEST_CLIENT_NAME = "TestOAuth2Client";
+    protected static final String REQUIRE_ALL_AUTHORIZER = "requireAllAuthorizer";
 
     protected void startWebServer(Router router, Handler<RoutingContext> authHandler) throws Exception {
         HttpServer server = vertx.createHttpServer();
@@ -50,4 +57,15 @@ public abstract class Pac4jAuthHandlerIntegrationTestBase extends VertxTestBase 
         assertTrue(latch.await(1L, TimeUnit.SECONDS));
     }
 
+    protected Map<String, Authorizer> authorizers(final List<String> permissions) {
+        return new HashMap<String, Authorizer>() {{
+            put(REQUIRE_ALL_AUTHORIZER, authorizer(permissions));
+        }};
+    }
+
+    private RequireAllPermissionsAuthorizer<TestOAuth2Profile> authorizer(final List<String> permissions) {
+        final RequireAllPermissionsAuthorizer<TestOAuth2Profile> authorizer = new RequireAllPermissionsAuthorizer<TestOAuth2Profile>();
+        authorizer.setPermissions(permissions);
+        return authorizer;
+    }
 }

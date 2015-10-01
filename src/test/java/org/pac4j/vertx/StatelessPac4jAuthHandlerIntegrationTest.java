@@ -29,6 +29,7 @@ import org.pac4j.vertx.auth.Pac4jAuthProvider;
 import org.pac4j.vertx.handler.impl.Pac4jAuthHandlerOptions;
 import org.pac4j.vertx.handler.impl.RequiresAuthenticationHandler;
 
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -90,7 +91,7 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
         final Router router = Router.router(vertx);
         // Configure a pac4j stateless handler configured for basic http auth
         final Pac4jAuthProvider authProvider = new Pac4jAuthProvider();
-        Pac4jAuthHandlerOptions options = new Pac4jAuthHandlerOptions("BasicAuthClient");
+        Pac4jAuthHandlerOptions options = new Pac4jAuthHandlerOptions("BasicAuthClient", REQUIRE_ALL_AUTHORIZER);
         final RequiresAuthenticationHandler handler =  new RequiresAuthenticationHandler(vertx, config(), authProvider, options);
         startWebServer(router, handler);
 
@@ -98,7 +99,7 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
 
     private Config config() {
         final Clients clients = new Clients(client());
-        return new Config(clients);
+        return new Config(clients, authorizers(new ArrayList<String>()));
     }
 
     private Client client() {

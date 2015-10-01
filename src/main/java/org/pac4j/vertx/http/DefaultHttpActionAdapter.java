@@ -37,7 +37,6 @@ public class DefaultHttpActionAdapter implements HttpActionAdapter {
         } else if (code == HttpConstants.FORBIDDEN) {
             sendResponse(context, HttpConstants.FORBIDDEN, "Forbidden");
         } else if (code == HttpConstants.TEMP_REDIRECT) {
-
             redirect(context.getResponseLocation(), context);
         } else if (code == HttpConstants.OK) {
             // Content should already have been written

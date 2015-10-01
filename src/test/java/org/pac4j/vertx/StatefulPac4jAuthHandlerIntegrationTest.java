@@ -37,6 +37,8 @@ import org.pac4j.vertx.client.TestOAuth2Client;
 import org.pac4j.vertx.handler.impl.CallbackDeployingPac4jAuthHandler;
 import org.pac4j.vertx.handler.impl.Pac4jAuthHandlerOptions;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -85,7 +87,10 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     @Test
     public void testSuccessfulOAuth2LoginWithInsufficientAuthorities() throws Exception {
         startOAuth2ProviderMimic("testUser2");
-        startWebServer(TEST_OAUTH2_SUCCESS_URL, "permission2");
+        final String[] permissions = {
+                "permission1", "permission2"
+        };
+        startWebServer(TEST_OAUTH2_SUCCESS_URL, Arrays.asList(permissions));
         loginSuccessfullyExpectingUnauthorizedUser(Void -> testComplete());
         await(1, TimeUnit.SECONDS);
     }
@@ -93,7 +98,8 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     @Test
     public void testSuccessfulOAuth2LoginWithSufficientAuthorities() throws Exception {
         startOAuth2ProviderMimic("testUser2");
-        startWebServer(TEST_OAUTH2_SUCCESS_URL, "permission1");
+        final String[] permissions = {"permission1"};
+        startWebServer(TEST_OAUTH2_SUCCESS_URL, Arrays.asList(permissions));
         loginSuccessfullyExpectingAuthorizedUser(Void -> testComplete());
         await(1, TimeUnit.SECONDS);
     }
@@ -185,12 +191,13 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
         };
     }
 
-    private void startWebServer(final String baseAuthUrl, final String requiredPermission) throws Exception {
-        startWebServer(baseAuthUrl, requiredPermission, handler -> {
+    private void startWebServer(final String baseAuthUrl, final List<String> requiredPermissions) throws Exception {
+        startWebServer(baseAuthUrl, requiredPermissions, handler -> {
         });
     }
 
-    private void startWebServer(final String baseAuthUrl, final String requiredPermission,
+    private void startWebServer(final String baseAuthUrl,
+                                final List<String> requiredPermissions,
                                 final Consumer<AuthHandler> handlerDecorator) throws Exception {
         Router router = Router.router(vertx);
         SessionStore sessionStore = sessionStore();
@@ -198,18 +205,18 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
         router.route().handler(CookieHandler.create());
         router.route().handler(sessionHandler(sessionStore));
 
-        CallbackDeployingPac4jAuthHandler pac4jAuthHandler = authHandler(router, baseAuthUrl);
-        Optional.ofNullable(requiredPermission).ifPresent(pac4jAuthHandler::addAuthority);
+        CallbackDeployingPac4jAuthHandler pac4jAuthHandler = authHandler(router, baseAuthUrl, requiredPermissions);
         handlerDecorator.accept(pac4jAuthHandler);
 
         startWebServer(router, pac4jAuthHandler);
     }
 
     private CallbackDeployingPac4jAuthHandler authHandler(final Router router,
-                                                          final String baseAuthUrl) {
+                                                          final String baseAuthUrl,
+                                                          final List<String> requiredPermissions) {
         Pac4jAuthProvider authProvider = new Pac4jAuthProvider();
-        Pac4jAuthHandlerOptions options = new Pac4jAuthHandlerOptions(TEST_CLIENT_NAME);
-        return new CallbackDeployingPac4jAuthHandler(vertx, config(client(baseAuthUrl)), router, authProvider, options);
+        Pac4jAuthHandlerOptions options = new Pac4jAuthHandlerOptions(TEST_CLIENT_NAME, REQUIRE_ALL_AUTHORIZER);
+        return new CallbackDeployingPac4jAuthHandler(vertx, config(client(baseAuthUrl), requiredPermissions), router, authProvider, options);
     }
 
     private void redirectToUrl(final String redirectUrl, final HttpClient client, final Handler<HttpClientResponse> resultHandler) {
@@ -223,11 +230,11 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
         return Optional.ofNullable(sessionCookie.get());
     }
 
-    private Config config(final Client client) {
+    private Config config(final Client client, List<String> requiredPermissions) {
         final Clients clients = new Clients();
         clients.setClients(client);
         clients.setCallbackUrl("http://localhost:8080/authResult");
-        return new Config(clients);
+        return new  Config(clients, authorizers(requiredPermissions));
     }
 
     private TestOAuth2Client client(final String baseAuthUrl) {
