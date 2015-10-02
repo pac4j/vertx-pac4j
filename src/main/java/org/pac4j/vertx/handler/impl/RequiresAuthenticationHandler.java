@@ -35,6 +35,7 @@ import org.pac4j.core.exception.RequiresHttpAction;
 import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.profile.ProfileManager;
 import org.pac4j.core.profile.UserProfile;
+import org.pac4j.core.util.CommonHelper;
 import org.pac4j.vertx.VertxWebContext;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
 import org.pac4j.vertx.auth.Pac4jUser;
@@ -64,6 +65,12 @@ public class RequiresAuthenticationHandler extends AuthHandlerImpl {
     public RequiresAuthenticationHandler(final Vertx vertx, final Config config, final Pac4jAuthProvider authProvider,
                                          final Pac4jAuthHandlerOptions options) {
         super(authProvider);
+        CommonHelper.assertNotNull("vertx", vertx);
+        CommonHelper.assertNotNull("config", config);
+        CommonHelper.assertNotNull("config.getClients()", config.getClients());
+        CommonHelper.assertNotNull("authProvider", authProvider);
+        CommonHelper.assertNotNull("options", options);
+
         clientName = options.clientName();
         authorizerName = options.authorizerName();
         this.vertx = vertx;
@@ -210,7 +217,7 @@ public class RequiresAuthenticationHandler extends AuthHandlerImpl {
         context.fail(toTechnicalException(failure));
     }
 
-    private final TechnicalException toTechnicalException(final Throwable t) {
+    protected final TechnicalException toTechnicalException(final Throwable t) {
         return (t instanceof TechnicalException) ? (TechnicalException) t : new TechnicalException(t);
     }
 
