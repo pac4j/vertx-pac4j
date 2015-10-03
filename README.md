@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://pac4j.github.io/pac4j/img/logo-vertx.png" width="50%" height="50%" />
+</p>
+
 Pac4j module for Vert.x [![Build Status](https://travis-ci.org/pac4j/vertx-pac4j.png?branch=master)](https://travis-ci.org/pac4j/vertx-pac4j)
 =======================
 
@@ -166,6 +170,12 @@ Define the application verticle:
             .listen(8080, "localhost");
         
     }}
+
+Please note that in the above code it is perfectly legitimate to use a RequiresAuthenticationHandler and deploy a CallbackHandler
+separately. The CallbackDeployingPac4jAuthHandler is a convenience class which automatically deploys a CallbackHandler at the
+callback url specified in the config supplied to it. It therefore saves a small amount of code when using a single callback
+handler, but could prove useful for simple indirect authentication configurations. If you intend to use the same callback handler
+for multiple paths with different RequiresAuthenticationHandler, it would make sense to explicitly deploy the CallbackHandler.
 
 ## Stateless application
 
