@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://pac4j.github.io/pac4j/img/logo-vertx.png" width="50%" height="50%" />
+  <img src="https://pac4j.github.io/pac4j/img/logo-vertx.png" width="300" />
 </p>
 
 Pac4j module for Vert.x [![Build Status](https://travis-ci.org/pac4j/vertx-pac4j.png?branch=master)](https://travis-ci.org/pac4j/vertx-pac4j)
