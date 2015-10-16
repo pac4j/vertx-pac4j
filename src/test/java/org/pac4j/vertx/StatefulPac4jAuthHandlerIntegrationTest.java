@@ -79,9 +79,22 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
         LOG.debug("Starting auth provider mimic");
         startOAuth2ProviderMimic("testUser1");
         // Start a web server with no required authorities (i.e. only authentication required) for the secured resource
-        startWebServer(TEST_OAUTH2_SUCCESS_URL, null);
+        startWebServer(TEST_OAUTH2_SUCCESS_URL, optionsWithBothNamesProvided(), null);
         loginSuccessfullyExpectingAuthorizedUser(Void -> testComplete());
         await(2, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void testSuccessfulOAuth2LoginWithoutAuthorizerName() throws Exception {
+        // This should let any user access a protected resource - we'll set up with a user who doesn't have
+        // adequate permissions if the authorizer is used
+        startOAuth2ProviderMimic("testUser2");
+        final String[] permissions = {
+                "permission1", "permission2"
+        };
+        startWebServer(TEST_OAUTH2_SUCCESS_URL, new Pac4jAuthHandlerOptions().withClientName(TEST_CLIENT_NAME), Arrays.asList(permissions));
+        loginSuccessfullyExpectingAuthorizedUser(Void -> testComplete());
+        await(1, TimeUnit.SECONDS);
     }
 
     @Test
@@ -90,7 +103,7 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
         final String[] permissions = {
                 "permission1", "permission2"
         };
-        startWebServer(TEST_OAUTH2_SUCCESS_URL, Arrays.asList(permissions));
+        startWebServer(TEST_OAUTH2_SUCCESS_URL, optionsWithBothNamesProvided(), Arrays.asList(permissions));
         loginSuccessfullyExpectingUnauthorizedUser(Void -> testComplete());
         await(1, TimeUnit.SECONDS);
     }
@@ -99,7 +112,7 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     public void testSuccessfulOAuth2LoginWithSufficientAuthorities() throws Exception {
         startOAuth2ProviderMimic("testUser2");
         final String[] permissions = {"permission1"};
-        startWebServer(TEST_OAUTH2_SUCCESS_URL, Arrays.asList(permissions));
+        startWebServer(TEST_OAUTH2_SUCCESS_URL, optionsWithBothNamesProvided(),  Arrays.asList(permissions));
         loginSuccessfullyExpectingAuthorizedUser(Void -> testComplete());
         await(1, TimeUnit.SECONDS);
     }
@@ -110,7 +123,7 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     public void testSubsequentAccessFollowingSuccessfulLogin() throws Exception {
         startOAuth2ProviderMimic("testUser1");
         // Start a web server with no required authorities (i.e. only authentication required) for the secured resource
-        startWebServer(TEST_OAUTH2_SUCCESS_URL, null);
+        startWebServer(TEST_OAUTH2_SUCCESS_URL, optionsWithBothNamesProvided(), null);
         HttpClient client = vertx.createHttpClient();
         loginSuccessfullyExpectingAuthorizedUser(client, Void -> {
 
@@ -191,12 +204,18 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
         };
     }
 
-    private void startWebServer(final String baseAuthUrl, final List<String> requiredPermissions) throws Exception {
-        startWebServer(baseAuthUrl, requiredPermissions, handler -> {
+    private Pac4jAuthHandlerOptions optionsWithBothNamesProvided() {
+        return new Pac4jAuthHandlerOptions().withAuthorizerName(REQUIRE_ALL_AUTHORIZER)
+                .withClientName(TEST_CLIENT_NAME);
+    }
+
+    private void startWebServer(final String baseAuthUrl, final Pac4jAuthHandlerOptions options, final List<String> requiredPermissions) throws Exception {
+        startWebServer(baseAuthUrl, options, requiredPermissions, handler -> {
         });
     }
 
     private void startWebServer(final String baseAuthUrl,
+                                final Pac4jAuthHandlerOptions options,
                                 final List<String> requiredPermissions,
                                 final Consumer<AuthHandler> handlerDecorator) throws Exception {
         Router router = Router.router(vertx);
@@ -205,7 +224,7 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
         router.route().handler(CookieHandler.create());
         router.route().handler(sessionHandler(sessionStore));
 
-        CallbackDeployingPac4jAuthHandler pac4jAuthHandler = authHandler(router, baseAuthUrl, requiredPermissions);
+        CallbackDeployingPac4jAuthHandler pac4jAuthHandler = authHandler(router, baseAuthUrl,options,  requiredPermissions);
         handlerDecorator.accept(pac4jAuthHandler);
 
         startWebServer(router, pac4jAuthHandler);
@@ -213,9 +232,9 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
 
     private CallbackDeployingPac4jAuthHandler authHandler(final Router router,
                                                           final String baseAuthUrl,
+                                                          final Pac4jAuthHandlerOptions options,
                                                           final List<String> requiredPermissions) {
         Pac4jAuthProvider authProvider = new Pac4jAuthProvider();
-        Pac4jAuthHandlerOptions options = new Pac4jAuthHandlerOptions(TEST_CLIENT_NAME, REQUIRE_ALL_AUTHORIZER);
         return new CallbackDeployingPac4jAuthHandler(vertx, config(client(baseAuthUrl), requiredPermissions), router, authProvider, options);
     }
 
