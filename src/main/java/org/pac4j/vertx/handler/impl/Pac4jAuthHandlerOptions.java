@@ -23,14 +23,19 @@ import java.util.Objects;
  */
 public class Pac4jAuthHandlerOptions {
 
-    private final String clientName;
-    private final String authorizerName;
+    private String clientName = "";
+    private String authorizerName = "";
 
-    public Pac4jAuthHandlerOptions(final String clientName, final String authorizerName) {
-        Objects.requireNonNull(clientName);
-        Objects.requireNonNull(authorizerName);
-        this.clientName = clientName;
-        this.authorizerName = authorizerName;
+    public Pac4jAuthHandlerOptions withClientName(final String newName) {
+        Objects.requireNonNull(newName);
+        clientName = newName;
+        return this;
+    }
+
+    public Pac4jAuthHandlerOptions withAuthorizerName(final String newName) {
+        Objects.requireNonNull(newName);
+        authorizerName = newName;
+        return this;
     }
 
     public String clientName() {

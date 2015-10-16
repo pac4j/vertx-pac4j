@@ -44,6 +44,7 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
     private static final String TEST_BASIC_AUTH_HEADER = BASIC_AUTH_PREFIX + Base64.encodeBase64String("testUser:testUser".getBytes());
     private static final String TEST_FAILING_BASIC_AUTH_HEADER = BASIC_AUTH_PREFIX + Base64.encodeBase64String("testUser:testUser2".getBytes());
     public static final String PROTECTED_RESOURCE_URL = "/private/success.html";
+    public static final String BASIC_AUTH_CLIENT = "BasicAuthClient";
 
     @Test
     public void testSuccessfulLogin() throws Exception {
@@ -91,7 +92,9 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
         final Router router = Router.router(vertx);
         // Configure a pac4j stateless handler configured for basic http auth
         final Pac4jAuthProvider authProvider = new Pac4jAuthProvider();
-        Pac4jAuthHandlerOptions options = new Pac4jAuthHandlerOptions("BasicAuthClient", REQUIRE_ALL_AUTHORIZER);
+        Pac4jAuthHandlerOptions options = new Pac4jAuthHandlerOptions()
+                .withAuthorizerName(REQUIRE_ALL_AUTHORIZER)
+                .withClientName(BASIC_AUTH_CLIENT);
         final RequiresAuthenticationHandler handler =  new RequiresAuthenticationHandler(vertx, config(), authProvider, options);
         startWebServer(router, handler);
 
