@@ -31,11 +31,11 @@ public class DefaultHttpActionAdapter implements HttpActionAdapter {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultHttpActionAdapter.class);
 
     @Override
-    public void handle(int code, VertxWebContext context) {
+    public void handle(final int code, final VertxWebContext context) {
         if (code == HttpConstants.UNAUTHORIZED) {
-            sendResponse(context, HttpConstants.UNAUTHORIZED, "Unauthorized");
+            sendFailureResponse(context, HttpConstants.UNAUTHORIZED);
         } else if (code == HttpConstants.FORBIDDEN) {
-            sendResponse(context, HttpConstants.FORBIDDEN, "Forbidden");
+            sendFailureResponse(context, HttpConstants.FORBIDDEN);
         } else if (code == HttpConstants.TEMP_REDIRECT) {
             redirect(context.getResponseLocation(), context);
         } else if (code == HttpConstants.OK) {
@@ -72,6 +72,10 @@ public class DefaultHttpActionAdapter implements HttpActionAdapter {
         webContext.setResponseStatus(HttpConstants.TEMP_REDIRECT);
         webContext.setResponseHeader(HttpConstants.LOCATION_HEADER, location);
         webContext.completeResponse();
+    }
+
+    protected void sendFailureResponse(final VertxWebContext webContext, final int code) {
+        webContext.failResponse(code);
     }
 
     protected void sendResponse(final VertxWebContext webContext, final int code, final String body) {

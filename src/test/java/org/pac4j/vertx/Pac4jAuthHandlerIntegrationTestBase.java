@@ -39,12 +39,30 @@ public abstract class Pac4jAuthHandlerIntegrationTestBase extends VertxTestBase 
 
     protected static final String TEST_CLIENT_NAME = "TestOAuth2Client";
     protected static final String REQUIRE_ALL_AUTHORIZER = "requireAllAuthorizer";
+    protected static final String FORBIDDEN_BODY = "Forbidden to access this resource";
+    protected static final String UNAUTHORIZED_BODY = "Unauthorized for resource";
 
     protected void startWebServer(Router router, Handler<RoutingContext> authHandler) throws Exception {
         HttpServer server = vertx.createHttpServer();
 
         router.route("/private/*").handler(authHandler);
         router.route().handler(StaticHandler.create());
+        router.route().failureHandler(rc -> {
+            rc.response().setStatusCode(rc.statusCode());
+            switch(rc.statusCode()) {
+
+                case 401:
+                    rc.response().end(UNAUTHORIZED_BODY);
+                    break;
+
+                case 403:
+                    rc.response().end(FORBIDDEN_BODY);
+                    break;
+
+                default:
+                    rc.response().end("Unexpected error");
+            }
+        });
 
         CountDownLatch latch = new CountDownLatch(1);
         server.requestHandler(router::accept).listen(8080, asyncResult -> {

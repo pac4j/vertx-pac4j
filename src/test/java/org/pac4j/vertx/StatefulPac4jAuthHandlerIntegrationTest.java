@@ -158,7 +158,10 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     private void loginSuccessfullyExpectingUnauthorizedUser(final Consumer<Void> subsequentActions) throws Exception {
         loginSuccessfully(finalRedirectResponse -> {
             assertEquals(403, finalRedirectResponse.statusCode());
-            subsequentActions.accept(null);
+            finalRedirectResponse.bodyHandler(body -> {
+                assertEquals(FORBIDDEN_BODY, body.toString());
+                subsequentActions.accept(null);
+            });
         });
     }
 

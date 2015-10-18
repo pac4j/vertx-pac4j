@@ -95,6 +95,10 @@ public class VertxWebContext extends BaseResponseContext {
 
     }
 
+    public void failResponse(final int status) {
+        routingContext.fail(status);
+    }
+
     public void completeResponse() {
         routingContext.response().end();
     }

@@ -56,7 +56,7 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
     @Test
     public void testFailedLogin() throws Exception {
 
-        testLoginAttempt(TEST_FAILING_BASIC_AUTH_HEADER, 401, aunauthorizedContentValidator());
+        testLoginAttempt(TEST_FAILING_BASIC_AUTH_HEADER, 401, unauthorizedContentValidator());
 
     }
 
@@ -83,8 +83,8 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
         return body -> assertEquals("authenticationSuccess", body);
     }
 
-    private Consumer<String> aunauthorizedContentValidator() {
-        return body -> assertEquals("Unauthorized", body);
+    private Consumer<String> unauthorizedContentValidator() {
+        return body -> assertEquals(UNAUTHORIZED_BODY, body);
     }
 
     private void startWebServer() throws Exception {
