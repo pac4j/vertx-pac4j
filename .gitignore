@@ -9,3 +9,4 @@ bin
 *.iws
 .idea
 .DS_Store
+.vertx

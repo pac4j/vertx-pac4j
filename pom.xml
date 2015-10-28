@@ -19,7 +19,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <vertx.version>3.0.0</vertx.version>
-    <pac4j.version>1.8.0-RC1</pac4j.version>
+    <pac4j.version>1.8.0</pac4j.version>
   </properties>
 
   <dependencies>

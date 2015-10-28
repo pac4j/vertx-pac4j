@@ -22,7 +22,6 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
 import org.pac4j.core.context.BaseResponseContext;
 import org.pac4j.core.context.Cookie;
-import org.pac4j.core.context.Pac4jConstants;
 import org.pac4j.vertx.core.DefaultJsonConverter;
 
 import java.net.URI;
@@ -154,11 +153,6 @@ public class VertxWebContext extends BaseResponseContext {
             throw new IllegalStateException("Session required for use of getSessionAttribute");
         }
         return DefaultJsonConverter.getInstance().decodeObject(session.get(name));
-    }
-
-    @Override
-    public void invalidateSession() {
-        routingContext.session().remove(Pac4jConstants.USER_PROFILE);
     }
 
     @Override
