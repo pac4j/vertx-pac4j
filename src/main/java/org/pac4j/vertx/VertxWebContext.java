@@ -22,6 +22,7 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
 import org.pac4j.core.context.BaseResponseContext;
 import org.pac4j.core.context.Cookie;
+import org.pac4j.core.context.Pac4jConstants;
 import org.pac4j.vertx.core.DefaultJsonConverter;
 
 import java.net.URI;
@@ -139,7 +140,11 @@ public class VertxWebContext extends BaseResponseContext {
             throw new IllegalStateException("Session required for use of getSessionAttribute");
         }
         // Need to convert to something that can be passed round a distributed vert.x session cleanly
-        session.put(name, DefaultJsonConverter.getInstance().encodeObject(value));
+        if (value == null) {
+            session.remove(name);
+        } else {
+            session.put(name, DefaultJsonConverter.getInstance().encodeObject(value));
+        }
     }
 
     @Override
@@ -148,13 +153,12 @@ public class VertxWebContext extends BaseResponseContext {
         if (session == null) {
             throw new IllegalStateException("Session required for use of getSessionAttribute");
         }
-        // Need to convert to/from something that can be passed round a distributed vert.x session cleanly
         return DefaultJsonConverter.getInstance().decodeObject(session.get(name));
     }
 
     @Override
     public void invalidateSession() {
-        routingContext.session().destroy();
+        routingContext.session().remove(Pac4jConstants.USER_PROFILE);
     }
 
     @Override

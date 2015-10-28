@@ -19,6 +19,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
@@ -34,6 +35,7 @@ import org.pac4j.core.config.Config;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
 import org.pac4j.vertx.client.TestOAuth2AuthorizationGenerator;
 import org.pac4j.vertx.client.TestOAuth2Client;
+import org.pac4j.vertx.handler.impl.ApplicationLogoutHandler;
 import org.pac4j.vertx.handler.impl.CallbackDeployingPac4jAuthHandler;
 import org.pac4j.vertx.handler.impl.Pac4jAuthHandlerOptions;
 
@@ -54,6 +56,7 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     private static final String TEST_CLIENT_ID = "testClient";
     private static final String TEST_CLIENT_SECRET = "testClientSecret";
     private static final String TEST_OAUTH2_SUCCESS_URL = "http://localhost:9292/authSuccess";
+    private static final String LOGOUT_URL_FOR_CLIENT = "/logout?url=/";
     private static final String TEST_OAUTH2_TOKEN_URL = "http://localhost:9292/authToken";
     public static final String APPLICATION_SERVER = "http://localhost:8080";
     private static final String AUTH_RESULT_HANDLER_URL = APPLICATION_SERVER + "/authResult";
@@ -141,6 +144,36 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
         await(1, TimeUnit.SECONDS);
     }
 
+    @Test
+    public void testLogoutRequiresSubsequentReauthentication() throws Exception {
+        startOAuth2ProviderMimic("testUser1");
+        // Start a web server with no required authorities (i.e. only authentication required) for the secured resource
+        startWebServer(TEST_OAUTH2_SUCCESS_URL, optionsWithBothNamesProvided(), null);
+        HttpClient client = vertx.createHttpClient();
+        loginSuccessfullyExpectingAuthorizedUser(client, Void -> {
+            LOG.info("Successfully logged in, now about to logout");
+            logout(client, response -> {
+                // We don't need to actually bother to redirect to the url, we've validated that we're directed to following
+                // logout, what we do need to do, is with our session established, try and connect to a protected url again
+                // and ensure we get a redirect to the auth provider as expected
+                final HttpClientRequest successfulRequest = client.get(8080, "localhost", "/private/success.html");
+                getSessionCookie().ifPresent(cookie -> successfulRequest.putHeader("cookie", cookie));
+                successfulRequest.handler(resp -> {
+                    assertEquals(302, resp.statusCode());
+                    final String redirectToUrl = resp.getHeader("location");
+                    LOG.info("RedirectTo: " + redirectToUrl);
+                    // Check we're redirecting to a url derived from the auth provider url we passed to the web server
+                    assertTrue(redirectToUrl.startsWith(TEST_OAUTH2_SUCCESS_URL));
+                    testComplete();
+                })
+                .end();
+
+
+            });
+        });
+        await(1, TimeUnit.SECONDS);
+    }
+
     private void loginSuccessfullyExpectingAuthorizedUser(final Consumer<Void> subsequentActions) throws Exception {
         loginSuccessfullyExpectingAuthorizedUser(vertx.createHttpClient(), subsequentActions);
     }
@@ -168,6 +201,17 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     private void loginSuccessfully(final Handler<HttpClientResponse> finalResponseHandler) throws Exception {
         HttpClient client = vertx.createHttpClient();
         loginSuccessfully(client, finalResponseHandler);
+    }
+
+    private void logout(final HttpClient client, final Handler<HttpClientResponse> postLogoutActions) {
+        final HttpClientRequest logoutRequest = client.get(8080, "localhost", LOGOUT_URL_FOR_CLIENT);
+        getSessionCookie().ifPresent(cookie -> logoutRequest.putHeader("cookie", cookie));
+        logoutRequest.handler(response -> {
+            assertEquals(302, response.statusCode());
+            final String redirectToUrl = response.getHeader("location");
+            assertEquals(redirectToUrl, "/");
+            postLogoutActions.handle(response);
+        }).end();
     }
 
     private void loginSuccessfully(final HttpClient client, final Handler<HttpClientResponse> finalResponseHandler) throws Exception {
@@ -229,6 +273,8 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
 
         CallbackDeployingPac4jAuthHandler pac4jAuthHandler = authHandler(router, baseAuthUrl,options,  requiredPermissions);
         handlerDecorator.accept(pac4jAuthHandler);
+
+        router.route(HttpMethod.GET, "/logout").handler(new ApplicationLogoutHandler());
 
         startWebServer(router, pac4jAuthHandler);
     }
