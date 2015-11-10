@@ -29,10 +29,11 @@ import io.vertx.ext.web.handler.SessionHandler;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.vertx.ext.web.sstore.SessionStore;
 import org.junit.Test;
-import org.pac4j.core.client.Client;
 import org.pac4j.core.client.Clients;
 import org.pac4j.core.config.Config;
+import org.pac4j.core.context.HttpConstants;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
+import org.pac4j.vertx.client.TestOAuth1Client;
 import org.pac4j.vertx.client.TestOAuth2AuthorizationGenerator;
 import org.pac4j.vertx.client.TestOAuth2Client;
 import org.pac4j.vertx.handler.impl.ApplicationLogoutHandler;
@@ -46,6 +47,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+
+import static org.hamcrest.CoreMatchers.is;
 
 /**
  * @author Jeremy Prime
@@ -174,6 +177,29 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
         await(1, TimeUnit.SECONDS);
     }
 
+    @Test
+    public void testoAuth1LoginViaRequiresClientRedirect() throws Exception {
+        LOG.info("testSuccessfulOAuth2LoginWithoutAuthorities");
+        LOG.debug("Starting auth provider mimic");
+        startOAuth2ProviderMimic("testUser1");
+        // Start a web server with no required authorities (i.e. only authentication required) for the secured resource
+        startWebServer(TEST_OAUTH2_SUCCESS_URL, optionsWithBothNamesProvided(), null);
+        // Hit a correctly formed callback for the oAuth1 client
+        final HttpClient client = vertx.createHttpClient();
+        final HttpClientRequest request = client.get(8080, "localhost",
+                "/authResult?client_name=TestOAuth1Client&needs_client_redirection=true",
+                resp -> {
+                    assertThat(resp.statusCode(), is(302));
+                    final String newLoc = resp.getHeader(HttpConstants.LOCATION_HEADER);
+                    assertThat(newLoc, is( TestOAuth1Client.TEST_AUTHORIZATION_URL + "?authToken=" + TestOAuth1Client.TEST_REQUEST_TOKEN));
+                    // We only care that the first step works
+                    testComplete();
+                }
+        );
+        request.end();
+        await(6, TimeUnit.SECONDS);
+    }
+
     private void loginSuccessfullyExpectingAuthorizedUser(final Consumer<Void> subsequentActions) throws Exception {
         loginSuccessfullyExpectingAuthorizedUser(vertx.createHttpClient(), subsequentActions);
     }
@@ -284,7 +310,7 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
                                                           final Pac4jAuthHandlerOptions options,
                                                           final List<String> requiredPermissions) {
         Pac4jAuthProvider authProvider = new Pac4jAuthProvider();
-        return new CallbackDeployingPac4jAuthHandler(vertx, config(client(baseAuthUrl), requiredPermissions), router, authProvider, options);
+        return new CallbackDeployingPac4jAuthHandler(vertx, config(new Clients(oAuth2Client(baseAuthUrl), testOAuth1Client()), requiredPermissions), router, authProvider, options);
     }
 
     private void redirectToUrl(final String redirectUrl, final HttpClient client, final Handler<HttpClientResponse> resultHandler) {
@@ -298,14 +324,12 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
         return Optional.ofNullable(sessionCookie.get());
     }
 
-    private Config config(final Client client, List<String> requiredPermissions) {
-        final Clients clients = new Clients();
-        clients.setClients(client);
+    private Config config(final Clients clients, List<String> requiredPermissions) {
         clients.setCallbackUrl("http://localhost:8080/authResult");
         return new  Config(clients, authorizers(requiredPermissions));
     }
 
-    private TestOAuth2Client client(final String baseAuthUrl) {
+    private TestOAuth2Client oAuth2Client(final String baseAuthUrl) {
         TestOAuth2Client client = new TestOAuth2Client();
         client.setCallbackUrl("http://localhost:8080/authResult");
         client.setKey(TEST_CLIENT_ID);
@@ -314,6 +338,14 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
         client.setIncludeClientNameInCallbackUrl(true);
         client.setAuthorizationUrlTemplate(baseAuthUrl + "?client_id=%s&redirect_uri=%s&state=%s");
         client.addAuthorizationGenerator(new TestOAuth2AuthorizationGenerator());
+        return client;
+    }
+
+    private TestOAuth1Client testOAuth1Client() {
+        TestOAuth1Client client =  new TestOAuth1Client();
+        client.setKey(TEST_CLIENT_ID);
+        client.setSecret(TEST_CLIENT_SECRET);
+        client.setName("TestOAuth1Client");
         return client;
     }
 

@@ -22,6 +22,7 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
 import org.pac4j.core.context.BaseResponseContext;
 import org.pac4j.core.context.Cookie;
+import org.pac4j.core.context.HttpConstants;
 import org.pac4j.vertx.core.DefaultJsonConverter;
 
 import java.net.URI;
@@ -31,6 +32,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -190,8 +192,21 @@ public class VertxWebContext extends BaseResponseContext {
     }
 
     @Override
+    public Map<String, String> getResponseHeaders() {
+        Map<String, String> headers =  routingContext.response().headers().entries().stream()
+            .collect(Collectors.toMap((Function<Map.Entry<String, String>, String>) Map.Entry::getKey,
+                    (Function<Map.Entry<String, String>, String>) Map.Entry::getValue));
+        return headers;
+    }
+
+    @Override
+    public String getResponseLocation() {
+        return getResponseHeaders().get(HttpConstants.LOCATION_HEADER);
+    }
+
+    @Override
     public void setResponseCharacterEncoding(String s) {
-        routingContext.response().headers().add("Content-Encoding", s);
+        setResponseHeader("Content-Encoding", s);
     }
 
     @Override
