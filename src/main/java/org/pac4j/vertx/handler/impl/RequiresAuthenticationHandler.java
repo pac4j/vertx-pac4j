@@ -174,6 +174,7 @@ public class RequiresAuthenticationHandler extends AuthHandlerImpl {
         // blocking i/o such as database lookups
         vertx.executeBlocking(future -> {
                     future.complete(authorizationChecker.isAuthorized(new VertxWebContext(context), ((Pac4jUser) user).pac4jUserProfile(), authorizerName, config.getAuthorizers()));
+                    context.setUser(user);
                 },
                 authHandler
         );

@@ -30,9 +30,14 @@ import org.pac4j.core.profile.UserProfile;
 public class Pac4jUser extends AbstractUser {
 
   private final UserProfile userProfile;
+  private final JsonObject principal;
 
   public Pac4jUser(UserProfile userProfile) {
     this.userProfile = userProfile;
+    principal = new JsonObject();
+    userProfile.getAttributes().keySet().stream().forEach(key -> {
+      principal.put(key, userProfile.getAttribute(key));
+    });
   }
 
   @Override
@@ -46,7 +51,7 @@ public class Pac4jUser extends AbstractUser {
 
   @Override
   public JsonObject principal() {
-    return null;
+    return principal;
   }
 
   @Override
