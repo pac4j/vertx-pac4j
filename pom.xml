@@ -35,6 +35,14 @@
       <version>${vertx.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-rx-java</artifactId>
+      <version>${vertx.version}</version>
+      <scope>compile</scope>
+    </dependency>
+
+
 
     <!-- Pac4j -->
     <dependency>
@@ -60,6 +68,11 @@
     <dependency>
       <groupId>org.pac4j</groupId>
       <artifactId>pac4j-oidc</artifactId>
+      <version>${pac4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.pac4j</groupId>
+      <artifactId>pac4j-cas</artifactId>
       <version>${pac4j.version}</version>
     </dependency>
 

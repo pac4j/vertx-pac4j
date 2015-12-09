@@ -1,0 +1,90 @@
+/*
+  Copyright 2015 - 2015 pac4j organization
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+ */
+package org.pac4j.vertx.cas;
+
+import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import io.vertx.rxjava.ext.web.sstore.SessionStore;
+import org.apache.commons.lang3.StringUtils;
+import org.pac4j.cas.logout.NoLogoutHandler;
+import org.pac4j.core.context.Pac4jConstants;
+import org.pac4j.core.context.WebContext;
+import org.pac4j.core.exception.TechnicalException;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+/**
+ * @author Jeremy Prime
+ * @since 2.0.0
+ */
+public abstract class VertxSharedDataLogoutHandler extends NoLogoutHandler {
+
+    private static final Logger LOG = LoggerFactory.getLogger(VertxSharedDataLogoutHandler.class);
+    public static final String PAC4J_CAS_SHARED_DATA_KEY = "pac4jCasSharedData";
+
+    // Mimic https://github.com/pac4j/play-pac4j/blob/master/play-pac4j-java/src/main/java/org/pac4j/play/cas/logout/PlayCacheLogoutHandler.java
+    // With Shared data replacing cache and vertx session store as the main session info
+    protected final Vertx vertx;
+    private final SessionStore sessionStore;
+    protected final int blockingTimeoutSeconds;
+
+    public VertxSharedDataLogoutHandler(final Vertx vertx, final io.vertx.ext.web.sstore.SessionStore sessionStore, int blockingTimeoutSeconds) {
+        this.vertx = vertx;
+        this.blockingTimeoutSeconds = blockingTimeoutSeconds;
+        this.sessionStore = SessionStore.newInstance(sessionStore);
+    }
+
+    @Override
+    public void recordSession(WebContext context, String ticket) {
+
+        String sessionId = (String) context.getSessionIdentifier();
+        doRecordSession(sessionId, ticket);
+
+    }
+
+    @Override
+    public void destroySession(WebContext context) {
+        final String logoutRequest = context.getRequestParameter("logoutRequest");
+        LOG.debug("logoutRequest: {}", logoutRequest);
+        final String ticket = StringUtils.substringBetween(logoutRequest, "SessionIndex>", "</");
+        LOG.debug("extract ticket: {}", ticket);
+        // get the session id first, then remove the pac4j profile from that session
+        final CompletableFuture<Void> userLogoutFuture = new CompletableFuture<>();
+        final String sessionId = getSessionId(ticket);
+        sessionStore.getObservable(sessionId)
+                .map(session -> session.remove(Pac4jConstants.USER_PROFILE))
+                .doOnError(e -> {
+                    e.printStackTrace();
+                })
+                .subscribe(s -> userLogoutFuture.complete(null));
+        try {
+            userLogoutFuture.get(blockingTimeoutSeconds, TimeUnit.SECONDS);
+        } catch (InterruptedException|ExecutionException|TimeoutException e) {
+            userLogoutFuture.completeExceptionally(new TechnicalException(e));
+        }
+
+        doDestroySession(ticket);
+    }
+
+    protected abstract void doRecordSession(final String sessionId, final String ticket);
+    protected abstract void doDestroySession(final String ticket);
+    protected abstract String getSessionId(final String ticket);
+
+}

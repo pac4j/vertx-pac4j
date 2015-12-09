@@ -70,25 +70,30 @@ public class CallbackHandler implements Handler<RoutingContext> {
         CommonHelper.assertNotNull("client", client);
         CommonHelper.assertTrue(client instanceof IndirectClient, "only indirect clients are allowed on the callback url");
 
-        final Credentials credentials;
-        try {
-            credentials = client.getCredentials(webContext);
-        } catch (final RequiresHttpAction e) {
-            LOG.warn("Requires http action: " + e.getCode());
-            httpActionHandler.handle(e.getCode(), webContext);
-            return;
-        }
+        // Annoyingly because client.getCredentials can force a blocking wrap of a non-blocking call (eg when using clustered shared data)
+        // we have to wrap this in an executeBlocking call so that the future will be got on a non-eventloop thread!
         vertx.<CommonProfile>executeBlocking(future -> {
-            final CommonProfile profile = (CommonProfile) client.getUserProfile(credentials, webContext);
-            future.complete(profile);
-        }, result -> {
+            try {
+                final Credentials credentials = client.getCredentials(webContext);
+                final CommonProfile profile = (CommonProfile) client.getUserProfile(credentials, webContext);
+                future.complete(profile);
+            } catch (final RequiresHttpAction e) {
+                LOG.warn("Requires http action: " + e.getCode());
+                httpActionHandler.handle(e.getCode(), webContext);
+                future.fail(e);
+            }
+        }, false, // Don't want to enforce ordering for this
+        result -> {
             if (result.succeeded()) {
                 Optional.ofNullable(result.result()).ifPresent(commonProfile -> {
                     profileManager.save(true, commonProfile);
                 });
                 redirectToOriginallyRequestedUrl(webContext);
             } else {
-                event.fail(new TechnicalException("Failed to retrieve user profile"));
+                // We will already have handled RequiresHttpAction, see above
+                if (!(result.cause() instanceof RequiresHttpAction)) {
+                    event.fail(new TechnicalException("Failed to retrieve user profile"));
+                }
             }
         });
     }
