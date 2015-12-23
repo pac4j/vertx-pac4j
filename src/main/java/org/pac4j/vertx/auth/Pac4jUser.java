@@ -97,7 +97,7 @@ public class Pac4jUser extends AbstractUser {
         this.userProfile = profile;
         principal = new JsonObject();
         userProfile.getAttributes().keySet().stream().forEach(key -> {
-            principal.put(key, userProfile.getAttribute(key));
+            principal.put(key, userProfile.getAttribute(key).toString());
         });
     }
 }
