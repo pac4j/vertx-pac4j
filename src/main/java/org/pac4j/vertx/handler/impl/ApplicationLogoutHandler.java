@@ -21,6 +21,7 @@ import org.pac4j.core.context.HttpConstants;
 import org.pac4j.core.context.Pac4jConstants;
 import org.pac4j.core.profile.ProfileManager;
 import org.pac4j.core.util.CommonHelper;
+import org.pac4j.vertx.VertxProfileManager;
 import org.pac4j.vertx.VertxWebContext;
 
 import java.util.regex.Pattern;
@@ -46,7 +47,7 @@ public class ApplicationLogoutHandler implements Handler<RoutingContext> {
         // also persist the user to the session)
         // and redirect the user to an appropriate endpoint
         final VertxWebContext webContext = new VertxWebContext(routingContext);
-        final ProfileManager manager = new ProfileManager(webContext);
+        final ProfileManager manager = new VertxProfileManager(webContext);
         manager.logout();
         routingContext.setUser(null);
 

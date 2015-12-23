@@ -18,10 +18,15 @@ package org.pac4j.vertx.auth;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.AbstractUser;
 import io.vertx.ext.auth.AuthProvider;
 import org.pac4j.core.profile.UserProfile;
+import org.pac4j.vertx.core.DefaultJsonConverter;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 /**
  * @author Jeremy Prime
@@ -29,37 +34,70 @@ import org.pac4j.core.profile.UserProfile;
  */
 public class Pac4jUser extends AbstractUser {
 
-  private final UserProfile userProfile;
-  private final JsonObject principal;
+    private UserProfile userProfile;
+    private JsonObject principal;
 
-  public Pac4jUser(UserProfile userProfile) {
-    this.userProfile = userProfile;
-    principal = new JsonObject();
-    userProfile.getAttributes().keySet().stream().forEach(key -> {
-      principal.put(key, userProfile.getAttribute(key));
-    });
-  }
-
-  @Override
-  protected void doIsPermitted(String permission, Handler<AsyncResult<Boolean>> resultHandler) {
-    if (userProfile.getPermissions().contains(permission)) {
-      resultHandler.handle(Future.succeededFuture(true));
-    } else {
-      resultHandler.handle(Future.succeededFuture(false));
+    public Pac4jUser() {
+        // I think this noop default constructor is required for deserialization from a clustered session
     }
-  }
 
-  @Override
-  public JsonObject principal() {
-    return principal;
-  }
+    public Pac4jUser(UserProfile userProfile) {
+        setUserProfile(userProfile);
+    }
 
-  @Override
-  public void setAuthProvider(AuthProvider authProvider) {
+    @Override
+    protected void doIsPermitted(String permission, Handler<AsyncResult<Boolean>> resultHandler) {
+        if (userProfile.getPermissions().contains(permission)) {
+            resultHandler.handle(Future.succeededFuture(true));
+        } else {
+            resultHandler.handle(Future.succeededFuture(false));
+        }
+    }
 
-  }
+    @Override
+    public JsonObject principal() {
+        return principal;
+    }
 
-  public UserProfile pac4jUserProfile() {
-    return userProfile;
-  }
+    @Override
+    public void setAuthProvider(AuthProvider authProvider) {
+    }
+
+    @Override
+    public void writeToBuffer(Buffer buff) {
+        super.writeToBuffer(buff);
+        // Now write the remainder of our stuff to the buffer;
+        final String json = principal.encodePrettily();
+        byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
+        buff.appendInt(jsonBytes.length)
+            .appendBytes(jsonBytes);
+
+    }
+
+    @Override
+    public int readFromBuffer(int pos, Buffer buffer) {
+        pos = super.readFromBuffer(pos, buffer);
+        final int jsonByteCount = buffer.getInt(pos);
+        pos += 4;
+        final byte[] jsonBytes = buffer.getBytes(pos, pos + jsonByteCount);
+        pos += jsonByteCount;
+        final String json = new String(jsonBytes, StandardCharsets.UTF_8);
+        final UserProfile userProfile = (UserProfile) DefaultJsonConverter.getInstance().decodeObject(json);
+        setUserProfile(userProfile);
+        return pos;
+    }
+
+    public UserProfile pac4jUserProfile() {
+        return userProfile;
+    }
+
+    private final void setUserProfile(UserProfile profile) {
+
+        Objects.requireNonNull(profile);
+        this.userProfile = profile;
+        principal = new JsonObject();
+        userProfile.getAttributes().keySet().stream().forEach(key -> {
+            principal.put(key, userProfile.getAttribute(key));
+        });
+    }
 }

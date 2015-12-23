@@ -17,6 +17,7 @@ package org.pac4j.vertx;
 
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
@@ -33,6 +34,8 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import static org.hamcrest.CoreMatchers.is;
+
 /**
  * @author Jeremy Prime
  * @since 2.0.0
@@ -41,10 +44,12 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
 
     private static final String AUTH_HEADER_NAME = "Authorization";
     private static final String BASIC_AUTH_PREFIX = "Basic ";
-    private static final String TEST_BASIC_AUTH_HEADER = BASIC_AUTH_PREFIX + Base64.encodeBase64String("testUser:testUser".getBytes());
-    private static final String TEST_FAILING_BASIC_AUTH_HEADER = BASIC_AUTH_PREFIX + Base64.encodeBase64String("testUser:testUser2".getBytes());
+    public static final String TEST_USER_NAME = "testUser";
+    private static final String TEST_BASIC_AUTH_HEADER = BASIC_AUTH_PREFIX + Base64.encodeBase64String((TEST_USER_NAME + ":testUser").getBytes());
+    private static final String TEST_FAILING_BASIC_AUTH_HEADER = BASIC_AUTH_PREFIX + Base64.encodeBase64String((TEST_USER_NAME + ":testUser2").getBytes());
     public static final String PROTECTED_RESOURCE_URL = "/private/success.html";
     public static final String BASIC_AUTH_CLIENT = "BasicAuthClient";
+    private static final String USERNAME_FIELD = "username";
 
     @Test
     public void testSuccessfulLogin() throws Exception {
@@ -57,6 +62,12 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
     public void testFailedLogin() throws Exception {
 
         testLoginAttempt(TEST_FAILING_BASIC_AUTH_HEADER, 401, unauthorizedContentValidator());
+
+    }
+
+    @Override
+    protected void validateProtectedResourceContent(JsonObject jsonObject) {
+        assertThat(jsonObject.getString(USERNAME_FIELD), is(TEST_USER_NAME));
 
     }
 
@@ -77,10 +88,6 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
         });
         request.end();
         await(1, TimeUnit.SECONDS);
-    }
-
-    private Consumer<String> protectedResourceContentValidator() {
-        return body -> assertEquals("authenticationSuccess", body);
     }
 
     private Consumer<String> unauthorizedContentValidator() {

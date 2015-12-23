@@ -26,10 +26,12 @@ import io.vertx.ext.web.sstore.SessionStore;
 import io.vertx.rxjava.core.http.HttpClientRequest;
 import io.vertx.rxjava.core.http.HttpClientResponse;
 import io.vertx.rxjava.core.http.HttpServer;
+import io.vertx.rxjava.ext.auth.AuthProvider;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.handler.CookieHandler;
 import io.vertx.rxjava.ext.web.handler.SessionHandler;
+import io.vertx.rxjava.ext.web.handler.UserSessionHandler;
 import io.vertx.rxjava.ext.web.sstore.LocalSessionStore;
 import io.vertx.test.core.VertxTestBase;
 import org.junit.After;
@@ -41,7 +43,9 @@ import org.pac4j.core.client.Clients;
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.HttpConstants;
 import org.pac4j.core.profile.ProfileManager;
+import org.pac4j.vertx.VertxProfileManager;
 import org.pac4j.vertx.VertxWebContext;
+import org.pac4j.vertx.auth.Pac4jAuthProvider;
 import org.pac4j.vertx.handler.impl.CallbackHandler;
 
 import java.net.URLEncoder;
@@ -63,6 +67,7 @@ public class ClusteredSharedDataLogoutHandlerIntegrationTest extends VertxTestBa
 
     private static final String USER_ID = "userId";
     private static final String STORED_SESSION_ID = "storedSessionId";
+
     public static final String QUERY_STATE_URL = "/cas_state";
     private static final String TEST_USER_ID = "testUser1";
     private static final String SESSION_ID = "sessionId";
@@ -122,6 +127,7 @@ public class ClusteredSharedDataLogoutHandlerIntegrationTest extends VertxTestBa
         invokeCasLogout();
         // Now we should no longer have a user profile or stored session id
         assertNullUserProfileAndStoredSessionId();
+
     }
 
     /**
@@ -236,8 +242,10 @@ public class ClusteredSharedDataLogoutHandlerIntegrationTest extends VertxTestBa
         final LocalSessionStore sessionStore = LocalSessionStore.create(rxVertx);
         final io.vertx.ext.web.sstore.SessionStore sstoreDelegate = (SessionStore) sessionStore.getDelegate();
 
+        final AuthProvider authProvider = AuthProvider.newInstance(new Pac4jAuthProvider());
         rxRouter.route().handler(CookieHandler.create());
         rxRouter.route().handler(SessionHandler.create(sessionStore));
+        rxRouter.route().handler(UserSessionHandler.create(authProvider));
         rxRouter.route(HttpMethod.GET, QUERY_STATE_URL).handler(queryHandler());
         rxRouter.route(HttpMethod.GET, SERVICE_VALIDATE_URL).handler(serviceValidateHandler());
         final CallbackHandler callbackHandler = new CallbackHandler((Vertx) rxVertx.getDelegate(), config(sstoreDelegate));
@@ -287,7 +295,7 @@ public class ClusteredSharedDataLogoutHandlerIntegrationTest extends VertxTestBa
     }
 
     private ProfileManager<CasProfile> profileManager(final RoutingContext routingContext) {
-        return new ProfileManager<>(new VertxWebContext((io.vertx.ext.web.RoutingContext) routingContext.getDelegate()));
+        return new VertxProfileManager<>(new VertxWebContext((io.vertx.ext.web.RoutingContext) routingContext.getDelegate()));
     }
 
     // Trivial cas response

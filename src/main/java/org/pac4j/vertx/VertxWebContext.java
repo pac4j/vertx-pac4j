@@ -23,6 +23,7 @@ import io.vertx.ext.web.Session;
 import org.pac4j.core.context.BaseResponseContext;
 import org.pac4j.core.context.Cookie;
 import org.pac4j.core.context.HttpConstants;
+import org.pac4j.vertx.auth.Pac4jUser;
 import org.pac4j.vertx.core.DefaultJsonConverter;
 
 import java.net.URI;
@@ -247,6 +248,18 @@ public class VertxWebContext extends BaseResponseContext {
     @Override
     public void addResponseCookie(Cookie cookie) {
         routingContext.addCookie(io.vertx.ext.web.Cookie.cookie(cookie.getName(), cookie.getValue()));
+    }
+
+    public Pac4jUser getVertxUser() {
+        return (Pac4jUser) routingContext.user();
+    }
+
+    public void removeVertxUser() {
+        routingContext.clearUser();
+    }
+
+    public void setVertxUser(final Pac4jUser pac4jUser) {
+        routingContext.setUser(pac4jUser);
     }
 
 }

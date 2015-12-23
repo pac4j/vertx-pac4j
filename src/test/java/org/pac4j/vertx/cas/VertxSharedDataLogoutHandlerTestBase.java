@@ -4,19 +4,21 @@ import io.vertx.core.Vertx;
 import io.vertx.ext.web.Session;
 import io.vertx.ext.web.sstore.SessionStore;
 import io.vertx.test.core.VertxTestBase;
-import org.pac4j.core.context.BaseResponseContext;
-import org.pac4j.core.context.Cookie;
-import org.pac4j.core.context.WebContext;
 import org.pac4j.core.profile.ProfileManager;
 import org.pac4j.core.profile.UserProfile;
+import org.pac4j.vertx.VertxProfileManager;
+import org.pac4j.vertx.VertxWebContext;
+import org.pac4j.vertx.auth.Pac4jUser;
 import org.pac4j.vertx.profile.TestOAuth2Profile;
 
-import java.util.Collection;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Jeremy Prime
@@ -27,9 +29,11 @@ public class VertxSharedDataLogoutHandlerTestBase extends VertxTestBase {
 
     public static final String TEST_USER_ID = "testUserId";
     protected static final String TEST_TICKET = "testTicket"; // Think this is sufficient for our purposes
+    private static final String SESSION_USER_HOLDER_KEY = "__vertx.userHolder"; // Where vert.x stores the current vert.x user - we need to be able to clear this out
 
-    protected void simulateLogin(WebContext context) {
-        final ProfileManager profileManager = new ProfileManager(context);
+
+    protected void simulateLogin(VertxWebContext context) {
+        final ProfileManager profileManager = new VertxProfileManager(context);
         final TestOAuth2Profile userProfile = new TestOAuth2Profile();
         userProfile.setId(TEST_USER_ID);
         profileManager.save(true, userProfile);
@@ -52,108 +56,56 @@ public class VertxSharedDataLogoutHandlerTestBase extends VertxTestBase {
     protected String recordSession(final Vertx suppliedVertx, final VertxSharedDataLogoutHandler casLogoutHandler, final SessionStore sessionStore) throws Exception {
         final Session session = getSession(sessionStore);
         final VertxSharedDataLogoutHandler handler = casLogoutHandler;
-        final WebContext context = new DummyWebContext(session);
+        final VertxWebContext context = dummyWebContext(session);
         handler.recordSession(context, TEST_TICKET);
         return session.id(); // Return the actual session id for test validation
     }
 
-    /**
-     * Simple dummy context wrapper so we can just focus on the behaviours we care about for a web context, not
-     * actually use a full vert.x webcontext or try and invent a full cas stack including server for an integration
-     * test
+    /*
+    Factory method to stub a vertx web context, so we can focus on the behaviours we care about from the point of view of
+    this test. I would prefer not to use a mock for this, but stubbing a full vertx web context just to extract a small
+    portion of the behaviour looks even more painful
      */
-    public static class DummyWebContext extends BaseResponseContext {
+    protected static VertxWebContext dummyWebContext(final Session session) {
+        final VertxWebContext vertxWebContext = mock(VertxWebContext.class);
 
-        private final Session session;
+        final AtomicReference<Pac4jUser> loggedInUser = new AtomicReference<>();
 
-        protected DummyWebContext(Session session) {
-            this.session = session;
-        }
+        when(vertxWebContext.getRequestParameter("logoutRequest")).thenReturn("<samlp:LogoutRequest\n" +
+                "    xmlns:samlp=\"urn:oasis:names:tc:SAML:2.0:protocol\"\n" +
+                "    xmlns:saml=\"urn:oasis:names:tc:SAML:2.0:assertion\"\n" +
+                "    ID=\"[RANDOM ID]\"\n" +
+                "    Version=\"2.0\"\n" +
+                "    IssueInstant=\"[CURRENT DATE/TIME]\">\n" +
+                "    <saml:NameID>@NOT_USED@</saml:NameID>\n" +
+                "    <samlp:SessionIndex>testTicket</samlp:SessionIndex>\n" +
+                "</samlp:LogoutRequest>");
 
-        @Override
-        public String getRequestParameter(String name) {
-            if (name.equals("logoutRequest")) {
-                return "<samlp:LogoutRequest\n" +
-                        "    xmlns:samlp=\"urn:oasis:names:tc:SAML:2.0:protocol\"\n" +
-                        "    xmlns:saml=\"urn:oasis:names:tc:SAML:2.0:assertion\"\n" +
-                        "    ID=\"[RANDOM ID]\"\n" +
-                        "    Version=\"2.0\"\n" +
-                        "    IssueInstant=\"[CURRENT DATE/TIME]\">\n" +
-                        "    <saml:NameID>@NOT_USED@</saml:NameID>\n" +
-                        "    <samlp:SessionIndex>testTicket</samlp:SessionIndex>\n" +
-                        "</samlp:LogoutRequest>";
-            }
+        when(vertxWebContext.getSessionAttribute(anyString())).thenAnswer(invocation -> {
+            final String key = (String) invocation.getArguments()[0];
+            return session.get(key);
+        });
+
+        doAnswer(invocation -> {
+            final String key = (String) invocation.getArguments()[0];
+            final Object value = invocation.getArguments()[1];
+            session.put(key, value);
             return null;
-        }
+        }).when(vertxWebContext).setSessionAttribute(anyString(), anyObject());
 
-        @Override
-        public Map<String, String[]> getRequestParameters() {
+        when(vertxWebContext.getSessionIdentifier()).thenReturn(session.id());
+
+        // annoyingly we have to replicate vert.x internals to check cas will work ok
+        when(vertxWebContext.getVertxUser()).thenAnswer(invocation -> session.get(SESSION_USER_HOLDER_KEY));
+
+        doAnswer(invocation -> {
+            final Pac4jUser pac4jUser = (Pac4jUser) invocation.getArguments()[0];
+            // annoyingly we have to replicate vert.x internals to check cas will work ok
+            session.put(SESSION_USER_HOLDER_KEY, pac4jUser);
             return null;
-        }
+        }).when(vertxWebContext).setVertxUser(anyObject());
 
-        @Override
-        public Object getRequestAttribute(String name) {
-            return null;
-        }
-
-        @Override
-        public void setRequestAttribute(String name, Object value) {
-
-        }
-
-        @Override
-        public String getRequestHeader(String name) {
-            return null;
-        }
-
-        @Override
-        public void setSessionAttribute(String name, Object value) {
-            session.put(name, value);
-        }
-
-        @Override
-        public Object getSessionAttribute(String name) {
-            return session.get(name);
-        }
-
-        @Override
-        public Object getSessionIdentifier() {
-            return session.id();
-        }
-
-        @Override
-        public String getRequestMethod() {
-            return null;
-        }
-
-        @Override
-        public String getRemoteAddr() {
-            return null;
-        }
-
-        @Override
-        public String getServerName() {
-            return null;
-        }
-
-        @Override
-        public int getServerPort() {
-            return 0;
-        }
-
-        @Override
-        public String getScheme() {
-            return null;
-        }
-
-        @Override
-        public String getFullRequestURL() {
-            return null;
-        }
-
-        @Override
-        public Collection<Cookie> getRequestCookies() {
-            return null;
-        }
+        return vertxWebContext;
     }
+
 }

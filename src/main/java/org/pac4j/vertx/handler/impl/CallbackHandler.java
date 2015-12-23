@@ -30,6 +30,7 @@ import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.core.profile.ProfileManager;
 import org.pac4j.core.util.CommonHelper;
+import org.pac4j.vertx.VertxProfileManager;
 import org.pac4j.vertx.VertxWebContext;
 import org.pac4j.vertx.http.DefaultHttpActionAdapter;
 import org.pac4j.vertx.http.HttpActionAdapter;
@@ -64,7 +65,7 @@ public class CallbackHandler implements Handler<RoutingContext> {
 
         // Can we complete the authentication process here?
         final VertxWebContext webContext = new VertxWebContext(event);
-        final ProfileManager profileManager = new ProfileManager(webContext);
+        final ProfileManager profileManager = new VertxProfileManager(webContext);
         final Client client = config.getClients().findClient(webContext);
 
         CommonHelper.assertNotNull("client", client);

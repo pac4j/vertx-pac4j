@@ -20,12 +20,14 @@ import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.AuthHandler;
 import io.vertx.ext.web.handler.CookieHandler;
 import io.vertx.ext.web.handler.SessionHandler;
+import io.vertx.ext.web.handler.UserSessionHandler;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.vertx.ext.web.sstore.SessionStore;
 import org.junit.Test;
@@ -49,6 +51,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 
 /**
  * @author Jeremy Prime
@@ -138,10 +141,7 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
             successfulRequest.handler(resp -> {
 
                 assertEquals(200, resp.statusCode());
-                resp.bodyHandler(body -> {
-                    assertEquals("authenticationSuccess", body.toString());
-                    testComplete();
-                });
+                validateLoginSuccessResponse(resp, v -> testComplete());
             }).end();
         });
         await(1, TimeUnit.SECONDS);
@@ -200,6 +200,11 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
         await(6, TimeUnit.SECONDS);
     }
 
+    @Override
+    protected void validateProtectedResourceContent(JsonObject jsonObject) {
+        assertThat(jsonObject.getString("access_token"), is(notNullValue()));
+    }
+
     private void loginSuccessfullyExpectingAuthorizedUser(final Consumer<Void> subsequentActions) throws Exception {
         loginSuccessfullyExpectingAuthorizedUser(vertx.createHttpClient(), subsequentActions);
     }
@@ -207,10 +212,7 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     private void loginSuccessfullyExpectingAuthorizedUser(final HttpClient client, final Consumer<Void> subsequentActions) throws Exception {
         loginSuccessfully(client, finalRedirectResponse -> {
             assertEquals(200, finalRedirectResponse.statusCode());
-            finalRedirectResponse.bodyHandler(body -> {
-                assertEquals("authenticationSuccess", body.toString());
-                subsequentActions.accept(null);
-            });
+            validateLoginSuccessResponse(finalRedirectResponse, subsequentActions);
         });
     }
 
@@ -292,12 +294,15 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
                                 final List<String> requiredPermissions,
                                 final Consumer<AuthHandler> handlerDecorator) throws Exception {
         Router router = Router.router(vertx);
+        Pac4jAuthProvider authProvider = new Pac4jAuthProvider();
+
         SessionStore sessionStore = sessionStore();
 
         router.route().handler(CookieHandler.create());
         router.route().handler(sessionHandler(sessionStore));
+        router.route().handler(UserSessionHandler.create(authProvider));
 
-        CallbackDeployingPac4jAuthHandler pac4jAuthHandler = authHandler(router, baseAuthUrl,options,  requiredPermissions);
+        CallbackDeployingPac4jAuthHandler pac4jAuthHandler = authHandler(router, authProvider, baseAuthUrl,options,  requiredPermissions);
         handlerDecorator.accept(pac4jAuthHandler);
 
         router.route(HttpMethod.GET, "/logout").handler(new ApplicationLogoutHandler());
@@ -306,10 +311,10 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     }
 
     private CallbackDeployingPac4jAuthHandler authHandler(final Router router,
+                                                          final Pac4jAuthProvider authProvider,
                                                           final String baseAuthUrl,
                                                           final Pac4jAuthHandlerOptions options,
                                                           final List<String> requiredPermissions) {
-        Pac4jAuthProvider authProvider = new Pac4jAuthProvider();
         return new CallbackDeployingPac4jAuthHandler(vertx, config(new Clients(oAuth2Client(baseAuthUrl), testOAuth1Client()), requiredPermissions), router, authProvider, options);
     }
 

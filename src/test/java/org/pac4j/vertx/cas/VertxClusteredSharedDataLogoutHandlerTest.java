@@ -24,9 +24,9 @@ import io.vertx.ext.web.Session;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.vertx.ext.web.sstore.SessionStore;
 import org.junit.Test;
-import org.pac4j.core.context.WebContext;
-import org.pac4j.core.profile.ProfileManager;
 import org.pac4j.core.profile.UserProfile;
+import org.pac4j.vertx.VertxProfileManager;
+import org.pac4j.vertx.VertxWebContext;
 import rx.Observable;
 
 import java.util.concurrent.CompletableFuture;
@@ -34,6 +34,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 
 /**
@@ -125,7 +126,8 @@ public class VertxClusteredSharedDataLogoutHandlerTest extends VertxSharedDataLo
         final Vertx delegate = (Vertx) clusteredVertx.getDelegate();
         final SessionStore sessionStore = LocalSessionStore.create(delegate);
         final Session session = getSession(sessionStore);
-        final WebContext webContext = new DummyWebContext(session);
+        final VertxWebContext webContext = dummyWebContext(session);
+        simulateLogin(webContext);
         final VertxClusteredSharedDataLogoutHandler sharedDataLogoutHandler = new VertxClusteredSharedDataLogoutHandler(delegate, sessionStore);
         final CompletableFuture<Void> putSessionIdFuture = new CompletableFuture<Void>();
 
@@ -135,6 +137,7 @@ public class VertxClusteredSharedDataLogoutHandlerTest extends VertxSharedDataLo
                 .subscribe(v -> putSessionIdFuture.complete(v));
 
         putSessionIdFuture.get(1, TimeUnit.SECONDS); // Wait here until setup is complete or we timeout
+        assertThat(webContext.getVertxUser(), is(notNullValue()));
 
         // Now our starting state should be in place so now to destroy the session and check results
         final CompletableFuture<Void> sessionDestructionFuture = new CompletableFuture<>();
@@ -144,12 +147,12 @@ public class VertxClusteredSharedDataLogoutHandlerTest extends VertxSharedDataLo
         }, false)
         .doOnError(t -> sessionDestructionFuture.completeExceptionally(t))
         .subscribe(v -> sessionDestructionFuture.complete(v));
-        sessionDestructionFuture.get(1, TimeUnit.SECONDS); // Wait till we think session destruction is complete or we timeotu
+        sessionDestructionFuture.get(1, TimeUnit.SECONDS); // Wait till we think session destruction is complete or we timeo
 
         // Now check final state
         final String actualSessionId = getFromAsyncMap(clusteredVertx, TEST_TICKET);
         assertThat(actualSessionId, is(nullValue()));
-        final UserProfile profileFromSession = new ProfileManager<>(webContext).get(true);
+        final UserProfile profileFromSession = new VertxProfileManager(webContext).get(true);
         assertThat(profileFromSession, is(nullValue()));
 
     }
@@ -171,33 +174,6 @@ public class VertxClusteredSharedDataLogoutHandlerTest extends VertxSharedDataLo
         return vertxFuture.get(2, TimeUnit.SECONDS);
     }
 
-    private CompletableFuture<WebContext> webContextFuture(CompletableFuture<Session> sessionFuture) {
-        return sessionFuture.thenApply(session -> {
-                final WebContext context = new DummyWebContext(session);
-                simulateLogin(context);
-                return context;
-            });
-    }
-
-    private CompletableFuture<Vertx> vertxCompletableFuture(VertxOptions options) {
-        final CompletableFuture<Vertx> clusteredVertxFuture = new CompletableFuture<>();
-        Vertx.clusteredVertx(options, asyncRsult -> {
-            if(asyncRsult.succeeded())
-                clusteredVertxFuture.complete(asyncRsult.result());
-        });
-        return clusteredVertxFuture;
-    }
-
-    private CompletableFuture<AsyncMap<String, String>> pac4jCasAsyncMapFuture(final CompletableFuture<Vertx> clusteredVertxFuture) {
-        final CompletableFuture<AsyncMap<String, String>> putAsyncMapFuture = new CompletableFuture<>();
-        clusteredVertxFuture.thenAccept(clusteredVertx -> clusteredVertx.sharedData().<String, String>getClusterWideMap(VertxSharedDataLogoutHandler.PAC4J_CAS_SHARED_DATA_KEY,
-                asyncMapResult -> {
-                    if (asyncMapResult.succeeded()) {
-                        putAsyncMapFuture.complete(asyncMapResult.result());
-                    }
-                }));
-        return putAsyncMapFuture;
-    }
 
     private static void getSessionIdFromClusteredData(final Vertx clusteredVertx, final CompletableFuture<String> sessionIdFuture) {
         clusteredVertx.sharedData().<String, String>getClusterWideMap(VertxSharedDataLogoutHandler.PAC4J_CAS_SHARED_DATA_KEY,

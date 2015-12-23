@@ -36,6 +36,7 @@ import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.profile.ProfileManager;
 import org.pac4j.core.profile.UserProfile;
 import org.pac4j.core.util.CommonHelper;
+import org.pac4j.vertx.VertxProfileManager;
 import org.pac4j.vertx.VertxWebContext;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
 import org.pac4j.vertx.auth.Pac4jUser;
@@ -88,7 +89,7 @@ public class RequiresAuthenticationHandler extends AuthHandlerImpl {
         } else {
             final VertxWebContext webContext = new VertxWebContext(routingContext);
             final List<Client> currentClients = clientFinder.find(config.getClients(), webContext, this.clientName);
-            final ProfileManager profileManager = new ProfileManager(webContext);
+            final ProfileManager profileManager = new VertxProfileManager(webContext);
 
             UserProfile profile = profileManager.get(useSession(webContext, currentClients));
             if (profile != null) {
@@ -174,7 +175,6 @@ public class RequiresAuthenticationHandler extends AuthHandlerImpl {
         // blocking i/o such as database lookups
         vertx.executeBlocking(future -> {
                     future.complete(authorizationChecker.isAuthorized(new VertxWebContext(context), ((Pac4jUser) user).pac4jUserProfile(), authorizerName, config.getAuthorizers()));
-                    context.setUser(user);
                 },
                 authHandler
         );

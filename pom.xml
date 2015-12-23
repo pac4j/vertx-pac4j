@@ -20,6 +20,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <vertx.version>3.1.0</vertx.version>
     <pac4j.version>1.8.0</pac4j.version>
+    <mockito.version>1.10.19</mockito.version>
   </properties>
 
   <dependencies>
@@ -82,6 +83,14 @@
       <version>4.11</version>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
+
 
     <dependency>
       <groupId>io.vertx</groupId>

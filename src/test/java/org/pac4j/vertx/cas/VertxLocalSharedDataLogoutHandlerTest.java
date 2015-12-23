@@ -5,9 +5,9 @@ import io.vertx.ext.web.Session;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.vertx.ext.web.sstore.SessionStore;
 import org.junit.Test;
-import org.pac4j.core.context.WebContext;
-import org.pac4j.core.profile.ProfileManager;
 import org.pac4j.core.profile.UserProfile;
+import org.pac4j.vertx.VertxProfileManager;
+import org.pac4j.vertx.VertxWebContext;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -36,7 +36,7 @@ public class VertxLocalSharedDataLogoutHandlerTest extends VertxSharedDataLogout
         final Session session = getSession(sessionStore);
 
         // Add key pac4j elements to session, as we'd expect to find, do this via the Dummy Web Context
-        final WebContext context = new DummyWebContext(session);
+        final VertxWebContext context = dummyWebContext(session);
         simulateLogin(context);
 
         final VertxLocalSharedDataLogoutHandler handler = new VertxLocalSharedDataLogoutHandler(vertx, sessionStore);
@@ -51,7 +51,8 @@ public class VertxLocalSharedDataLogoutHandlerTest extends VertxSharedDataLogout
         final String sessionIdFromSharedData = (String) vertx.sharedData().getLocalMap(VertxSharedDataLogoutHandler.PAC4J_CAS_SHARED_DATA_KEY)
                 .get(TEST_TICKET);
         assertThat(sessionIdFromSharedData, is(nullValue()));
-        final UserProfile userProfileFromSession = new ProfileManager(context).get(true);
+        System.out.println(context);
+        final UserProfile userProfileFromSession = new VertxProfileManager(context).get(true);
         assertThat(userProfileFromSession, is(nullValue()));
     }
 
