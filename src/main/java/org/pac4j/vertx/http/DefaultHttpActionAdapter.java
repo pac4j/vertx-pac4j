@@ -61,6 +61,11 @@ public class DefaultHttpActionAdapter implements HttpActionAdapter {
                 break;
 
             case SUCCESS:
+                webContext.setResponseStatus(HttpConstants.OK);
+                if (action.getContent() != null) {
+                    webContext.writeResponseContent(action.getContent());
+                }
+                webContext.completeResponse();
                 break;
 
             default:
