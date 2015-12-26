@@ -2,7 +2,7 @@ language: java
 
 sudo: false
 
-script: "mvn deploy -DskipITs --settings travis/settings.xml"
+script: "mvn package -DskipITs --settings travis/settings.xml"
 
 jdk:
   - oraclejdk8
@@ -11,3 +11,7 @@ env:
   global:
   - secure: "IfmBFjAeOgoBTX5dehbVWGlS9xYT2wZeiS9Onh+ijU9TZIlgpPBVKlrA8Al9cxzlMgU4C/C/ooRziW5V82yIQBH8wVKJXLVr2m0vaYwYLCJf72XyQVS95KQKuzDuOl6qV9TNZRSmF0uhOn6O/EBspMJtd4iOWqq+2oDyei61l8M="
   - secure: "R784OwOyGnvtqal8fjKiiMTCnyOcCAjZI9jQiOSxrAaYWrsEKu6mOUq6uIwfVGj1eXgIeX9L3JN/M5/IfIcKNtuaiVTdYidcS27GhmOB1TiOiV59/UHzP9/KPCcyC54AD87MTs4XCfHIskZgpui5RCFqIFKvDV+ltlhXRaa/+kQ="
+
+after_success:
+- chmod -R 777 ./travis/deploy-to-sonatype.sh
+- ./travis/deploy-to-sonatype.sh
