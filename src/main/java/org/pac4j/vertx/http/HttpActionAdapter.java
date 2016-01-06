@@ -29,7 +29,6 @@ public interface HttpActionAdapter {
    *
    * @param code the HTTP status code
    * @param context the web context
-   * @return void
    */
   void handle(final int code, final VertxWebContext context);
 
@@ -37,7 +36,7 @@ public interface HttpActionAdapter {
    * Handle HTTP action for redirection use cases.
    *
    * @param action the pac4j action to perform
-   * @return void
+   * @param webContext the web context
    */
   void handleRedirect(final RedirectAction action, final VertxWebContext webContext);
 }
