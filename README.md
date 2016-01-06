@@ -85,7 +85,7 @@ For example:
 
 ### Define the callback endpoint (only for stateful / indirect authentication mechanisms)
 
-Indirect clients rely on external identity providers (like Facebook) and thus require to define a callback endpoint in the application where the user will be redirected after login at the identity provider. For REST support / direct clients only, this callback endpoint is not necessary.
+Indirect clients rely on external identity providers (like Facebook) and thus require to define a callback endpoint in the application where the user will be redirected after login at the identity provider. For REST support / direct clients only, this callback endpoint is not necessary.  
 It must be defined for your router (to handle callbacks on the /callback url):
 
     final CallbackHandler callbackHandler = new CallbackHandler(vertx, config);
@@ -98,7 +98,7 @@ The `defaultUrl` parameter can be set for the `CallbackHandler` to define where 
 
 ### Protect an url (authentication + authorization)
 
-You can protect an url and require the user to be authenticated by a client (and optionally have the appropriate authorizations) by using the `RequiresAuthenticationHandler`:
+You can protect an url and require the user to be authenticated by a client (and optionally have the appropriate authorizations) by using the `RequiresAuthenticationHandler` and `Pac4jAuthProvider`:
 
     Pac4jAuthProvider authProvider = new Pac4jAuthProvider();
     Pac4jAuthHandlerOptions options = new Pac4jAuthHandlerOptions().withClientName(clientNames);
