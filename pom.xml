@@ -16,6 +16,12 @@
     <version>7</version>
   </parent>
 
+  <scm>
+    <url>https://github.com/pac4j/vertx-pac4j.git</url>
+    <connection>scm:git:git@github.com:pac4j/vertx-pac4j.git</connection>
+    <developerConnection>scm:git:git@github.com:pac4j/vertx-pac4j.git</developerConnection>
+  </scm>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <vertx.version>3.1.0</vertx.version>
