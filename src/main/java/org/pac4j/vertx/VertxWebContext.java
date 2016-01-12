@@ -231,6 +231,11 @@ public class VertxWebContext extends BaseResponseContext {
     }
 
     @Override
+    public boolean isSecure() {
+        return getScheme().equals("https");
+    }
+
+    @Override
     public String getFullRequestURL() {
         return fullUrl;
     }
@@ -248,6 +253,11 @@ public class VertxWebContext extends BaseResponseContext {
     @Override
     public void addResponseCookie(Cookie cookie) {
         routingContext.addCookie(io.vertx.ext.web.Cookie.cookie(cookie.getName(), cookie.getValue()));
+    }
+
+    @Override
+    public String getPath() {
+        return routingContext.request().path();
     }
 
     public Pac4jUser getVertxUser() {

@@ -95,7 +95,7 @@ public abstract class Pac4jAuthHandlerIntegrationTestBase extends VertxTestBase 
 
     private RequireAllPermissionsAuthorizer<TestOAuth2Profile> authorizer(final List<String> permissions) {
         final RequireAllPermissionsAuthorizer<TestOAuth2Profile> authorizer = new RequireAllPermissionsAuthorizer<TestOAuth2Profile>();
-        authorizer.setPermissions(permissions);
+        authorizer.setElements(permissions);
         return authorizer;
     }
 

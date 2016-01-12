@@ -42,8 +42,8 @@ public class TestOAuth1Client extends BaseOAuth10Client<TestOAuth1Profile> {
     public static final String TEST_PROFILE_URL = "http://localhost:9292/profile";
 
     @Override
-    protected void internalInit() {
-        super.internalInit();
+    protected void internalInit(final WebContext webContext) {
+        super.internalInit(webContext);
         final DefaultApi10a api = new TestOAuthWrapperApi10();
         this.service = new ProxyOAuth10aServiceImpl(api, new OAuthConfig(this.key, this.secret, this.callbackUrl,
                 SignatureType.Header, null, null),

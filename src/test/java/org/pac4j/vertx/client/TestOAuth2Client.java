@@ -18,7 +18,7 @@ package org.pac4j.vertx.client;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.pac4j.core.client.BaseClient;
 import org.pac4j.core.context.WebContext;
-import org.pac4j.oauth.client.BaseOAuth20Client;
+import org.pac4j.oauth.client.BaseOAuth20StateClient;
 import org.pac4j.oauth.credentials.OAuthCredentials;
 import org.pac4j.oauth.profile.JsonHelper;
 import org.pac4j.vertx.profile.TestOAuth2Profile;
@@ -34,14 +34,14 @@ import org.scribe.oauth.StateOAuth20ServiceImpl;
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public class TestOAuth2Client extends BaseOAuth20Client<TestOAuth2Profile> {
+public class TestOAuth2Client extends BaseOAuth20StateClient<TestOAuth2Profile> {
 
     protected StateApi20 api20;
     private String authorizationUrlTemplate;
 
     @Override
-    protected void internalInit() {
-        super.internalInit();
+    protected void internalInit(final WebContext webContext) {
+        super.internalInit(webContext);
         this.api20 = new TestOAuthWrapperApi20(this.getAuthorizationUrlTemplate());
         this.service = new StateOAuth20ServiceImpl(this.api20, new OAuthConfig(this.key, this.secret,
                 this.callbackUrl,
@@ -49,11 +49,6 @@ public class TestOAuth2Client extends BaseOAuth20Client<TestOAuth2Profile> {
                 this.connectTimeout, this.readTimeout, this.proxyHost,
                 this.proxyPort);
 
-    }
-
-    @Override
-    protected boolean requiresStateParameter() {
-        return true;
     }
 
     @Override
