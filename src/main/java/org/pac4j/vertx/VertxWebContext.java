@@ -206,11 +206,6 @@ public class VertxWebContext extends BaseResponseContext {
     }
 
     @Override
-    public void setResponseCharacterEncoding(String s) {
-        setResponseHeader("Content-Encoding", s);
-    }
-
-    @Override
     public void setResponseContentType(String s) {
         routingContext.response().headers().add("Content-Type", s);
     }
