@@ -33,6 +33,8 @@ import org.pac4j.core.context.WebContext;
 import org.pac4j.core.credentials.Credentials;
 import org.pac4j.core.exception.RequiresHttpAction;
 import org.pac4j.core.exception.TechnicalException;
+import org.pac4j.core.matching.DefaultMatchingChecker;
+import org.pac4j.core.matching.MatchingChecker;
 import org.pac4j.core.profile.ProfileManager;
 import org.pac4j.core.profile.UserProfile;
 import org.pac4j.core.util.CommonHelper;
@@ -57,11 +59,13 @@ public class RequiresAuthenticationHandler extends AuthHandlerImpl {
     protected final Config config;
     protected final String clientName;
     protected final String authorizerName;
+    protected final String matcherName;
     protected final Vertx vertx;
 
     protected HttpActionAdapter httpActionAdapter = new DefaultHttpActionAdapter();
     protected ClientFinder clientFinder = new DefaultClientFinder();
     protected AuthorizationChecker authorizationChecker = new DefaultAuthorizationChecker();
+    protected MatchingChecker matchingChecker = new DefaultMatchingChecker();
 
     public RequiresAuthenticationHandler(final Vertx vertx, final Config config, final Pac4jAuthProvider authProvider,
                                          final Pac4jAuthHandlerOptions options) {
@@ -74,6 +78,7 @@ public class RequiresAuthenticationHandler extends AuthHandlerImpl {
 
         clientName = options.clientName();
         authorizerName = options.authorizerName();
+        matcherName = options.matcherName();
         this.vertx = vertx;
         this.config = config;
     }
@@ -87,70 +92,78 @@ public class RequiresAuthenticationHandler extends AuthHandlerImpl {
             // Already logged in, just authorise
             authorise(user, routingContext);
         } else {
+
             final VertxWebContext webContext = new VertxWebContext(routingContext);
-            final List<Client> currentClients = clientFinder.find(config.getClients(), webContext, this.clientName);
-            final ProfileManager profileManager = new VertxProfileManager(webContext);
 
-            UserProfile profile = profileManager.get(useSession(webContext, currentClients));
-            if (profile != null) {
-                // We have been authenticated, are we authorized? Use vert.x subsystem for this
-                authorise(new Pac4jUser(profile), routingContext);
-            } else {
-                // We have not been authenticated yet, so start of the authentication process
-                // First try direct clients complying to client name filter, then attempt indirect
-                // authentication
-                vertx.<Optional<UserProfile>>executeBlocking(
-                    future -> {
-                        // Note the following stream should NOT be executed in parallel
-                        // as it may contain blocking operations which could block threads from the
-                        // fork/join pool.
-                        // This needs to be in an executeBlocking segment as it may involve blocking i/o
-                        // so needs to be kept off the vert.x event loop
-                        future.complete(currentClients.stream()
-                            .filter(client -> client instanceof DirectClient)
-                            .map(client -> {
-                                try {
-                                    final Credentials credentials = client.getCredentials(webContext);
-                                    return client.getUserProfile(credentials, webContext);
-                                } catch (RequiresHttpAction requiresHttpAction) {
-                                    throw new TechnicalException("Unexpected HTTP action", requiresHttpAction);
-                                }
-                            })
-                            .filter(userProfile -> userProfile != null)
-                            .findFirst());
-                    },
-                    asyncResult -> {
-                        if (asyncResult.succeeded()){
+            if (matchingChecker.matches(webContext, this.matcherName, config.getMatchers())) {
 
-                            // Non error condition but we might not have a profile
-                            final Optional<UserProfile> profileOption = asyncResult.result();
-                            if (profileOption.isPresent()) {
-                                // We/ve been successfully authenticated so authorise
-                                final UserProfile authenticatedProfile = profileOption.get();
-                                profileManager.save(useSession(webContext, currentClients), authenticatedProfile);
-                                authorise(new Pac4jUser(authenticatedProfile), routingContext);
-                            } else {
-                                // direct authentication failed so attempt indirect authentication if possible,
-                                // otherwise fail authentication
-                                if (startAuthentication(webContext, currentClients)) {
-                                    LOG.debug("Starting authentication");
-                                    saveRequestedUrl(webContext, currentClients);
-                                    redirectToIdentityProvider(webContext, currentClients);
+                final List<Client> currentClients = clientFinder.find(config.getClients(), webContext, this.clientName);
+                final ProfileManager profileManager = new VertxProfileManager(webContext);
+
+                UserProfile profile = profileManager.get(useSession(webContext, currentClients));
+                if (profile != null) {
+                    // We have been authenticated, are we authorized? Use vert.x subsystem for this
+                    authorise(new Pac4jUser(profile), routingContext);
+                } else {
+                    // We have not been authenticated yet, so start of the authentication process
+                    // First try direct clients complying to client name filter, then attempt indirect
+                    // authentication
+                    vertx.<Optional<UserProfile>>executeBlocking(
+                            future -> {
+                                // Note the following stream should NOT be executed in parallel
+                                // as it may contain blocking operations which could block threads from the
+                                // fork/join pool.
+                                // This needs to be in an executeBlocking segment as it may involve blocking i/o
+                                // so needs to be kept off the vert.x event loop
+                                future.complete(currentClients.stream()
+                                        .filter(client -> client instanceof DirectClient)
+                                        .map(client -> {
+                                            try {
+                                                final Credentials credentials = client.getCredentials(webContext);
+                                                return client.getUserProfile(credentials, webContext);
+                                            } catch (RequiresHttpAction requiresHttpAction) {
+                                                throw new TechnicalException("Unexpected HTTP action", requiresHttpAction);
+                                            }
+                                        })
+                                        .filter(userProfile -> userProfile != null)
+                                        .findFirst());
+                            },
+                            asyncResult -> {
+                                if (asyncResult.succeeded()) {
+
+                                    // Non error condition but we might not have a profile
+                                    final Optional<UserProfile> profileOption = asyncResult.result();
+                                    if (profileOption.isPresent()) {
+                                        // We/ve been successfully authenticated so authorise
+                                        final UserProfile authenticatedProfile = profileOption.get();
+                                        profileManager.save(useSession(webContext, currentClients), authenticatedProfile);
+                                        authorise(new Pac4jUser(authenticatedProfile), routingContext);
+                                    } else {
+                                        // direct authentication failed so attempt indirect authentication if possible,
+                                        // otherwise fail authentication
+                                        if (startAuthentication(webContext, currentClients)) {
+                                            LOG.debug("Starting authentication");
+                                            saveRequestedUrl(webContext, currentClients);
+                                            redirectToIdentityProvider(webContext, currentClients);
+                                        } else {
+                                            LOG.debug("unauthorized");
+                                            unauthorized(webContext, currentClients);
+                                        }
+                                    }
+
                                 } else {
-                                    LOG.debug("unauthorized");
-                                    unauthorized(webContext, currentClients);
+                                    unexpectedFailure(routingContext, asyncResult.cause());
                                 }
+
                             }
-
-                        } else {
-                            unexpectedFailure(routingContext, asyncResult.cause());
-                        }
-
-                    }
-                );
+                    );
+                }
+            } else {
+                LOG.debug("no matching for this request -> grant access");
+                routingContext.next();
             }
-        }
 
+        }
     }
 
     @Override

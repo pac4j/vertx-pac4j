@@ -25,6 +25,7 @@ public class Pac4jAuthHandlerOptions {
 
     private String clientName = "";
     private String authorizerName = "";
+    private String matcherName = "";
 
     public Pac4jAuthHandlerOptions withClientName(final String newName) {
         Objects.requireNonNull(newName);
@@ -38,11 +39,21 @@ public class Pac4jAuthHandlerOptions {
         return this;
     }
 
+    public Pac4jAuthHandlerOptions withMatcherName(final String matcherName) {
+        Objects.requireNonNull(matcherName);
+        this.matcherName = matcherName;
+        return this;
+    }
+
     public String clientName() {
         return clientName;
     }
 
     public String authorizerName() {
         return authorizerName;
+    }
+
+    public String matcherName() {
+        return matcherName;
     }
 }

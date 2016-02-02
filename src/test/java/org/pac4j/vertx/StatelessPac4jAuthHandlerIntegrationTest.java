@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.pac4j.core.client.Client;
 import org.pac4j.core.client.Clients;
 import org.pac4j.core.config.Config;
+import org.pac4j.core.matching.ExcludedPathMatcher;
 import org.pac4j.http.client.direct.DirectBasicAuthClient;
 import org.pac4j.http.credentials.authenticator.test.SimpleTestUsernamePasswordAuthenticator;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
@@ -31,6 +32,7 @@ import org.pac4j.vertx.handler.impl.Pac4jAuthHandlerOptions;
 import org.pac4j.vertx.handler.impl.RequiresAuthenticationHandler;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -50,33 +52,60 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
     public static final String PROTECTED_RESOURCE_URL = "/private/success.html";
     public static final String BASIC_AUTH_CLIENT = "BasicAuthClient";
     private static final String USERNAME_FIELD = "username";
+    public static final String EXCLUDED_PATH_MATCHER_NAME = "ExcludedPathMatcher";
 
     @Test
     public void testSuccessfulLogin() throws Exception {
 
-        testLoginAttempt(TEST_BASIC_AUTH_HEADER, 200, protectedResourceContentValidator());
+        testProtectedResourceAccessWithCredentials(TEST_BASIC_AUTH_HEADER, 200, protectedResourceContentValidator());
 
     }
 
     @Test
     public void testFailedLogin() throws Exception {
 
-        testLoginAttempt(TEST_FAILING_BASIC_AUTH_HEADER, 401, unauthorizedContentValidator());
+        testProtectedResourceAccessWithCredentials(TEST_FAILING_BASIC_AUTH_HEADER, 401, unauthorizedContentValidator());
 
+    }
+
+    @Test
+    public void testExcludedUrlIsAccessibleWithoutCredentials() throws Exception {
+        testResourceAccessWithoutCredentials(EXCLUDED_PROTECTED_RESOURCE_URL, 200, unprotectedResourceContentValidator());
+    }
+
+    @Test
+    public void testExcludedUrlIsAccessibleWithInvalidCredentials() throws Exception {
+        testResourceAccess(EXCLUDED_PROTECTED_RESOURCE_URL, Optional.of(TEST_FAILING_BASIC_AUTH_HEADER), 200, unprotectedResourceContentValidator());
     }
 
     @Override
     protected void validateProtectedResourceContent(JsonObject jsonObject) {
         assertThat(jsonObject.getString(USERNAME_FIELD), is(TEST_USER_NAME));
-
     }
 
-    private void testLoginAttempt(final String credentialsHeader, final int expectedHttpStatus, final Consumer<String> bodyValidator) throws Exception {
+    protected Consumer<String> unprotectedResourceContentValidator() {
+        return s -> s.equals(UNPROTECTED_RESOURCE_BODY);
+    }
+
+    private void testResourceAccessWithoutCredentials(final String url,
+                                                      final int expectedHttpStatus,
+                                                      final Consumer<String> bodyValidator) throws Exception {
+        testResourceAccess(url, Optional.empty(), expectedHttpStatus, bodyValidator);
+    }
+
+    private void testProtectedResourceAccessWithCredentials(final String credentialsHeader, final int expectedHttpStatus, final Consumer<String> bodyValidator) throws Exception {
+        testResourceAccess(PROTECTED_RESOURCE_URL, Optional.of(credentialsHeader), expectedHttpStatus, bodyValidator);
+    }
+
+    private void testResourceAccess(final String url,
+                                    final Optional<String> credentialsHeader,
+                                    final int expectedHttpStatus,
+                                    final Consumer<String> bodyValidator) throws Exception {
         startWebServer();
         HttpClient client = vertx.createHttpClient();
         // Attempt to get a private url
-        final HttpClientRequest request = client.get(8080, "localhost", PROTECTED_RESOURCE_URL)
-                .putHeader(AUTH_HEADER_NAME, credentialsHeader);
+        final HttpClientRequest request = client.get(8080, "localhost", url);
+        credentialsHeader.ifPresent(header -> request.putHeader(AUTH_HEADER_NAME, header));
         // This should get the desired result straight away rather than operating through redirects
         request.handler(response -> {
             assertEquals(expectedHttpStatus, response.statusCode());
@@ -88,6 +117,7 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
         });
         request.end();
         await(1, TimeUnit.SECONDS);
+
     }
 
     private Consumer<String> unauthorizedContentValidator() {
@@ -101,7 +131,8 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
         final Pac4jAuthProvider authProvider = new Pac4jAuthProvider();
         Pac4jAuthHandlerOptions options = new Pac4jAuthHandlerOptions()
                 .withAuthorizerName(REQUIRE_ALL_AUTHORIZER)
-                .withClientName(BASIC_AUTH_CLIENT);
+                .withClientName(BASIC_AUTH_CLIENT)
+                .withMatcherName(EXCLUDED_PATH_MATCHER_NAME);
         final RequiresAuthenticationHandler handler =  new RequiresAuthenticationHandler(vertx, config(), authProvider, options);
         startWebServer(router, handler);
 
@@ -109,7 +140,9 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
 
     private Config config() {
         final Clients clients = new Clients(client());
-        return new Config(clients, authorizers(new ArrayList<String>()));
+        final Config config = new Config(clients, authorizers(new ArrayList<>()));
+        config.setMatcher(new ExcludedPathMatcher("^/private/public/.*$"));
+        return config;
     }
 
     private Client client() {

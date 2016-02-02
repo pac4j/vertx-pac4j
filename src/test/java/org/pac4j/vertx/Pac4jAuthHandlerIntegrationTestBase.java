@@ -40,6 +40,8 @@ import java.util.function.Consumer;
  */
 public abstract class Pac4jAuthHandlerIntegrationTestBase extends VertxTestBase {
 
+    public static final String EXCLUDED_PROTECTED_RESOURCE_URL = "/private/public/success.html";
+    public static final String UNPROTECTED_RESOURCE_BODY = "Unprotected resource";
     protected static final String TEST_CLIENT_NAME = "TestOAuth2Client";
     protected static final String REQUIRE_ALL_AUTHORIZER = "requireAllAuthorizer";
     protected static final String FORBIDDEN_BODY = "Forbidden to access this resource";
@@ -49,6 +51,9 @@ public abstract class Pac4jAuthHandlerIntegrationTestBase extends VertxTestBase 
         HttpServer server = vertx.createHttpServer();
 
         router.route("/private/*").handler(authHandler);
+        router.route(EXCLUDED_PROTECTED_RESOURCE_URL).handler(rc -> {
+            rc.response().end(UNPROTECTED_RESOURCE_BODY);
+        });
         router.route("/private/success.html").handler(loginSuccessHandler()); // Spit out the user
         router.route().failureHandler(rc -> {
             rc.response().setStatusCode(rc.statusCode());
