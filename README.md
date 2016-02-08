@@ -39,7 +39,7 @@ Just follow these easy steps:
 
 ### Add the required dependencies (`vertx-pac4j` + `pac4j-*` libraries)
 
-You need to add a dependency on the `vertx-pac4j` library (<em>groupId</em>: **org.pac4j**, *version*: **2.0.0**) as well as on the appropriate `pac4j` submodules (<em>groupId</em>: **org.pac4j**, *version*: **1.8.0**): the `pac4j-oauth` dependency for OAuth support, the `pac4j-cas` dependency for CAS support, the `pac4j-ldap` module for LDAP authentication, ...
+You need to add a dependency on the `vertx-pac4j` library (<em>groupId</em>: **org.pac4j**, *version*: **2.0.1**) as well as on the appropriate `pac4j` submodules (<em>groupId</em>: **org.pac4j**, *version*: **1.8.5**): the `pac4j-oauth` dependency for OAuth support, the `pac4j-cas` dependency for CAS support, the `pac4j-ldap` module for LDAP authentication, ...
 
 All released artifacts are available in the [Maven central repository](http://search.maven.org/#search%7Cga%7C1%7Cpac4j).
 
@@ -110,8 +110,8 @@ You can protect an url and require the user to be authenticated by a client (and
 Here are the available parameters of the `Pac4jAuthHandlerOptions`:
 
 - `clientName` (optional): the list of client names (separated by commas) used for authentication. If the user is not authenticated, direct clients are tried successively then if the user is still not authenticated and if the first client is an indirect one, this client is used to start the authentication. Otherwise, a 401 HTTP error is returned. If the *client_name* request parameter is provided, only the matching client is selected
-- `authorizerName` (optional): the list of authorizer names (separated by commas) used to check authorizations. If the user is not authorized, a 403 HTTP error is returned. By default (if blank), the user only requires to be authenticated to access the resource.
-
+- `authorizerName` (optional): the list of authorizer names (separated by commas) used to check authorizations. If the user is not authorized, a 403 HTTP error is returned. By default (if blank), the user only requires to be authenticated to access the resource
+- `matcherName` (optional): the list of matcher names (separated by commas) that the request must satisfy to apply authentication / authorization. By default, all requests are checked.
 
 ### Get the user profile
 
@@ -146,7 +146,7 @@ The demo webapp: [vertx-pac4j-demo](https://github.com/pac4j/vertx-pac4j-demo) i
 
 ## Release notes
 
-See the [release notes](https://github.com/pac4j/vertx-pac4j/wiki/Release-Notes). Learn more by browsing the [vertx-pac4j Javadoc](http://www.javadoc.io/doc/org.pac4j/vertx-pac4j/2.0.0) and the [pac4j Javadoc](http://www.pac4j.org/apidocs/pac4j/1.8.0/index.html).
+See the [release notes](https://github.com/pac4j/vertx-pac4j/wiki/Release-Notes). Learn more by browsing the [vertx-pac4j Javadoc](http://www.javadoc.io/doc/org.pac4j/vertx-pac4j/2.0.1) and the [pac4j Javadoc](http://www.pac4j.org/apidocs/pac4j/1.8.5/index.html).
 
 
 ## Need help?
@@ -158,7 +158,7 @@ If you have any question, please use the following mailing lists:
 
 ## Development
 
-The version 2.0.1-SNAPSHOT is under development.
+The version 2.0.2-SNAPSHOT is under development.
 
 Maven artifacts are built via Travis: [![Build Status](https://travis-ci.org/pac4j/vertx-pac4j.png?branch=master)](https://travis-ci.org/pac4j/vertx-pac4j) and available in the [Sonatype snapshots repository](https://oss.sonatype.org/content/repositories/snapshots/org/pac4j). This repository must be added in the Maven *pom.xml* file for example:
 
