@@ -100,7 +100,7 @@ public class RequiresAuthenticationHandler extends AuthHandlerImpl {
                 final List<Client> currentClients = clientFinder.find(config.getClients(), webContext, this.clientName);
                 final ProfileManager profileManager = new VertxProfileManager(webContext);
 
-                UserProfile profile = profileManager.get(useSession(webContext, currentClients));
+                UserProfile profile = profileManager.get(useSession(currentClients));
                 if (profile != null) {
                     // We have been authenticated, are we authorized? Use vert.x subsystem for this
                     authorise(new Pac4jUser(profile), routingContext);
@@ -136,18 +136,18 @@ public class RequiresAuthenticationHandler extends AuthHandlerImpl {
                                     if (profileOption.isPresent()) {
                                         // We/ve been successfully authenticated so authorise
                                         final UserProfile authenticatedProfile = profileOption.get();
-                                        profileManager.save(useSession(webContext, currentClients), authenticatedProfile);
+                                        profileManager.save(useSession(currentClients), authenticatedProfile);
                                         authorise(new Pac4jUser(authenticatedProfile), routingContext);
                                     } else {
                                         // direct authentication failed so attempt indirect authentication if possible,
                                         // otherwise fail authentication
-                                        if (startAuthentication(webContext, currentClients)) {
+                                        if (startAuthentication(currentClients)) {
                                             LOG.debug("Starting authentication");
-                                            saveRequestedUrl(webContext, currentClients);
+                                            saveRequestedUrl(webContext);
                                             redirectToIdentityProvider(webContext, currentClients);
                                         } else {
                                             LOG.debug("unauthorized");
-                                            unauthorized(webContext, currentClients);
+                                            unauthorized(webContext);
                                         }
                                     }
 
@@ -193,15 +193,15 @@ public class RequiresAuthenticationHandler extends AuthHandlerImpl {
         );
     }
 
-    protected boolean useSession(final WebContext context, final List<Client> currentClients) {
+    protected boolean useSession(final List<Client> currentClients) {
         return currentClients == null || currentClients.size() == 0 || currentClients.get(0) instanceof IndirectClient;
     }
 
-    protected boolean startAuthentication(final VertxWebContext context, final List<Client> currentClients) {
+    protected boolean startAuthentication(final List<Client> currentClients) {
         return currentClients != null && currentClients.size() > 0 && currentClients.get(0) instanceof IndirectClient;
     }
 
-    protected void saveRequestedUrl(final WebContext context, final List<Client> currentClients) {
+    protected void saveRequestedUrl(final WebContext context) {
         final String requestedUrl = context.getFullRequestURL();
         LOG.debug("requestedUrl: " + requestedUrl);
         context.setSessionAttribute(Pac4jConstants.REQUESTED_URL, requestedUrl);
@@ -219,7 +219,7 @@ public class RequiresAuthenticationHandler extends AuthHandlerImpl {
         }
     }
 
-    protected void unauthorized(final VertxWebContext webContext, List<Client> currentClients) {
+    protected void unauthorized(final VertxWebContext webContext) {
         httpActionAdapter.handle(HttpConstants.UNAUTHORIZED, webContext);
     }
 
