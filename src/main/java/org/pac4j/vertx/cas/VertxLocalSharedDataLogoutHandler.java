@@ -16,8 +16,6 @@
 package org.pac4j.vertx.cas;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.shareddata.LocalMap;
 import io.vertx.ext.web.sstore.SessionStore;
 
@@ -26,8 +24,6 @@ import io.vertx.ext.web.sstore.SessionStore;
  * @since 2.0.0
  */
 public class VertxLocalSharedDataLogoutHandler extends VertxSharedDataLogoutHandler {
-
-    private static final Logger LOG = LoggerFactory.getLogger(VertxLocalSharedDataLogoutHandler.class);
 
     public VertxLocalSharedDataLogoutHandler(final Vertx vertx, final SessionStore sessionStore) {
         this(vertx, sessionStore, 1);
