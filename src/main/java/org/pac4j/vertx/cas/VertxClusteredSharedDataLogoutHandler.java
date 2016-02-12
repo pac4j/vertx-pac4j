@@ -15,8 +15,6 @@
  */
 package org.pac4j.vertx.cas;
 
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.rxjava.core.Vertx;
 import org.pac4j.core.exception.TechnicalException;
 
@@ -30,8 +28,6 @@ import java.util.concurrent.TimeoutException;
  * @since 2.0.0
  */
 public class VertxClusteredSharedDataLogoutHandler extends VertxSharedDataLogoutHandler {
-
-    private static final Logger LOG = LoggerFactory.getLogger(VertxClusteredSharedDataLogoutHandler.class);
 
     private final Vertx rxVertx;
 

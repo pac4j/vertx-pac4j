@@ -82,8 +82,8 @@ public class Pac4jUser extends AbstractUser {
         final byte[] jsonBytes = buffer.getBytes(pos, pos + jsonByteCount);
         pos += jsonByteCount;
         final String json = new String(jsonBytes, StandardCharsets.UTF_8);
-        final UserProfile userProfile = (UserProfile) DefaultJsonConverter.getInstance().decodeObject(json);
-        setUserProfile(userProfile);
+        final UserProfile userProfileLocal = (UserProfile) DefaultJsonConverter.getInstance().decodeObject(json);
+        setUserProfile(userProfileLocal);
         return pos;
     }
 
