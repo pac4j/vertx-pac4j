@@ -194,10 +194,9 @@ public class VertxWebContext extends BaseResponseContext {
 
     @Override
     public Map<String, String> getResponseHeaders() {
-        Map<String, String> headers =  routingContext.response().headers().entries().stream()
+        return routingContext.response().headers().entries().stream()
             .collect(Collectors.toMap((Function<Map.Entry<String, String>, String>) Map.Entry::getKey,
                     (Function<Map.Entry<String, String>, String>) Map.Entry::getValue));
-        return headers;
     }
 
     @Override
