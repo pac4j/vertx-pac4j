@@ -116,7 +116,7 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
             });
         });
         request.end();
-        await(1, TimeUnit.SECONDS);
+        await(2, TimeUnit.SECONDS);
 
     }
 
