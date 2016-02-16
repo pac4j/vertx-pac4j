@@ -67,7 +67,8 @@ public class Pac4jUser extends AbstractUser {
     public void writeToBuffer(Buffer buff) {
         super.writeToBuffer(buff);
         // Now write the remainder of our stuff to the buffer;
-        final String json = principal.encodePrettily();
+        final String json = (String) DefaultJsonConverter.getInstance().encodeObject(userProfile).toString();
+//                principal.encodePrettily();
         byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
         buff.appendInt(jsonBytes.length)
             .appendBytes(jsonBytes);
@@ -82,7 +83,7 @@ public class Pac4jUser extends AbstractUser {
         final byte[] jsonBytes = buffer.getBytes(posLocal, posLocal + jsonByteCount);
         posLocal += jsonByteCount;
         final String json = new String(jsonBytes, StandardCharsets.UTF_8);
-        final UserProfile userProfile = (UserProfile) DefaultJsonConverter.getInstance().decodeObject(json);
+        final UserProfile userProfile = (UserProfile) DefaultJsonConverter.getInstance().decodeObject(new JsonObject(json));
         setUserProfile(userProfile);
         return posLocal;
     }
