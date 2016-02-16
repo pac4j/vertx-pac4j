@@ -194,11 +194,11 @@ public class RequiresAuthenticationHandler extends AuthHandlerImpl {
     }
 
     protected boolean useSession(final WebContext context, final List<Client> currentClients) {
-        return currentClients == null || currentClients.size() == 0 || currentClients.get(0) instanceof IndirectClient;
+        return currentClients == null || currentClients.isEmpty() || currentClients.get(0) instanceof IndirectClient;
     }
 
     protected boolean startAuthentication(final VertxWebContext context, final List<Client> currentClients) {
-        return currentClients != null && currentClients.size() > 0 && currentClients.get(0) instanceof IndirectClient;
+        return currentClients != null && !currentClients.isEmpty() && currentClients.get(0) instanceof IndirectClient;
     }
 
     protected void saveRequestedUrl(final WebContext context, final List<Client> currentClients) {
