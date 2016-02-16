@@ -68,10 +68,10 @@ public class CallbackDeployingPac4jAuthHandler extends RequiresAuthenticationHan
         }
 
         // Start manager verticle
-        router.route(HttpMethod.GET, uri.getPath()).handler(authResultHandler(vertx, config, options));
+        router.route(HttpMethod.GET, uri.getPath()).handler(authResultHandler(vertx, config));
     }
 
-    private Handler<RoutingContext> authResultHandler(final Vertx vertx, final Config config, Pac4jAuthHandlerOptions options) {
+    private Handler<RoutingContext> authResultHandler(final Vertx vertx, final Config config) {
         return new CallbackHandler(vertx, config);
     }
 
