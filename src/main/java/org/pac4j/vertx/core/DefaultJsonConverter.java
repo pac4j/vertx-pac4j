@@ -80,9 +80,7 @@ public class DefaultJsonConverter implements JsonConverter {
         } else if (value instanceof Object[]) {
             Object[] src = ((Object[]) value);
             List<Object> list = new ArrayList<>(src.length);
-            for (Object object : src) {
-                list.add(encodeObject(object));
-            }
+            fillEncodedList(src, list);
             return new JsonArray(list);
         } else {
             try {
@@ -91,6 +89,12 @@ public class DefaultJsonConverter implements JsonConverter {
             } catch (Exception e) {
                 throw new TechnicalException("Error while encoding object", e);
             }
+        }
+    }
+
+    private void fillEncodedList(Object[] src, List<Object> list) {
+        for (Object object : src) {
+            list.add(encodeObject(object));
         }
     }
 
@@ -103,19 +107,27 @@ public class DefaultJsonConverter implements JsonConverter {
         } else if (value instanceof JsonArray) {
             JsonArray src = (JsonArray) value;
             List<Object> list = new ArrayList<>(src.size());
-            for (Object object : src) {
-                list.add(decodeObject(object));
-            }
+            fillDecodedList(src, list);
             return list.toArray();
         } else if (value instanceof JsonObject) {
             JsonObject src = (JsonObject) value;
-            try {
-                return decode(src.getJsonObject("value").encode(), Class.forName(src.getString("class")));
-            } catch (Exception e) {
-                throw new TechnicalException("Error while decoding object", e);
-            }
+            return decode(src);
         }
         return null;
+    }
+
+    private Object decode(JsonObject src) {
+        try {
+            return decode(src.getJsonObject("value").encode(), Class.forName(src.getString("class")));
+        } catch (Exception e) {
+            throw new TechnicalException("Error while decoding object", e);
+        }
+    }
+
+    private void fillDecodedList(JsonArray src, List<Object> list) {
+        for (Object object : src) {
+            list.add(decodeObject(object));
+        }
     }
 
     private boolean isPrimitiveType(Object value) {
@@ -138,20 +150,20 @@ public class DefaultJsonConverter implements JsonConverter {
         @JsonCreator
         public BearerAccessTokenMixin(@JsonProperty("value") String value, @JsonProperty("lifetime") long lifetime,
                 @JsonProperty("scope") Scope scope) {
-        };
+        }
     }
 
     public static class ValueMixin {
         @JsonCreator
         public ValueMixin(@JsonProperty("value") String value, @JsonProperty("requirement") Requirement requirement) {
-        };
+        }
     }
 
     public static class TokenMixin {
         @JsonCreator
         public TokenMixin(@JsonProperty("token") String token, @JsonProperty("secret") String secret,
                 @JsonProperty("rawResponse") String rawResponse) {
-        };
+        }
     }
 
 }
