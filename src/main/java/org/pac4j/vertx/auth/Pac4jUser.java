@@ -27,6 +27,11 @@ import org.pac4j.vertx.core.DefaultJsonConverter;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 /**
  * @author Jeremy Prime
@@ -71,7 +76,27 @@ public class Pac4jUser extends AbstractUser {
         byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
         buff.appendInt(jsonBytes.length)
             .appendBytes(jsonBytes);
-
+            
+        ObjectOutputStream outputStream = null;
+    		try {
+    			// storing the user profile object to session
+    			ByteArrayOutputStream stream = new ByteArrayOutputStream();
+    			outputStream = new ObjectOutputStream(stream);
+    			userProfile.writeExternal(outputStream);
+    			byte[] byteArray = stream.toByteArray();
+    
+    			buff.appendInt(byteArray.length).appendBytes(byteArray);
+    			outputStream.close();
+    		} catch (IOException e) {
+    			e.printStackTrace();
+    		} finally {
+    			if (null != outputStream) {
+    				try {
+    					outputStream.close();
+    				} catch (IOException e) {
+    				}
+    			}
+    		}
     }
 
     @Override
@@ -82,8 +107,35 @@ public class Pac4jUser extends AbstractUser {
         final byte[] jsonBytes = buffer.getBytes(pos, pos + jsonByteCount);
         pos += jsonByteCount;
         final String json = new String(jsonBytes, StandardCharsets.UTF_8);
-        final UserProfile userProfile = (UserProfile) DefaultJsonConverter.getInstance().decodeObject(json);
-        setUserProfile(userProfile);
+        // bug :: while writing (writeToBuffer method) JSON object was written. Below instead of JSONObject type case done for UserProfile. So I was getting ClassCaseException.
+        //final UserProfile userProfile = (UserProfile) DefaultJsonConverter.getInstance().decodeObject(json);
+        //setUserProfile(userProfile);
+        // below is the my fix for the same.
+        ObjectInputStream inputStream = null;
+    		try {
+    			principal = new JsonObject(json);
+    			int userByteCount = buffer.getInt(pos);
+    			pos += 4;
+    			final byte[] userBytes = buffer.getBytes(pos, pos + userByteCount);
+    
+    			ByteArrayInputStream stream = new ByteArrayInputStream(userBytes);
+    			inputStream = new ObjectInputStream(stream);
+    			
+    			UserProfile profile = new UserProfile();
+    			profile.readExternal(inputStream);
+    			
+    			setUserProfile(profile);
+    		} catch (Exception e) {
+    			e.printStackTrace();
+    		} finally {
+    			if (null != inputStream) {
+    				try {
+    					inputStream.close();
+    				} catch (IOException e) {
+    				}
+    			}
+    		}
+        
         return pos;
     }
 
