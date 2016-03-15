@@ -24,7 +24,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <vertx.version>3.2.1</vertx.version>
-    <pac4j.version>1.8.6</pac4j.version>
+    <pac4j.version>1.8.7</pac4j.version>
     <mockito.version>1.10.19</mockito.version>
   </properties>
 
