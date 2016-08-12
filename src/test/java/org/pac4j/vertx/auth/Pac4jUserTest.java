@@ -2,7 +2,7 @@ package org.pac4j.vertx.auth;
 
 import io.vertx.core.buffer.Buffer;
 import org.junit.Test;
-import org.pac4j.core.profile.UserProfile;
+import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.vertx.profile.TestOAuth1Profile;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -14,11 +14,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class Pac4jUserTest {
 
     private static final String TEST_USER_ID = "testUserId";
+    private static final String TEST_CLIENT = "testClient";
 
     @Test
     public void testClusterSerializationAndDeserialization() throws Exception {
-        final UserProfile profileToSerialize = new TestOAuth1Profile();
+        final CommonProfile profileToSerialize = new TestOAuth1Profile();
         profileToSerialize.setId(TEST_USER_ID);
+        profileToSerialize.setClientName(TEST_CLIENT);
         final Pac4jUser userToSerialize = new Pac4jUser(profileToSerialize);
         final Buffer buf = Buffer.buffer();
         userToSerialize.writeToBuffer(buf);

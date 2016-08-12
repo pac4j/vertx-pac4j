@@ -61,8 +61,7 @@ public class VertxClusteredSharedDataLogoutHandlerTest extends VertxSharedDataLo
                 clusteredVertx.<String>executeBlocking(future -> {
                             String expectedSessionid = null;
                             try {
-                                expectedSessionid = recordSession(clusteredVertx,
-                                        new VertxClusteredSharedDataLogoutHandler(clusteredVertx, sessionStore), sessionStore);
+                                expectedSessionid = recordSession(new VertxClusteredSharedDataLogoutHandler(clusteredVertx, sessionStore), sessionStore);
                                 future.complete(expectedSessionid);
                             } catch (Exception e) {
                                future.fail(e);
@@ -94,12 +93,12 @@ public class VertxClusteredSharedDataLogoutHandlerTest extends VertxSharedDataLo
 
         final io.vertx.rxjava.core.Vertx clusteredVertx = getClusteredVertx();
         final Observable<String> expectedSessionIdObservable = clusteredVertx
-                .<String>executeBlockingObservable(future -> {
+                .executeBlockingObservable(future -> {
                     final Vertx delegate = (Vertx) clusteredVertx.getDelegate();
                     final SessionStore sessionStore = LocalSessionStore.create(delegate);
                     final String expectedSessionId;
                     try {
-                        expectedSessionId = recordSession(delegate,
+                        expectedSessionId = recordSession(
                                 new VertxClusteredSharedDataLogoutHandler(delegate, sessionStore),
                                 sessionStore);
                         future.complete(expectedSessionId);
@@ -109,7 +108,7 @@ public class VertxClusteredSharedDataLogoutHandlerTest extends VertxSharedDataLo
                 }, false);
 
         final CompletableFuture<String> expectedSessionIdFuture = new CompletableFuture<>();
-        expectedSessionIdObservable.subscribe(s -> expectedSessionIdFuture.complete(s));
+        expectedSessionIdObservable.subscribe(expectedSessionIdFuture::complete);
         final String expectedSessionId = expectedSessionIdFuture.get(2, TimeUnit.SECONDS);
 
         // Now we know record session has happened we should check the session id from the shared data cluster, we need
@@ -129,12 +128,12 @@ public class VertxClusteredSharedDataLogoutHandlerTest extends VertxSharedDataLo
         final VertxWebContext webContext = dummyWebContext(session);
         simulateLogin(webContext);
         final VertxClusteredSharedDataLogoutHandler sharedDataLogoutHandler = new VertxClusteredSharedDataLogoutHandler(delegate, sessionStore);
-        final CompletableFuture<Void> putSessionIdFuture = new CompletableFuture<Void>();
+        final CompletableFuture<Void> putSessionIdFuture = new CompletableFuture<>();
 
         clusteredVertx.sharedData()
                 .<String, String>getClusterWideMapObservable(VertxSharedDataLogoutHandler.PAC4J_CAS_SHARED_DATA_KEY)
                 .flatMap(asyncMap -> asyncMap.putObservable(TEST_TICKET, session.id()))
-                .subscribe(v -> putSessionIdFuture.complete(v));
+                .subscribe(putSessionIdFuture::complete);
 
         putSessionIdFuture.get(1, TimeUnit.SECONDS); // Wait here until setup is complete or we timeout
         assertThat(webContext.getVertxUser(), is(notNullValue()));
@@ -145,14 +144,14 @@ public class VertxClusteredSharedDataLogoutHandlerTest extends VertxSharedDataLo
             sharedDataLogoutHandler.destroySession(webContext);
             future.complete(null);
         }, false)
-        .doOnError(t -> sessionDestructionFuture.completeExceptionally(t))
-        .subscribe(v -> sessionDestructionFuture.complete(v));
+        .doOnError(sessionDestructionFuture::completeExceptionally)
+        .subscribe(sessionDestructionFuture::complete);
         sessionDestructionFuture.get(1, TimeUnit.SECONDS); // Wait till we think session destruction is complete or we timeo
 
         // Now check final state
         final String actualSessionId = getFromAsyncMap(clusteredVertx, TEST_TICKET);
         assertThat(actualSessionId, is(nullValue()));
-        final UserProfile profileFromSession = new VertxProfileManager(webContext).get(true);
+        final UserProfile profileFromSession = new VertxProfileManager<>(webContext).get(true).orElse(null);
         assertThat(profileFromSession, is(nullValue()));
 
     }

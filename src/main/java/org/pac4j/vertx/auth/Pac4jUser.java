@@ -22,7 +22,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.AbstractUser;
 import io.vertx.ext.auth.AuthProvider;
-import org.pac4j.core.profile.UserProfile;
+import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.vertx.core.DefaultJsonConverter;
 
 import java.nio.charset.StandardCharsets;
@@ -32,16 +32,16 @@ import java.util.Objects;
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public class Pac4jUser extends AbstractUser {
+public class Pac4jUser<T extends CommonProfile> extends AbstractUser {
 
-    private UserProfile userProfile;
+    private T userProfile;
     private JsonObject principal;
 
     public Pac4jUser() {
         // I think this noop default constructor is required for deserialization from a clustered session
     }
 
-    public Pac4jUser(UserProfile userProfile) {
+    public Pac4jUser(T userProfile) {
         setUserProfile(userProfile);
     }
 
@@ -67,8 +67,7 @@ public class Pac4jUser extends AbstractUser {
     public void writeToBuffer(Buffer buff) {
         super.writeToBuffer(buff);
         // Now write the remainder of our stuff to the buffer;
-        final String json = (String) DefaultJsonConverter.getInstance().encodeObject(userProfile).toString();
-//                principal.encodePrettily();
+        final String json = DefaultJsonConverter.getInstance().encodeObject(userProfile).toString();
         byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
         buff.appendInt(jsonBytes.length)
             .appendBytes(jsonBytes);
@@ -83,22 +82,20 @@ public class Pac4jUser extends AbstractUser {
         final byte[] jsonBytes = buffer.getBytes(posLocal, posLocal + jsonByteCount);
         posLocal += jsonByteCount;
         final String json = new String(jsonBytes, StandardCharsets.UTF_8);
-        final UserProfile decodedUserProfile = (UserProfile) DefaultJsonConverter.getInstance().decodeObject(new JsonObject(json));
+        final T decodedUserProfile = (T) DefaultJsonConverter.getInstance().decodeObject(new JsonObject(json));
         setUserProfile(decodedUserProfile);
         return posLocal;
     }
 
-    public UserProfile pac4jUserProfile() {
+    public CommonProfile pac4jUserProfile() {
         return userProfile;
     }
 
-    private final void setUserProfile(UserProfile profile) {
+    private void setUserProfile(T profile) {
 
         Objects.requireNonNull(profile);
         this.userProfile = profile;
         principal = new JsonObject();
-        userProfile.getAttributes().keySet().stream().forEach(key -> {
-            principal.put(key, userProfile.getAttribute(key).toString());
-        });
+        userProfile.getAttributes().keySet().stream().forEach(key -> principal.put(key, userProfile.getAttribute(key).toString()));
     }
 }

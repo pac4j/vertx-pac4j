@@ -71,9 +71,7 @@ public abstract class VertxSharedDataLogoutHandler extends NoLogoutHandler {
         final String sessionId = getSessionId(ticket);
         sessionStore.getObservable(sessionId)
                 .map(session -> session.remove(SESSION_USER_HOLDER_KEY))
-                .doOnError(e -> {
-                    e.printStackTrace();
-                })
+                .doOnError(Throwable::printStackTrace)
                 .subscribe(s -> userLogoutFuture.complete(null));
         try {
             userLogoutFuture.get(blockingTimeoutSeconds, TimeUnit.SECONDS);

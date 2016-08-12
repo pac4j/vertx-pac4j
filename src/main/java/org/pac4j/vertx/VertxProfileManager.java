@@ -15,17 +15,19 @@
  */
 package org.pac4j.vertx;
 
+import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.core.profile.ProfileManager;
-import org.pac4j.core.profile.UserProfile;
 import org.pac4j.vertx.auth.Pac4jUser;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public class VertxProfileManager<T extends UserProfile> extends ProfileManager<T> {
+public class VertxProfileManager<T extends CommonProfile> extends ProfileManager<T> {
 
     private VertxWebContext vertxWebContext;
 
@@ -35,10 +37,9 @@ public class VertxProfileManager<T extends UserProfile> extends ProfileManager<T
     }
 
     @Override
-    public T get(boolean readFromSession) {
+    public Optional<T> get(boolean readFromSession) {
         return Optional.ofNullable(vertxWebContext.getVertxUser())
-                .map(user -> (T)user.pac4jUserProfile())
-                .orElse(null);
+                .map(user -> (T) user.pac4jUserProfile());
     }
 
     @Override
@@ -47,8 +48,18 @@ public class VertxProfileManager<T extends UserProfile> extends ProfileManager<T
     }
 
     @Override
-    public void save(boolean saveInSession, T profile) {
-        final Pac4jUser pac4jUser = new Pac4jUser(profile);
-        vertxWebContext.setVertxUser(pac4jUser);
+    public List<T> getAll(boolean readFromSession) {
+        final ArrayList<T> profiles = new ArrayList<>(1);
+        final Optional<T> profile = get(readFromSession);
+        profile.ifPresent(profiles::add);
+        return profiles;
     }
+
+    // TODO: Multiprofile support
+    @Override
+    public void save(boolean saveInSession, T profile, boolean multiProfile) {
+        final Pac4jUser vertxUser = new Pac4jUser(profile);
+        vertxWebContext.setVertxUser(vertxUser);
+    }
+
 }

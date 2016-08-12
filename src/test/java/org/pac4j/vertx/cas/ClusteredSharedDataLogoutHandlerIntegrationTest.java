@@ -43,10 +43,12 @@ import org.pac4j.core.client.Clients;
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.HttpConstants;
 import org.pac4j.core.profile.ProfileManager;
+import org.pac4j.core.profile.UserProfile;
 import org.pac4j.vertx.VertxProfileManager;
 import org.pac4j.vertx.VertxWebContext;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
 import org.pac4j.vertx.handler.impl.CallbackHandler;
+import org.pac4j.vertx.handler.impl.Pac4jAuthHandlerOptions;
 
 import java.net.URLEncoder;
 import java.util.Optional;
@@ -61,7 +63,7 @@ import static org.hamcrest.core.Is.is;
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public class ClusteredSharedDataLogoutHandlerIntegrationTest extends VertxTestBase {
+public class  ClusteredSharedDataLogoutHandlerIntegrationTest extends VertxTestBase {
 
     private final static Logger LOG = LoggerFactory.getLogger(ClusteredSharedDataLogoutHandlerIntegrationTest.class);
 
@@ -133,7 +135,7 @@ public class ClusteredSharedDataLogoutHandlerIntegrationTest extends VertxTestBa
     /**
      * Spoof a login and return the session id for the current web session
      * @return The current web session id
-     * @throws Exception
+     * @throws Exception when something gos wrong during spoofing of login
      */
     private String spoofLogin() throws Exception {
         final CompletableFuture<String> redirectUrlFuture = new CompletableFuture<>();
@@ -154,9 +156,8 @@ public class ClusteredSharedDataLogoutHandlerIntegrationTest extends VertxTestBa
         casLogoutRequest.toObservable().map(resp -> {
             assertThat(resp.statusCode(), is(HttpConstants.OK));
             return null;
-        }).subscribe(v -> {
-            invokeLogoutFuture.complete(null);
-        });
+        })
+        .subscribe(v -> invokeLogoutFuture.complete(null));
         casLogoutRequest.end();
         invokeLogoutFuture.get(1, TimeUnit.SECONDS);
     }
@@ -188,9 +189,7 @@ public class ClusteredSharedDataLogoutHandlerIntegrationTest extends VertxTestBa
                 .doOnError(err -> {
                     throw new RuntimeException("Expected successful request round trip");
                 })
-                .subscribe(json -> {
-                    jsonFuture.complete(json);
-                });
+                .subscribe(jsonFuture::complete);
     }
 
     private void convertRequestToBlockingCallExpectingRedirect(final CompletableFuture<String> redirectUrlFuture, final HttpClientRequest request) {
@@ -198,7 +197,7 @@ public class ClusteredSharedDataLogoutHandlerIntegrationTest extends VertxTestBa
             assertThat(resp.statusCode(), is(HttpConstants.TEMP_REDIRECT));
             return resp.getHeader(HttpConstants.LOCATION_HEADER);
         })
-        .subscribe(url -> redirectUrlFuture.complete(url));
+        .subscribe(redirectUrlFuture::complete);
     }
 
     private void assertNullUserProfileAndStoredSessionId() throws Exception {
@@ -238,6 +237,7 @@ public class ClusteredSharedDataLogoutHandlerIntegrationTest extends VertxTestBa
 
     private void startServer() throws Exception {
         final Router rxRouter = Router.router(rxVertx);
+        final Pac4jAuthHandlerOptions authHandlerOptions = new Pac4jAuthHandlerOptions();
 
         final LocalSessionStore sessionStore = LocalSessionStore.create(rxVertx);
         final io.vertx.ext.web.sstore.SessionStore sstoreDelegate = (SessionStore) sessionStore.getDelegate();
@@ -248,15 +248,13 @@ public class ClusteredSharedDataLogoutHandlerIntegrationTest extends VertxTestBa
         rxRouter.route().handler(UserSessionHandler.create(authProvider));
         rxRouter.route(HttpMethod.GET, QUERY_STATE_URL).handler(queryHandler());
         rxRouter.route(HttpMethod.GET, SERVICE_VALIDATE_URL).handler(serviceValidateHandler());
-        final CallbackHandler callbackHandler = new CallbackHandler((Vertx) rxVertx.getDelegate(), config(sstoreDelegate));
+        final CallbackHandler callbackHandler = new CallbackHandler((Vertx) rxVertx.getDelegate(), config(sstoreDelegate), authHandlerOptions);
         final io.vertx.ext.web.Router router = (io.vertx.ext.web.Router)rxRouter.getDelegate();
         router.route(HttpMethod.GET, CALLBACK_URL).handler(callbackHandler);
         router.route(HttpMethod.POST, CALLBACK_URL).handler(callbackHandler);
 
         final CompletableFuture<HttpServer> serverFuture = new CompletableFuture<>();
-        rxVertx.createHttpServer().requestHandler(rxRouter::accept).listenObservable(8080).subscribe(server -> {
-            serverFuture.complete(server);
-        });
+        rxVertx.createHttpServer().requestHandler(rxRouter::accept).listenObservable(8080).subscribe(serverFuture::complete);
         serverFuture.get(1, TimeUnit.SECONDS);
     }
 
@@ -266,8 +264,8 @@ public class ClusteredSharedDataLogoutHandlerIntegrationTest extends VertxTestBa
             LOG.info("queryHandler endpoint called");
             final String sessionId = routingContext.session().id();
             final ProfileManager<CasProfile> profileManager = profileManager(routingContext);
-            final String userId = Optional.ofNullable(profileManager.get(true))
-                    .map(profile -> profile.getId())
+            final String userId = profileManager.get(true)
+                    .map(UserProfile::getId)
                     .orElse(null);
 
             rxVertx.sharedData()
@@ -295,7 +293,7 @@ public class ClusteredSharedDataLogoutHandlerIntegrationTest extends VertxTestBa
     }
 
     private ProfileManager<CasProfile> profileManager(final RoutingContext routingContext) {
-        return new VertxProfileManager<>(new VertxWebContext((io.vertx.ext.web.RoutingContext) routingContext.getDelegate()));
+        return new VertxProfileManager(new VertxWebContext((io.vertx.ext.web.RoutingContext) routingContext.getDelegate()));
     }
 
     // Trivial cas response

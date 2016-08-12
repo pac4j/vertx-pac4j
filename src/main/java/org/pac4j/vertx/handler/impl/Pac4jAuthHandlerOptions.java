@@ -26,6 +26,7 @@ public class Pac4jAuthHandlerOptions {
     private String clientName = "";
     private String authorizerName = "";
     private String matcherName = "";
+    private boolean multiProfile = false;
 
     public Pac4jAuthHandlerOptions withClientName(final String newName) {
         Objects.requireNonNull(newName);
@@ -45,6 +46,11 @@ public class Pac4jAuthHandlerOptions {
         return this;
     }
 
+    public Pac4jAuthHandlerOptions withMultiProfile(final boolean allowMultiProfile) {
+        this.multiProfile = allowMultiProfile;
+        return this;
+    }
+
     public String clientName() {
         return clientName;
     }
@@ -55,5 +61,9 @@ public class Pac4jAuthHandlerOptions {
 
     public String matcherName() {
         return matcherName;
+    }
+
+    public boolean multiProfile() {
+        return multiProfile;
     }
 }

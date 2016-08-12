@@ -43,11 +43,6 @@ public class OAuth2ProviderMimic extends AbstractVerticle {
     public static final String OAUTH2_PROVIDER_SUCCESS_ENDPOINT = "/authSuccess";
     public static final String OAUTH2_PROVIDER_TOKEN_ENDPOINT = "/authToken";
     public static final String OAUTH2_PROVIDER_PROFILE_ENDPOINT = "/profile";
-    public static final String OAUTH2PROVIDER_UNKNOWN_CLIENT_ENDPOINT = "/unknownClient";
-    public static final String OAUTH2PROVIDER_NOT_AUTHENTICATED_ENDPOINT = "/authFailure";
-    public static final String OAUTH2PROVIDER_SERVER_ERROR_ENDPOINT = "/serverError";
-
-    private static final String LOCATION_HEADER = "location";
 
     private Map<String, String> pendingCodes = new HashMap<>();
     private final String userIdToReturn;
@@ -105,7 +100,7 @@ public class OAuth2ProviderMimic extends AbstractVerticle {
                     return Optional.empty();
                 }
                 return Optional.of(s.equals("authorization_code")).flatMap(b ->
-                                b ? accessToken(clientId, redirectUri, code) : Optional.empty()
+                                b ? accessToken(clientId, redirectUri) : Optional.empty()
                 ) ;
             });
 
@@ -131,7 +126,7 @@ public class OAuth2ProviderMimic extends AbstractVerticle {
 
 
 
-    private Optional<String> accessToken(final String clientId, final String redirectUri, final String accessCode) {
+    private Optional<String> accessToken(final String clientId, final String redirectUri) {
         Optional<String> token = Optional.ofNullable(pendingCodes.get(getKey(clientId, redirectUri))).flatMap(code ->
                         Optional.of(UUID.randomUUID().toString())
         );

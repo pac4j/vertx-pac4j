@@ -1,11 +1,10 @@
 package org.pac4j.vertx.cas;
 
-import io.vertx.core.Vertx;
 import io.vertx.ext.web.Session;
 import io.vertx.ext.web.sstore.SessionStore;
 import io.vertx.test.core.VertxTestBase;
+import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.core.profile.ProfileManager;
-import org.pac4j.core.profile.UserProfile;
 import org.pac4j.vertx.VertxProfileManager;
 import org.pac4j.vertx.VertxWebContext;
 import org.pac4j.vertx.auth.Pac4jUser;
@@ -13,11 +12,8 @@ import org.pac4j.vertx.profile.TestOAuth2Profile;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
 /**
@@ -33,11 +29,11 @@ public class VertxSharedDataLogoutHandlerTestBase extends VertxTestBase {
 
 
     protected void simulateLogin(VertxWebContext context) {
-        final ProfileManager profileManager = new VertxProfileManager(context);
+        final ProfileManager<CommonProfile> profileManager = new VertxProfileManager(context);
         final TestOAuth2Profile userProfile = new TestOAuth2Profile();
         userProfile.setId(TEST_USER_ID);
-        profileManager.save(true, userProfile);
-        UserProfile profile = profileManager.get(true);
+        profileManager.save(true, userProfile, false);
+        CommonProfile profile = profileManager.get(true).orElse(null);
         assertThat(profile, is(userProfile));
     }
 
@@ -53,7 +49,7 @@ public class VertxSharedDataLogoutHandlerTestBase extends VertxTestBase {
         return sessionFuture.get(1, TimeUnit.SECONDS);
     }
 
-    protected String recordSession(final Vertx suppliedVertx, final VertxSharedDataLogoutHandler casLogoutHandler, final SessionStore sessionStore) throws Exception {
+    protected String recordSession(final VertxSharedDataLogoutHandler casLogoutHandler, final SessionStore sessionStore) throws Exception {
         final Session session = getSession(sessionStore);
         final VertxSharedDataLogoutHandler handler = casLogoutHandler;
         final VertxWebContext context = dummyWebContext(session);
@@ -68,8 +64,6 @@ public class VertxSharedDataLogoutHandlerTestBase extends VertxTestBase {
      */
     protected static VertxWebContext dummyWebContext(final Session session) {
         final VertxWebContext vertxWebContext = mock(VertxWebContext.class);
-
-        final AtomicReference<Pac4jUser> loggedInUser = new AtomicReference<>();
 
         when(vertxWebContext.getRequestParameter("logoutRequest")).thenReturn("<samlp:LogoutRequest\n" +
                 "    xmlns:samlp=\"urn:oasis:names:tc:SAML:2.0:protocol\"\n" +

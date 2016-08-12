@@ -20,9 +20,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
-import org.pac4j.core.context.BaseResponseContext;
 import org.pac4j.core.context.Cookie;
-import org.pac4j.core.context.HttpConstants;
+import org.pac4j.core.context.WebContext;
 import org.pac4j.vertx.auth.Pac4jUser;
 import org.pac4j.vertx.core.DefaultJsonConverter;
 
@@ -33,7 +32,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -42,7 +40,7 @@ import java.util.stream.Collectors;
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public class VertxWebContext extends BaseResponseContext {
+public class VertxWebContext implements WebContext {
 
     private final RoutingContext routingContext;
     private final String method;
@@ -192,17 +190,17 @@ public class VertxWebContext extends BaseResponseContext {
         routingContext.response().putHeader(name, value);
     }
 
-    @Override
+//    @Override
     public Map<String, String> getResponseHeaders() {
         return  routingContext.response().headers().entries().stream()
-            .collect(Collectors.toMap((Function<Map.Entry<String, String>, String>) Map.Entry::getKey,
-                    (Function<Map.Entry<String, String>, String>) Map.Entry::getValue));
+            .collect(Collectors.toMap(Map.Entry::getKey,
+                    Map.Entry::getValue));
     }
-
-    @Override
-    public String getResponseLocation() {
-        return getResponseHeaders().get(HttpConstants.LOCATION_HEADER);
-    }
+//
+//    @Override
+//    public String getResponseLocation() {
+//        return getResponseHeaders().get(HttpConstants.LOCATION_HEADER);
+//    }
 
     @Override
     public void setResponseContentType(String s) {

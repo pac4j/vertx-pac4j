@@ -15,7 +15,7 @@
  */
 package org.pac4j.vertx.client;
 
-import org.pac4j.core.authorization.AuthorizationGenerator;
+import org.pac4j.core.authorization.generator.AuthorizationGenerator;
 import org.pac4j.vertx.profile.TestOAuth2Profile;
 
 /**

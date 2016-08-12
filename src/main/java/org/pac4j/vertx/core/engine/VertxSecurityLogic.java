@@ -13,30 +13,21 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package org.pac4j.vertx.http;
+package org.pac4j.vertx.core.engine;
 
-import org.pac4j.core.client.RedirectAction;
+import org.pac4j.core.engine.DefaultSecurityLogic;
+import org.pac4j.core.profile.ProfileManager;
+import org.pac4j.vertx.VertxProfileManager;
 import org.pac4j.vertx.VertxWebContext;
 
 /**
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public interface HttpActionAdapter {
+public class VertxSecurityLogic extends DefaultSecurityLogic<Void, VertxWebContext> {
 
-  /**
-   * Handle HTTP action.
-   *
-   * @param code the HTTP status code
-   * @param context the web context
-   */
-  void handle(final int code, final VertxWebContext context);
-
-  /**
-   * Handle HTTP action for redirection use cases.
-   *
-   * @param action the pac4j action to perform
-   * @param webContext the web context
-   */
-  void handleRedirect(final RedirectAction action, final VertxWebContext webContext);
+    @Override
+    protected ProfileManager getProfileManager(VertxWebContext context) {
+        return new VertxProfileManager(context);
+    }
 }

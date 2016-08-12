@@ -33,7 +33,6 @@ import io.vertx.ext.web.sstore.SessionStore;
 import org.junit.Test;
 import org.pac4j.core.client.Clients;
 import org.pac4j.core.config.Config;
-import org.pac4j.core.context.HttpConstants;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
 import org.pac4j.vertx.client.TestOAuth1Client;
 import org.pac4j.vertx.client.TestOAuth2AuthorizationGenerator;
@@ -63,10 +62,6 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     private static final String TEST_CLIENT_SECRET = "testClientSecret";
     private static final String TEST_OAUTH2_SUCCESS_URL = "http://localhost:9292/authSuccess";
     private static final String LOGOUT_URL_FOR_CLIENT = "/logout?url=/";
-    private static final String TEST_OAUTH2_TOKEN_URL = "http://localhost:9292/authToken";
-    public static final String APPLICATION_SERVER = "http://localhost:8080";
-    private static final String AUTH_RESULT_HANDLER_URL = APPLICATION_SERVER + "/authResult";
-    private static final String SESSION_PARAM_TOKEN = "testOAuth2Token";
 
     private static final Logger LOG = LoggerFactory.getLogger(StatefulPac4jAuthHandlerIntegrationTest.class);
 
@@ -175,29 +170,6 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
             });
         });
         await(1, TimeUnit.SECONDS);
-    }
-
-    @Test
-    public void testoAuth1LoginViaRequiresClientRedirect() throws Exception {
-        LOG.info("testSuccessfulOAuth2LoginWithoutAuthorities");
-        LOG.debug("Starting auth provider mimic");
-        startOAuth2ProviderMimic("testUser1");
-        // Start a web server with no required authorities (i.e. only authentication required) for the secured resource
-        startWebServer(TEST_OAUTH2_SUCCESS_URL, optionsWithBothNamesProvided(), null);
-        // Hit a correctly formed callback for the oAuth1 client
-        final HttpClient client = vertx.createHttpClient();
-        final HttpClientRequest request = client.get(8080, "localhost",
-                "/authResult?client_name=TestOAuth1Client&needs_client_redirection=true",
-                resp -> {
-                    assertThat(resp.statusCode(), is(302));
-                    final String newLoc = resp.getHeader(HttpConstants.LOCATION_HEADER);
-                    assertThat(newLoc, is( TestOAuth1Client.TEST_AUTHORIZATION_URL + "?authToken=" + TestOAuth1Client.TEST_REQUEST_TOKEN));
-                    // We only care that the first step works
-                    testComplete();
-                }
-        );
-        request.end();
-        await(6, TimeUnit.SECONDS);
     }
 
     @Override

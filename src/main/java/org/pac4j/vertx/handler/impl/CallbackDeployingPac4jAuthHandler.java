@@ -46,7 +46,7 @@ import java.net.URISyntaxException;
  */
 public class CallbackDeployingPac4jAuthHandler extends RequiresAuthenticationHandler {
 
-    private final Logger LOG = LoggerFactory.getLogger(CallbackDeployingPac4jAuthHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CallbackDeployingPac4jAuthHandler.class);
 
     // Consider coalescing the manager options into the handler options and then generating the manageroptions from them
     public CallbackDeployingPac4jAuthHandler(final Vertx vertx,
@@ -63,7 +63,7 @@ public class CallbackDeployingPac4jAuthHandler extends RequiresAuthenticationHan
         try {
             uri = new URI(config.getClients().getCallbackUrl());
         } catch (URISyntaxException e) {
-            LOG.error(e.getStackTrace().toString());
+            LOG.error(e.getMessage());
             throw toTechnicalException(e);
         }
 
@@ -72,7 +72,7 @@ public class CallbackDeployingPac4jAuthHandler extends RequiresAuthenticationHan
     }
 
     private Handler<RoutingContext> authResultHandler(final Vertx vertx, final Config config, Pac4jAuthHandlerOptions options) {
-        return new CallbackHandler(vertx, config);
+        return new CallbackHandler(vertx, config, options);
     }
 
 }
