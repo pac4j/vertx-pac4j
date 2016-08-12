@@ -190,17 +190,11 @@ public class VertxWebContext implements WebContext {
         routingContext.response().putHeader(name, value);
     }
 
-//    @Override
     public Map<String, String> getResponseHeaders() {
         return  routingContext.response().headers().entries().stream()
             .collect(Collectors.toMap(Map.Entry::getKey,
                     Map.Entry::getValue));
     }
-//
-//    @Override
-//    public String getResponseLocation() {
-//        return getResponseHeaders().get(HttpConstants.LOCATION_HEADER);
-//    }
 
     @Override
     public void setResponseContentType(String s) {
