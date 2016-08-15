@@ -34,7 +34,7 @@ import java.net.URISyntaxException;
  * the path of the callback URL specified in the Clients object held within the Config object supplied in the
  * constructor.
  *
- * There is no requirement to use this handler rather than a RequiresAuthenticationHandler (and indeed where the same
+ * There is no requirement to use this handler rather than a SecurityHandler (and indeed where the same
  * callback URL is being potentially used for multiple authentication handlers it may muddy the waters) but it is supplied
  * as a convenience to anyone wanting to perform very simple indirect authentications.
  *
@@ -44,7 +44,7 @@ import java.net.URISyntaxException;
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public class CallbackDeployingPac4jAuthHandler extends RequiresAuthenticationHandler {
+public class CallbackDeployingPac4jAuthHandler extends SecurityHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(CallbackDeployingPac4jAuthHandler.class);
 

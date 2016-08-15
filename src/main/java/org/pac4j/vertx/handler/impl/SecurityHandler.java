@@ -34,9 +34,9 @@ import org.pac4j.vertx.http.DefaultHttpActionAdapter;
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public class RequiresAuthenticationHandler extends AuthHandlerImpl {
+public class SecurityHandler extends AuthHandlerImpl {
 
-    private static final Logger LOG = LoggerFactory.getLogger(RequiresAuthenticationHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SecurityHandler.class);
 
     protected final Config config;
 
@@ -50,8 +50,8 @@ public class RequiresAuthenticationHandler extends AuthHandlerImpl {
 
     private SecurityLogic<Void, VertxWebContext> securityLogic = new VertxSecurityLogic();
 
-    public RequiresAuthenticationHandler(final Vertx vertx, final Config config, final Pac4jAuthProvider authProvider,
-                                         final Pac4jAuthHandlerOptions options) {
+    public SecurityHandler(final Vertx vertx, final Config config, final Pac4jAuthProvider authProvider,
+                           final Pac4jAuthHandlerOptions options) {
         super(authProvider);
         CommonHelper.assertNotNull("vertx", vertx);
         CommonHelper.assertNotNull("config", config);

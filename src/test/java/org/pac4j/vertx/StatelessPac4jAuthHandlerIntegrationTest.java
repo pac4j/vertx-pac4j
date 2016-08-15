@@ -29,7 +29,7 @@ import org.pac4j.http.client.direct.DirectBasicAuthClient;
 import org.pac4j.http.credentials.authenticator.test.SimpleTestUsernamePasswordAuthenticator;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
 import org.pac4j.vertx.handler.impl.Pac4jAuthHandlerOptions;
-import org.pac4j.vertx.handler.impl.RequiresAuthenticationHandler;
+import org.pac4j.vertx.handler.impl.SecurityHandler;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -133,7 +133,7 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
                 .withAuthorizerName(REQUIRE_ALL_AUTHORIZER)
                 .withClientName(BASIC_AUTH_CLIENT)
                 .withMatcherName(EXCLUDED_PATH_MATCHER_NAME);
-        final RequiresAuthenticationHandler handler =  new RequiresAuthenticationHandler(vertx, config(), authProvider, options);
+        final SecurityHandler handler =  new SecurityHandler(vertx, config(), authProvider, options);
         startWebServer(router, handler);
 
     }
