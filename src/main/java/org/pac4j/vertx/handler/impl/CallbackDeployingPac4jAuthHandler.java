@@ -38,7 +38,7 @@ public class CallbackDeployingPac4jAuthHandler extends SecurityHandler {
                                              final Config config,
                                              final Router router,
                                              final Pac4jAuthProvider authProvider,
-                                             final Pac4jAuthHandlerOptions options) {
+                                             final SecurityHandlerOptions options) {
         super(vertx, config, authProvider, options);
         // Other null checks performed by parent class
         CommonHelper.assertNotNull("router", router);
@@ -56,8 +56,8 @@ public class CallbackDeployingPac4jAuthHandler extends SecurityHandler {
         router.route(HttpMethod.GET, uri.getPath()).handler(authResultHandler(vertx, config, options));
     }
 
-    private Handler<RoutingContext> authResultHandler(final Vertx vertx, final Config config, Pac4jAuthHandlerOptions options) {
-        return new CallbackHandler(vertx, config, options);
+    private Handler<RoutingContext> authResultHandler(final Vertx vertx, final Config config, SecurityHandlerOptions options) {
+        return new CallbackHandler(vertx, config, options.multiProfile());
     }
 
 }

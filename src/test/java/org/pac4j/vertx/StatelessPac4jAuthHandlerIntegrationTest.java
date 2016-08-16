@@ -13,7 +13,7 @@ import org.pac4j.core.matching.ExcludedPathMatcher;
 import org.pac4j.http.client.direct.DirectBasicAuthClient;
 import org.pac4j.http.credentials.authenticator.test.SimpleTestUsernamePasswordAuthenticator;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
-import org.pac4j.vertx.handler.impl.Pac4jAuthHandlerOptions;
+import org.pac4j.vertx.handler.impl.SecurityHandlerOptions;
 import org.pac4j.vertx.handler.impl.SecurityHandler;
 
 import java.util.ArrayList;
@@ -114,10 +114,10 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
         final Router router = Router.router(vertx);
         // Configure a pac4j stateless handler configured for basic http auth
         final Pac4jAuthProvider authProvider = new Pac4jAuthProvider();
-        Pac4jAuthHandlerOptions options = new Pac4jAuthHandlerOptions()
-                .withAuthorizerName(REQUIRE_ALL_AUTHORIZER)
-                .withClientName(BASIC_AUTH_CLIENT)
-                .withMatcherName(EXCLUDED_PATH_MATCHER_NAME);
+        SecurityHandlerOptions options = new SecurityHandlerOptions()
+                .withAuthorizers(REQUIRE_ALL_AUTHORIZER)
+                .withClients(BASIC_AUTH_CLIENT)
+                .withMatchers(EXCLUDED_PATH_MATCHER_NAME);
         final SecurityHandler handler =  new SecurityHandler(vertx, config(), authProvider, options);
         startWebServer(router, handler);
 

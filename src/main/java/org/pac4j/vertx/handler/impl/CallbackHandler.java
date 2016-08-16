@@ -35,10 +35,10 @@ public class CallbackHandler implements Handler<RoutingContext> {
 
     public CallbackHandler(final Vertx vertx,
                            final Config config,
-                           final Pac4jAuthHandlerOptions authHandlerOptions) {
+                           final boolean multiProfile) {
         this.vertx = vertx;
         this.config = config;
-        this.multiProfile = authHandlerOptions.multiProfile();
+        this.multiProfile = multiProfile;
     }
 
     @Override

@@ -36,7 +36,7 @@ public class SecurityHandler extends AuthHandlerImpl {
     private SecurityLogic<Void, VertxWebContext> securityLogic = new VertxSecurityLogic();
 
     public SecurityHandler(final Vertx vertx, final Config config, final Pac4jAuthProvider authProvider,
-                           final Pac4jAuthHandlerOptions options) {
+                           final SecurityHandlerOptions options) {
         super(authProvider);
         CommonHelper.assertNotNull("vertx", vertx);
         CommonHelper.assertNotNull("config", config);
@@ -44,9 +44,9 @@ public class SecurityHandler extends AuthHandlerImpl {
         CommonHelper.assertNotNull("authProvider", authProvider);
         CommonHelper.assertNotNull("options", options);
 
-        clientNames = options.clientName();
-        authorizerName = options.authorizerName();
-        matcherName = options.matcherName();
+        clientNames = options.clients();
+        authorizerName = options.authorizers();
+        matcherName = options.matchers();
         multiProfile = options.multiProfile();
         this.vertx = vertx;
         this.config = config;
