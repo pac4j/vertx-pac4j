@@ -25,6 +25,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <vertx.version>3.2.1</vertx.version>
     <pac4j.version>1.9.1</pac4j.version>
+    <java.version>1.8</java.version>
+    <maven.compiler.plugin.version>3.5.1</maven.compiler.plugin.version>
     <mockito.version>1.10.19</mockito.version>
   </properties>
 
@@ -113,10 +115,10 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.2</version>
+        <version>${maven.compiler.plugin.version}</version>
         <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
         </configuration>
       </plugin>
     </plugins>
