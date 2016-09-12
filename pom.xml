@@ -27,6 +27,7 @@
     <pac4j.version>1.9.1</pac4j.version>
     <java.version>1.8</java.version>
     <maven.compiler.plugin.version>3.5.1</maven.compiler.plugin.version>
+    <kotlin.version>1.0.3</kotlin.version>
     <mockito.version>1.10.19</mockito.version>
   </properties>
 
@@ -91,6 +92,7 @@
       <scope>test</scope>
     </dependency>
 
+
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-all</artifactId>
@@ -106,12 +108,51 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
-
+    <dependency>
+      <groupId>org.jetbrains.kotlin</groupId>
+      <artifactId>kotlin-stdlib</artifactId>
+      <version>${kotlin.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.kotlin</groupId>
+      <artifactId>kotlin-test-junit</artifactId>
+      <version>${kotlin.version}</version>
+      <scope>test</scope>
+    </dependency>
 
   </dependencies>
 
   <build>
     <plugins>
+
+      <plugin>
+        <groupId>org.jetbrains.kotlin</groupId>
+        <artifactId>kotlin-maven-plugin</artifactId>
+        <version>${kotlin.version}</version>
+        <executions>
+          <execution>
+            <id>compile</id>
+            <phase>process-sources</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>test-compile</id>
+            <phase>process-test-sources</phase>
+            <goals>
+              <goal>test-compile</goal>
+            </goals>
+            <configuration>
+              <sourceDirs>
+                <source>src/test/java</source>
+                <source>src/test/kotlin</source>
+              </sourceDirs>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>

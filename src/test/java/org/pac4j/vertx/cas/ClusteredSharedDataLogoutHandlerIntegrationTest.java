@@ -33,7 +33,7 @@ import org.pac4j.vertx.VertxProfileManager;
 import org.pac4j.vertx.VertxWebContext;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
 import org.pac4j.vertx.handler.impl.CallbackHandler;
-import org.pac4j.vertx.handler.impl.SecurityHandlerOptions;
+import org.pac4j.vertx.handler.impl.CallbackHandlerOptions;
 
 import java.net.URLEncoder;
 import java.util.Optional;
@@ -222,7 +222,7 @@ public class  ClusteredSharedDataLogoutHandlerIntegrationTest extends VertxTestB
 
     private void startServer() throws Exception {
         final Router rxRouter = Router.router(rxVertx);
-        final SecurityHandlerOptions authHandlerOptions = new SecurityHandlerOptions();
+        final CallbackHandlerOptions callbackHandlerOptions = new CallbackHandlerOptions().setMultiProfile(false);
 
         final LocalSessionStore sessionStore = LocalSessionStore.create(rxVertx);
         final io.vertx.ext.web.sstore.SessionStore sstoreDelegate = (SessionStore) sessionStore.getDelegate();
@@ -233,7 +233,7 @@ public class  ClusteredSharedDataLogoutHandlerIntegrationTest extends VertxTestB
         rxRouter.route().handler(UserSessionHandler.create(authProvider));
         rxRouter.route(HttpMethod.GET, QUERY_STATE_URL).handler(queryHandler());
         rxRouter.route(HttpMethod.GET, SERVICE_VALIDATE_URL).handler(serviceValidateHandler());
-        final CallbackHandler callbackHandler = new CallbackHandler((Vertx) rxVertx.getDelegate(), config(sstoreDelegate), authHandlerOptions.multiProfile());
+        final CallbackHandler callbackHandler = new CallbackHandler((Vertx) rxVertx.getDelegate(), config(sstoreDelegate), callbackHandlerOptions);
         final io.vertx.ext.web.Router router = (io.vertx.ext.web.Router)rxRouter.getDelegate();
         router.route(HttpMethod.GET, CALLBACK_URL).handler(callbackHandler);
         router.route(HttpMethod.POST, CALLBACK_URL).handler(callbackHandler);

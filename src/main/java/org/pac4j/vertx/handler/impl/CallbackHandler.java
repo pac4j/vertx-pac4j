@@ -6,7 +6,6 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 import org.pac4j.core.config.Config;
-import org.pac4j.core.context.Pac4jConstants;
 import org.pac4j.core.engine.CallbackLogic;
 import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.http.HttpActionAdapter;
@@ -28,17 +27,22 @@ public class CallbackHandler implements Handler<RoutingContext> {
     private final HttpActionAdapter httpActionHandler = new DefaultHttpActionAdapter();
     private final Vertx vertx;
     private final Config config;
-    private final boolean multiProfile;
 
-    protected String defaultUrl = Pac4jConstants.DEFAULT_URL_VALUE;
+    // Config elements which are all optional
+    private final Boolean multiProfile;
+    private final Boolean renewSession;
+    private final String defaultUrl;
+
     private final CallbackLogic<Void, VertxWebContext> callbackLogic = new VertxCallbackLogic();
 
     public CallbackHandler(final Vertx vertx,
                            final Config config,
-                           final boolean multiProfile) {
+                           final CallbackHandlerOptions options) {
         this.vertx = vertx;
         this.config = config;
-        this.multiProfile = multiProfile;
+        this.multiProfile = options.getMultiProfile();
+        this.renewSession = options.getRenewSession();
+        this.defaultUrl = options.getDefaultUrl();
     }
 
     @Override
@@ -47,8 +51,10 @@ public class CallbackHandler implements Handler<RoutingContext> {
         // Can we complete the authentication process here?
         final VertxWebContext webContext = new VertxWebContext(event);
 
-        vertx.executeBlocking(future ->
-                callbackLogic.perform(webContext, config, httpActionHandler, defaultUrl, multiProfile,  false),
+        vertx.executeBlocking(future -> {
+                    callbackLogic.perform(webContext, config, httpActionHandler, defaultUrl, false, renewSession);
+                    future.complete(null);
+                },
                 false,
                 asyncResult -> {
                     // If we succeeded we're all good here, the job is done either through approving, or redirect, or
