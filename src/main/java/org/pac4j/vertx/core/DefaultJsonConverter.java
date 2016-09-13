@@ -1,19 +1,3 @@
-/*
-  Copyright 2014 - 2015 pac4j organization
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
- */
-
 package org.pac4j.vertx.core;
 
 import com.fasterxml.jackson.annotation.*;
@@ -21,6 +5,8 @@ import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.scribejava.core.model.OAuth1RequestToken;
+import com.github.scribejava.core.model.Token;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.Scope.Value.Requirement;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
@@ -28,7 +14,6 @@ import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.pac4j.core.exception.TechnicalException;
-import org.scribe.model.Token;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -53,7 +38,7 @@ public class DefaultJsonConverter implements JsonConverter {
     private final ObjectMapper mapper = new ObjectMapper();
     private static final DefaultJsonConverter INSTANCE = new DefaultJsonConverter();
 
-    public static final JsonConverter getInstance() {
+    public static JsonConverter getInstance() {
         return INSTANCE;
     }
 
@@ -62,13 +47,10 @@ public class DefaultJsonConverter implements JsonConverter {
         mapper.setVisibility(PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
         mapper.setVisibility(PropertyAccessor.IS_GETTER, JsonAutoDetect.Visibility.NONE);
 
-        addMixIn(BearerAccessToken.class, BearerAccessTokenMixin.class);
-        addMixIn(Scope.Value.class, ValueMixin.class);
-        addMixIn(Token.class, TokenMixin.class);
-    }
-
-    public void addMixIn(Class<?> target, Class<?> mixinSource) {
-        mapper.addMixInAnnotations(target, mixinSource);
+        mapper.addMixIn(OAuth1RequestToken.class, OAuth1RequestTokenMixin.class)
+            .addMixIn(BearerAccessToken.class, BearerAccessTokenMixin.class)
+            .addMixIn(Scope.Value.class, ValueMixin.class)
+            .addMixIn(Token.class, TokenMixin.class);
     }
 
     @Override
@@ -163,6 +145,16 @@ public class DefaultJsonConverter implements JsonConverter {
         @JsonCreator
         public TokenMixin(@JsonProperty("token") String token, @JsonProperty("secret") String secret,
                 @JsonProperty("rawResponse") String rawResponse) {
+        }
+    }
+
+    public static class OAuth1RequestTokenMixin {
+        @JsonCreator
+        public OAuth1RequestTokenMixin(@JsonProperty("token") String token,
+                                       @JsonProperty("tokenSecret") String tokenSecret,
+                                       @JsonProperty("oauthCallbackConfirmed") boolean oauthCallbackConfirmed,
+                                       @JsonProperty("rawResponse") String RawResponse) {
+
         }
     }
 

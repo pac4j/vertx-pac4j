@@ -1,18 +1,3 @@
-/*
-  Copyright 2015 - 2015 pac4j organization
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
- */
 package org.pac4j.vertx;
 
 import io.vertx.core.http.HttpClient;
@@ -28,8 +13,8 @@ import org.pac4j.core.matching.ExcludedPathMatcher;
 import org.pac4j.http.client.direct.DirectBasicAuthClient;
 import org.pac4j.http.credentials.authenticator.test.SimpleTestUsernamePasswordAuthenticator;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
-import org.pac4j.vertx.handler.impl.Pac4jAuthHandlerOptions;
-import org.pac4j.vertx.handler.impl.RequiresAuthenticationHandler;
+import org.pac4j.vertx.handler.impl.SecurityHandlerOptions;
+import org.pac4j.vertx.handler.impl.SecurityHandler;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -129,11 +114,11 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
         final Router router = Router.router(vertx);
         // Configure a pac4j stateless handler configured for basic http auth
         final Pac4jAuthProvider authProvider = new Pac4jAuthProvider();
-        Pac4jAuthHandlerOptions options = new Pac4jAuthHandlerOptions()
-                .withAuthorizerName(REQUIRE_ALL_AUTHORIZER)
-                .withClientName(BASIC_AUTH_CLIENT)
-                .withMatcherName(EXCLUDED_PATH_MATCHER_NAME);
-        final RequiresAuthenticationHandler handler =  new RequiresAuthenticationHandler(vertx, config(), authProvider, options);
+        SecurityHandlerOptions options = new SecurityHandlerOptions()
+                .withAuthorizers(REQUIRE_ALL_AUTHORIZER)
+                .withClients(BASIC_AUTH_CLIENT)
+                .withMatchers(EXCLUDED_PATH_MATCHER_NAME);
+        final SecurityHandler handler =  new SecurityHandler(vertx, config(), authProvider, options);
         startWebServer(router, handler);
 
     }

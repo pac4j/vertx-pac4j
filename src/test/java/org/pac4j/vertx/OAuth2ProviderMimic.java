@@ -1,18 +1,3 @@
-/*
-  Copyright 2015 - 2015 pac4j organization
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
- */
 package org.pac4j.vertx;
 
 import io.vertx.core.AbstractVerticle;
@@ -43,11 +28,6 @@ public class OAuth2ProviderMimic extends AbstractVerticle {
     public static final String OAUTH2_PROVIDER_SUCCESS_ENDPOINT = "/authSuccess";
     public static final String OAUTH2_PROVIDER_TOKEN_ENDPOINT = "/authToken";
     public static final String OAUTH2_PROVIDER_PROFILE_ENDPOINT = "/profile";
-    public static final String OAUTH2PROVIDER_UNKNOWN_CLIENT_ENDPOINT = "/unknownClient";
-    public static final String OAUTH2PROVIDER_NOT_AUTHENTICATED_ENDPOINT = "/authFailure";
-    public static final String OAUTH2PROVIDER_SERVER_ERROR_ENDPOINT = "/serverError";
-
-    private static final String LOCATION_HEADER = "location";
 
     private Map<String, String> pendingCodes = new HashMap<>();
     private final String userIdToReturn;
@@ -105,7 +85,7 @@ public class OAuth2ProviderMimic extends AbstractVerticle {
                     return Optional.empty();
                 }
                 return Optional.of(s.equals("authorization_code")).flatMap(b ->
-                                b ? accessToken(clientId, redirectUri, code) : Optional.empty()
+                                b ? accessToken(clientId, redirectUri) : Optional.empty()
                 ) ;
             });
 
@@ -131,7 +111,7 @@ public class OAuth2ProviderMimic extends AbstractVerticle {
 
 
 
-    private Optional<String> accessToken(final String clientId, final String redirectUri, final String accessCode) {
+    private Optional<String> accessToken(final String clientId, final String redirectUri) {
         Optional<String> token = Optional.ofNullable(pendingCodes.get(getKey(clientId, redirectUri))).flatMap(code ->
                         Optional.of(UUID.randomUUID().toString())
         );

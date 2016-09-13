@@ -5,7 +5,7 @@ import io.vertx.ext.web.Session;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.vertx.ext.web.sstore.SessionStore;
 import org.junit.Test;
-import org.pac4j.core.profile.UserProfile;
+import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.vertx.VertxProfileManager;
 import org.pac4j.vertx.VertxWebContext;
 
@@ -21,7 +21,7 @@ public class VertxLocalSharedDataLogoutHandlerTest extends VertxSharedDataLogout
     @Test
     public void testRecordSession() throws Exception {
         final SessionStore sessionStore = LocalSessionStore.create(vertx);
-        final String expectedSessionId = recordSession(vertx, new VertxLocalSharedDataLogoutHandler(vertx,
+        final String expectedSessionId = recordSession(new VertxLocalSharedDataLogoutHandler(vertx,
                 sessionStore), sessionStore);
         // Validate that the shared data for TEST_TICKET points to the session id for the created session should now be in the shared data?
         LocalMap<String, String> casMap = vertx.sharedData().getLocalMap(VertxSharedDataLogoutHandler.PAC4J_CAS_SHARED_DATA_KEY);
@@ -51,7 +51,7 @@ public class VertxLocalSharedDataLogoutHandlerTest extends VertxSharedDataLogout
         final String sessionIdFromSharedData = (String) vertx.sharedData().getLocalMap(VertxSharedDataLogoutHandler.PAC4J_CAS_SHARED_DATA_KEY)
                 .get(TEST_TICKET);
         assertThat(sessionIdFromSharedData, is(nullValue()));
-        final UserProfile userProfileFromSession = new VertxProfileManager(context).get(true);
+        final CommonProfile userProfileFromSession = new VertxProfileManager<>(context).get(true).orElse(null);
         assertThat(userProfileFromSession, is(nullValue()));
     }
 
