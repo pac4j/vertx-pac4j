@@ -31,7 +31,7 @@ class ApplicationLogoutHandlerIntegrationTest: VertxTestBase() {
 
     companion object {
 
-        val LOG: Logger = getLogger(javaClass)
+        val LOG: Logger = getLogger(ApplicationLogoutHandlerIntegrationTest.javaClass)
 
         /**
          * A handler whose only job is to record a pac4j profile as logged in
