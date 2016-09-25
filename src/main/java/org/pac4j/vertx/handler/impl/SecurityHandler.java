@@ -6,13 +6,14 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.impl.AuthHandlerImpl;
 import org.pac4j.core.config.Config;
+import org.pac4j.core.engine.DefaultSecurityLogic;
 import org.pac4j.core.engine.SecurityLogic;
 import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.http.HttpActionAdapter;
 import org.pac4j.core.util.CommonHelper;
+import org.pac4j.vertx.VertxProfileManager;
 import org.pac4j.vertx.VertxWebContext;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
-import org.pac4j.vertx.core.engine.VertxSecurityLogic;
 import org.pac4j.vertx.http.DefaultHttpActionAdapter;
 
 /**
@@ -33,7 +34,13 @@ public class SecurityHandler extends AuthHandlerImpl {
 
     protected HttpActionAdapter<Void, VertxWebContext> httpActionAdapter = new DefaultHttpActionAdapter();
 
-    private SecurityLogic<Void, VertxWebContext> securityLogic = new VertxSecurityLogic();
+    protected static SecurityLogic<Void, VertxWebContext> getSecurityLogic() {
+        final DefaultSecurityLogic<Void, VertxWebContext> securityLogic = new DefaultSecurityLogic<>();
+        securityLogic.setProfileManagerFactory(VertxProfileManager::new);
+        return securityLogic;
+    }
+
+    private final SecurityLogic<Void, VertxWebContext> securityLogic = getSecurityLogic();
 
     public SecurityHandler(final Vertx vertx, final Config config, final Pac4jAuthProvider authProvider,
                            final SecurityHandlerOptions options) {

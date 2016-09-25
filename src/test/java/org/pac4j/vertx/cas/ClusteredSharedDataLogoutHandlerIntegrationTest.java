@@ -23,6 +23,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.pac4j.cas.client.CasClient;
+import org.pac4j.cas.config.CasProtocol;
 import org.pac4j.cas.profile.CasProfile;
 import org.pac4j.core.client.Clients;
 import org.pac4j.core.config.Config;
@@ -300,7 +301,7 @@ public class  ClusteredSharedDataLogoutHandlerIntegrationTest extends VertxTestB
         casClient.setLogoutHandler(new VertxClusteredSharedDataLogoutHandler(clusteredVertx, sessionStore));
         casClient.setCasLoginUrl(CAS_LOGIN_URL);
         casClient.setName(CAS_CLIENT_NAME);
-        casClient.setCasProtocol(CasClient.CasProtocol.CAS20);
+        casClient.setCasProtocol(CasProtocol.CAS20);
         return casClient;
     }
 

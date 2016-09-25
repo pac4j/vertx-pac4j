@@ -7,10 +7,11 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 import org.pac4j.core.config.Config;
 import org.pac4j.core.engine.CallbackLogic;
+import org.pac4j.core.engine.DefaultCallbackLogic;
 import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.http.HttpActionAdapter;
+import org.pac4j.vertx.VertxProfileManager;
 import org.pac4j.vertx.VertxWebContext;
-import org.pac4j.vertx.core.engine.VertxCallbackLogic;
 import org.pac4j.vertx.http.DefaultHttpActionAdapter;
 
 /**
@@ -33,7 +34,11 @@ public class CallbackHandler implements Handler<RoutingContext> {
     private final Boolean renewSession;
     private final String defaultUrl;
 
-    private final CallbackLogic<Void, VertxWebContext> callbackLogic = new VertxCallbackLogic();
+    private final CallbackLogic<Void, VertxWebContext> callbackLogic = new DefaultCallbackLogic();
+    {
+        ((DefaultCallbackLogic<Void, VertxWebContext>) callbackLogic)
+                .setProfileManagerFactory(VertxProfileManager::new);
+    }
 
     public CallbackHandler(final Vertx vertx,
                            final Config config,
