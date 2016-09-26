@@ -23,10 +23,7 @@ import org.pac4j.vertx.auth.Pac4jAuthProvider;
 import org.pac4j.vertx.client.TestOAuth1Client;
 import org.pac4j.vertx.client.TestOAuth2AuthorizationGenerator;
 import org.pac4j.vertx.client.TestOAuth2Client;
-import org.pac4j.vertx.handler.impl.ApplicationLogoutHandler;
-import org.pac4j.vertx.handler.impl.CallbackDeployingPac4jAuthHandler;
-import org.pac4j.vertx.handler.impl.CallbackHandlerOptions;
-import org.pac4j.vertx.handler.impl.SecurityHandlerOptions;
+import org.pac4j.vertx.handler.impl.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -277,7 +274,9 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
                 requiredPermissions);
         handlerDecorator.accept(pac4jAuthHandler);
 
-        router.route(HttpMethod.GET, "/logout").handler(new ApplicationLogoutHandler());
+        router.route(HttpMethod.GET, "/logout")
+                .handler(new ApplicationLogoutHandler(vertx, new ApplicationLogoutHandlerOptions(),
+                        config(new Clients(oAuth2Client(baseAuthUrl), testOAuth1Client()), requiredPermissions)));
 
         startWebServer(router, pac4jAuthHandler);
     }

@@ -1,15 +1,18 @@
 package org.pac4j.vertx.handler.impl;
 
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
-import org.pac4j.core.context.HttpConstants;
-import org.pac4j.core.context.Pac4jConstants;
-import org.pac4j.core.profile.ProfileManager;
-import org.pac4j.core.util.CommonHelper;
+import org.pac4j.core.config.Config;
+import org.pac4j.core.engine.ApplicationLogoutLogic;
+import org.pac4j.core.engine.DefaultApplicationLogoutLogic;
+import org.pac4j.core.exception.TechnicalException;
+import org.pac4j.core.http.HttpActionAdapter;
 import org.pac4j.vertx.VertxProfileManager;
 import org.pac4j.vertx.VertxWebContext;
+import org.pac4j.vertx.http.DefaultHttpActionAdapter;
 
-import java.util.regex.Pattern;
+import static org.pac4j.core.util.CommonHelper.assertNotNull;
 
 /**
  * Implementation of a handler for handling pac4j user logout
@@ -18,44 +21,52 @@ import java.util.regex.Pattern;
  */
 public class ApplicationLogoutHandler implements Handler<RoutingContext> {
 
-    protected String defaultUrl = Pac4jConstants.DEFAULT_URL_VALUE;
-    protected String logoutUrlPattern = Pac4jConstants.DEFAULT_LOGOUT_URL_PATTERN_VALUE;
+    protected final String defaultUrl;
+    protected final String logoutUrlPattern;
+    protected final Config config;
+
+    private final ApplicationLogoutLogic<Void, VertxWebContext> logoutLogic;
+    private final Vertx vertx;
+
+    protected HttpActionAdapter<Void, VertxWebContext> httpActionAdapter = new DefaultHttpActionAdapter();
+
+    /**
+     * Construct based on the option values provided
+     * @param options - the options to configure this handler
+     */
+    public ApplicationLogoutHandler(final Vertx vertx, final ApplicationLogoutHandlerOptions options, final Config config) {
+        final DefaultApplicationLogoutLogic<Void, VertxWebContext> defaultApplicationLogoutLogic =
+                new DefaultApplicationLogoutLogic<>();
+        defaultApplicationLogoutLogic.setProfileManagerFactory(VertxProfileManager::new);
+        logoutLogic = defaultApplicationLogoutLogic;
+        this.defaultUrl = options.getDefaultUrl();
+        this.logoutUrlPattern = options.getLogoutUrlPattern();
+        this.config = config;
+        this.vertx = vertx;
+    }
 
     @Override
     public void handle(final RoutingContext routingContext) {
 
-        CommonHelper.assertNotBlank(Pac4jConstants.DEFAULT_URL, this.defaultUrl);
-        CommonHelper.assertNotBlank(Pac4jConstants.LOGOUT_URL_PATTERN, this.logoutUrlPattern);
+        assertNotNull("applicationLogoutLogic", logoutLogic);
+        assertNotNull("config", config);
 
-        // We need to clear pac4j data from the session
-        // also clear the user from the routing context (in case we're also using a UserSessionHandler which will
-        // also persist the user to the session)
-        // and redirect the user to an appropriate endpoint
         final VertxWebContext webContext = new VertxWebContext(routingContext);
-        final ProfileManager manager = new VertxProfileManager(webContext);
-        manager.logout();
-        routingContext.setUser(null);
 
-        // Now user data should be cleared out so the final redirect should be sufficient
+        vertx.executeBlocking(future -> {
+                    logoutLogic.perform(webContext, config, httpActionAdapter, defaultUrl, logoutUrlPattern);
+                    future.complete(null);
+                },
+                false,
+                asyncResult -> {
+                    // If we succeeded we're all good here, the job is done either through approving, or redirect, or
+                    // forbidding
+                    // However, if an error occurred we need to handle this here
+                    if (asyncResult.failed()) {
+                        routingContext.fail(new TechnicalException(asyncResult.cause()));
+                    }
+                });
 
-        final String url = webContext.getRequestParameter(Pac4jConstants.URL);
-        if (url == null) {
-            routingContext.response().setStatusCode(HttpConstants.OK);
-            routingContext.response().end();
-        } else {
-            if (Pattern.matches(this.logoutUrlPattern, url)) {
-                redirect(webContext, url);
-            } else {
-                redirect(webContext, this.defaultUrl);
-            }
-        }
-
-    }
-
-    protected void redirect(final VertxWebContext webContext, final String url) {
-        webContext.setResponseStatus(HttpConstants.TEMP_REDIRECT);
-        webContext.setResponseHeader(HttpConstants.LOCATION_HEADER, url);
-        webContext.completeResponse();
     }
 
 }

@@ -75,7 +75,7 @@ class ApplicationLogoutHandlerIntegrationTest: VertxTestBase() {
             with(r) {
                 route(HttpMethod.POST, URL_SPOOF_LOGIN).handler  { spoofLoginHandler(it) }
                 route(HttpMethod.GET, URL_QUERY_PROFILE).handler { getProfileHandler(it) }
-                get(URL_LOGOUT).handler(logoutHandler())
+                get(URL_LOGOUT).handler(logoutHandler(vertx))
             }
         })
     }

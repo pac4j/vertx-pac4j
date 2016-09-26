@@ -34,13 +34,7 @@ public class SecurityHandler extends AuthHandlerImpl {
 
     protected HttpActionAdapter<Void, VertxWebContext> httpActionAdapter = new DefaultHttpActionAdapter();
 
-    protected static SecurityLogic<Void, VertxWebContext> getSecurityLogic() {
-        final DefaultSecurityLogic<Void, VertxWebContext> securityLogic = new DefaultSecurityLogic<>();
-        securityLogic.setProfileManagerFactory(VertxProfileManager::new);
-        return securityLogic;
-    }
-
-    private final SecurityLogic<Void, VertxWebContext> securityLogic = getSecurityLogic();
+    private final SecurityLogic<Void, VertxWebContext> securityLogic;
 
     public SecurityHandler(final Vertx vertx, final Config config, final Pac4jAuthProvider authProvider,
                            final SecurityHandlerOptions options) {
@@ -57,6 +51,10 @@ public class SecurityHandler extends AuthHandlerImpl {
         multiProfile = options.multiProfile();
         this.vertx = vertx;
         this.config = config;
+
+        final DefaultSecurityLogic<Void, VertxWebContext> securityLogic = new DefaultSecurityLogic<>();
+        securityLogic.setProfileManagerFactory(VertxProfileManager::new);
+        this.securityLogic = securityLogic;
     }
 
     // Port of Pac4J auth to a handler in vert.x 3.

@@ -13,6 +13,7 @@ import io.vertx.rxjava.ext.web.Router
 import io.vertx.rxjava.ext.web.RoutingContext
 import io.vertx.rxjava.ext.web.sstore.LocalSessionStore
 import org.hamcrest.MatcherAssert.assertThat
+import org.pac4j.core.config.Config
 import org.pac4j.vertx.VertxProfileManager
 import org.pac4j.vertx.VertxWebContext
 import org.pac4j.vertx.auth.Pac4jAuthProvider
@@ -53,8 +54,8 @@ fun getProfileHandler(rc: RoutingContext) {
     rc.response().end(json.encodePrettily())
 }
 
-fun logoutHandler(): Handler<RoutingContext> {
-    val applicationLogoutHandler = ApplicationLogoutHandler()
+fun logoutHandler(vertx: io.vertx.core.Vertx): Handler<RoutingContext> {
+    val applicationLogoutHandler = ApplicationLogoutHandler(vertx, ApplicationLogoutHandlerOptions(), Config())
     return Handler {
         val delegate = it.delegate
         if (delegate is io.vertx.ext.web.RoutingContext) {
