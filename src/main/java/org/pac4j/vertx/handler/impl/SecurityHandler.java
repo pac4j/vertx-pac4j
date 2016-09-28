@@ -32,7 +32,7 @@ public class SecurityHandler extends AuthHandlerImpl {
     protected final boolean multiProfile;
     protected final Vertx vertx;
 
-    protected HttpActionAdapter<Void, VertxWebContext> httpActionAdapter = new DefaultHttpActionAdapter();
+    protected final HttpActionAdapter<Void, VertxWebContext> httpActionAdapter = new DefaultHttpActionAdapter();
 
     private final SecurityLogic<Void, VertxWebContext> securityLogic;
 
@@ -67,11 +67,12 @@ public class SecurityHandler extends AuthHandlerImpl {
         // be blocking) so we have to wrap the following call in an executeBlocking call to avoid blocking the
         // event loop
         final VertxWebContext webContext = new VertxWebContext(routingContext);
+
         vertx.executeBlocking(future -> securityLogic.perform(webContext, config,
             (ctx, parameters) -> {
                 // This is what should occur if we are authenticated and authorized to view the requested
                 // resource
-                LOG.debug("Authorised to view resource " + routingContext.request().path());
+                LOG.info("Authorised to view resource " + routingContext.request().path());
                 routingContext.next();
                 return null;
             },

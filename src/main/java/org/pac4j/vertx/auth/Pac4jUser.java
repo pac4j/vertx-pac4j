@@ -11,32 +11,36 @@ import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.vertx.core.DefaultJsonConverter;
 
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
+
+import static java.util.stream.Collectors.toMap;
 
 /**
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public class Pac4jUser<T extends CommonProfile> extends AbstractUser {
+public class Pac4jUser extends AbstractUser {
 
-    private T userProfile;
+    private final LinkedHashMap<String, CommonProfile> profiles = new LinkedHashMap<>();
     private JsonObject principal;
 
     public Pac4jUser() {
         // I think this noop default constructor is required for deserialization from a clustered session
     }
 
-    public Pac4jUser(T userProfile) {
-        setUserProfile(userProfile);
-    }
-
     @Override
     protected void doIsPermitted(String permission, Handler<AsyncResult<Boolean>> resultHandler) {
-        if (userProfile.getPermissions().contains(permission)) {
-            resultHandler.handle(Future.succeededFuture(true));
-        } else {
-            resultHandler.handle(Future.succeededFuture(false));
-        }
+
+        /*
+         * Assume permitted if any profile is permitted
+         */
+        resultHandler.handle(Future.succeededFuture(
+            profiles.values().stream()
+                .anyMatch(p -> p.getPermissions().contains(permission))
+        ));
+
     }
 
     @Override
@@ -52,7 +56,13 @@ public class Pac4jUser<T extends CommonProfile> extends AbstractUser {
     public void writeToBuffer(Buffer buff) {
         super.writeToBuffer(buff);
         // Now write the remainder of our stuff to the buffer;
-        final String json = DefaultJsonConverter.getInstance().encodeObject(userProfile).toString();
+        final JsonObject profilesAsJson = new JsonObject();
+        profiles.forEach((name, profile) -> {
+            final JsonObject profileAsJson = (JsonObject) DefaultJsonConverter.getInstance().encodeObject(profile);
+            profilesAsJson.put(name, profileAsJson);
+        });
+
+        final String json = profilesAsJson.toString();
         byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
         buff.appendInt(jsonBytes.length)
             .appendBytes(jsonBytes);
@@ -66,21 +76,62 @@ public class Pac4jUser<T extends CommonProfile> extends AbstractUser {
         posLocal += 4;
         final byte[] jsonBytes = buffer.getBytes(posLocal, posLocal + jsonByteCount);
         posLocal += jsonByteCount;
+
         final String json = new String(jsonBytes, StandardCharsets.UTF_8);
-        final T decodedUserProfile = (T) DefaultJsonConverter.getInstance().decodeObject(new JsonObject(json));
-        setUserProfile(decodedUserProfile);
+        final JsonObject profiles = new JsonObject(json);
+
+        final Map<String, CommonProfile> decodedUserProfiles = profiles.stream()
+                .filter(e -> e.getValue() instanceof JsonObject)
+                .map(e -> new MappedPair<>(e.getKey(),
+                        (CommonProfile) DefaultJsonConverter.getInstance().decodeObject(e.getValue())))
+                .collect(toMap(e -> e.key, e -> e.value));
+
+        setUserProfiles(decodedUserProfiles);
         return posLocal;
     }
 
-    public CommonProfile pac4jUserProfile() {
-        return userProfile;
+    public Map<String, CommonProfile> pac4jUserProfiles() {
+        return profiles;
     }
 
-    private void setUserProfile(T profile) {
+    public void setUserProfile(final String clientName, final CommonProfile profile, final boolean multiProfile) {
+        if (multiProfile) {
+            profiles.clear();
+        }
+        profiles.put(clientName, profile);
+        updatePrincipal();
+    }
 
-        Objects.requireNonNull(profile);
-        this.userProfile = profile;
+    private void setUserProfiles(final Map<String, CommonProfile> userProfiles) {
+
+        Objects.requireNonNull(userProfiles);
+        profiles.clear();
+        profiles.putAll(userProfiles);
+        updatePrincipal();
+    }
+
+    /**
+     * Update the principal, to be called on any modification of the profiles map internally.
+     */
+    private void updatePrincipal() {
+
         principal = new JsonObject();
-        userProfile.getAttributes().keySet().stream().forEach(key -> principal.put(key, userProfile.getAttribute(key).toString()));
+        profiles.forEach((name, profile) -> {
+            final JsonObject jsonProfile = new JsonObject();
+            profile.getAttributes()
+                    .forEach((attributeName, attributeValue) ->
+                            jsonProfile.put(attributeName, attributeValue.toString()));
+            principal.put(name, jsonProfile);
+        });
+    }
+
+    private static class MappedPair<T, U> {
+        public final T key;
+        public final U value;
+
+        public MappedPair(final T key, final U value) {
+            this.key = key;
+            this.value = value;
+        }
     }
 }

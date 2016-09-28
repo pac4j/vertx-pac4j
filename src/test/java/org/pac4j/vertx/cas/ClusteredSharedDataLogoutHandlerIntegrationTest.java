@@ -56,20 +56,20 @@ public class  ClusteredSharedDataLogoutHandlerIntegrationTest extends VertxTestB
     private static final String USER_ID = "userId";
     private static final String STORED_SESSION_ID = "storedSessionId";
 
-    public static final String QUERY_STATE_URL = "/cas_state";
+    private static final String QUERY_STATE_URL = "/cas_state";
     private static final String TEST_USER_ID = "testUser1";
     private static final String SESSION_ID = "sessionId";
-    public static final String CAS_CLIENT_NAME = "casClient";
-    public static final String TEST_TICKET = "testTicket";
-    public static final String CAS_LOGIN_URL = "http://localhost:8080/";
-    public static final String SERVICE_VALIDATE_URL = "/serviceValidate";
-    public static final String CALLBACK_URL = "/callback";
+    private static final String CAS_CLIENT_NAME = "casClient";
+    private static final String TEST_TICKET = "testTicket";
+    private static final String CAS_LOGIN_URL = "http://localhost:8080/";
+    private static final String SERVICE_VALIDATE_URL = "/serviceValidate";
+    private static final String CALLBACK_URL = "/callback";
 
     private Vertx clusteredVertx;
     private io.vertx.rxjava.core.Vertx rxVertx;
 
     // This will be our session cookie header for use by requests
-    protected AtomicReference<String> sessionCookie = new AtomicReference<>();
+    protected final AtomicReference<String> sessionCookie = new AtomicReference<>();
 
     @Before
     public void clearSessionCookie() {
@@ -278,7 +278,7 @@ public class  ClusteredSharedDataLogoutHandlerIntegrationTest extends VertxTestB
             rc.response().setStatusCode(200).end(casTicketValidationResponse());
     }
 
-    private ProfileManager<CasProfile> profileManager(final RoutingContext routingContext) {
+    private ProfileManager profileManager(final RoutingContext routingContext) {
         return new VertxProfileManager(new VertxWebContext((io.vertx.ext.web.RoutingContext) routingContext.getDelegate()));
     }
 

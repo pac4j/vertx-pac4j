@@ -40,6 +40,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
  * @author Jeremy Prime
  * @since 2.0.0
  */
+@SuppressWarnings("RedundantThrows")
 public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIntegrationTestBase {
 
     private static final String TEST_CLIENT_ID = "testClient";
@@ -48,11 +49,13 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     private static final String LOGOUT_URL_FOR_CLIENT = "/logout?url=/";
 
     private static final Logger LOG = LoggerFactory.getLogger(StatefulPac4jAuthHandlerIntegrationTest.class);
+    private static final String TEST_OAUTH_2_CLIENT_NAME = "TestOAuth2Client";
+    private static final String FIELD_ACCESS_TOKEN = "access_token";
 
     // This will be our session cookie header for use by requests
-    protected AtomicReference<String> sessionCookie = new AtomicReference<>();
+    private final AtomicReference<String> sessionCookie = new AtomicReference<>();
 
-    public void startOAuth2ProviderMimic(final String userIdToReturn) throws Exception {
+    private void startOAuth2ProviderMimic(final String userIdToReturn) throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         final OAuth2ProviderMimic mimic = new OAuth2ProviderMimic(userIdToReturn);
 
@@ -161,8 +164,10 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
     }
 
     @Override
-    protected void validateProtectedResourceContent(JsonObject jsonObject) {
-        assertThat(jsonObject.getString("access_token"), is(notNullValue()));
+    protected void validateProtectedResourceContent(final JsonObject jsonObject) {
+        assertThat(jsonObject
+                .getJsonObject(TEST_OAUTH_2_CLIENT_NAME)
+                .getString(FIELD_ACCESS_TOKEN), is(notNullValue()));
     }
 
     private void loginSuccessfullyExpectingAuthorizedUser(final Consumer<Void> subsequentActions) throws Exception {
@@ -213,7 +218,7 @@ public class StatefulPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerInt
                         expectAndHandleRedirect(client, clientResponse -> {},
                                 // redirect to original url if authorized
                                 expectAndHandleRedirect(client, httpClientResponse -> {},
-                                        finalResponseHandler::handle)))
+                                        finalResponseHandler)))
         )
                 .end();
 
