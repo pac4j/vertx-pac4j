@@ -51,7 +51,7 @@ public class VertxLocalSharedDataLogoutHandlerTest extends VertxSharedDataLogout
         final String sessionIdFromSharedData = (String) vertx.sharedData().getLocalMap(VertxSharedDataLogoutHandler.PAC4J_CAS_SHARED_DATA_KEY)
                 .get(TEST_TICKET);
         assertThat(sessionIdFromSharedData, is(nullValue()));
-        final CommonProfile userProfileFromSession = new VertxProfileManager<>(context).get(true).orElse(null);
+        final CommonProfile userProfileFromSession = new VertxProfileManager(context).get(true).orElse(null);
         assertThat(userProfileFromSession, is(nullValue()));
     }
 

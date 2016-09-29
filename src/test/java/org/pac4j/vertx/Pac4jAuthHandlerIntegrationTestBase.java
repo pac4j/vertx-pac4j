@@ -4,6 +4,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -25,14 +27,16 @@ import java.util.function.Consumer;
  */
 public abstract class Pac4jAuthHandlerIntegrationTestBase extends VertxTestBase {
 
-    public static final String EXCLUDED_PROTECTED_RESOURCE_URL = "/private/public/success.html";
-    public static final String UNPROTECTED_RESOURCE_BODY = "Unprotected resource";
-    protected static final String TEST_CLIENT_NAME = "TestOAuth2Client";
-    protected static final String REQUIRE_ALL_AUTHORIZER = "requireAllAuthorizer";
-    protected static final String FORBIDDEN_BODY = "Forbidden to access this resource";
-    protected static final String UNAUTHORIZED_BODY = "Unauthorized for resource";
+    private static final Logger LOG = LoggerFactory.getLogger(Pac4jAuthHandlerIntegrationTestBase.class);
 
-    protected void startWebServer(Router router, Handler<RoutingContext> authHandler) throws Exception {
+    static final String EXCLUDED_PROTECTED_RESOURCE_URL = "/private/public/success.html";
+    static final String UNPROTECTED_RESOURCE_BODY = "Unprotected resource";
+    static final String TEST_CLIENT_NAME = "TestOAuth2Client";
+    static final String REQUIRE_ALL_AUTHORIZER = "requireAllAuthorizer";
+    static final String FORBIDDEN_BODY = "Forbidden to access this resource";
+    static final String UNAUTHORIZED_BODY = "Unauthorized for resource";
+
+    void startWebServer(Router router, Handler<RoutingContext> authHandler) throws Exception {
         HttpServer server = vertx.createHttpServer();
 
         router.route("/private/*").handler(authHandler);
@@ -69,13 +73,14 @@ public abstract class Pac4jAuthHandlerIntegrationTestBase extends VertxTestBase 
     private Handler<RoutingContext> loginSuccessHandler() {
         // Just write out the routing context's user principal, we can then validate against this
         return rc -> {
+            LOG.info("Login success");
             final User user = rc.user();
             final JsonObject json = user != null ? user.principal() : new JsonObject();
             rc.response().end(json.encodePrettily());
         };
     }
 
-    protected Map<String, Authorizer> authorizers(final List<String> permissions) {
+    Map<String, Authorizer> authorizers(final List<String> permissions) {
         return new HashMap<String, Authorizer>() {{
             put(REQUIRE_ALL_AUTHORIZER, authorizer(permissions));
         }};
@@ -87,14 +92,14 @@ public abstract class Pac4jAuthHandlerIntegrationTestBase extends VertxTestBase 
         return authorizer;
     }
 
-    protected Consumer<String> protectedResourceContentValidator() {
+    Consumer<String> protectedResourceContentValidator() {
         return body -> {
             final JsonObject json = new JsonObject(body);
             validateProtectedResourceContent(json);
         };
     }
 
-    protected void validateLoginSuccessResponse(final HttpClientResponse response, final Consumer<Void> subsequentActions) {
+    void validateLoginSuccessResponse(final HttpClientResponse response, final Consumer<Void> subsequentActions) {
         response.bodyHandler(body -> {
             protectedResourceContentValidator().accept(body.toString());
             subsequentActions.accept(null);

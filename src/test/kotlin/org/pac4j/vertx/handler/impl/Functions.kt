@@ -17,7 +17,6 @@ import org.pac4j.core.config.Config
 import org.pac4j.vertx.VertxProfileManager
 import org.pac4j.vertx.VertxWebContext
 import org.pac4j.vertx.auth.Pac4jAuthProvider
-import org.pac4j.vertx.profile.TestOAuth1Profile
 import rx.Observable
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
@@ -65,7 +64,7 @@ fun logoutHandler(vertx: io.vertx.core.Vertx): Handler<RoutingContext> {
 }
 
 
-fun getProfileManager(rc: RoutingContext): VertxProfileManager<TestOAuth1Profile> {
+fun getProfileManager(rc: RoutingContext): VertxProfileManager {
     val webContext = VertxWebContext(rc.delegate as io.vertx.ext.web.RoutingContext)
     return VertxProfileManager(webContext)
 }

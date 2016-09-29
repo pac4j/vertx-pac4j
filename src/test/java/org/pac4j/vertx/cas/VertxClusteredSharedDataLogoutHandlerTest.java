@@ -44,10 +44,10 @@ public class VertxClusteredSharedDataLogoutHandlerTest extends VertxSharedDataLo
                 final Vertx clusteredVertx = asyncResult.result();
                 final SessionStore sessionStore = LocalSessionStore.create(clusteredVertx);
                 clusteredVertx.<String>executeBlocking(future -> {
-                            String expectedSessionid = null;
+                            String expectedSessionId = null;
                             try {
-                                expectedSessionid = recordSession(new VertxClusteredSharedDataLogoutHandler(clusteredVertx, sessionStore), sessionStore);
-                                future.complete(expectedSessionid);
+                                expectedSessionId = recordSession(new VertxClusteredSharedDataLogoutHandler(clusteredVertx, sessionStore), sessionStore);
+                                future.complete(expectedSessionId);
                             } catch (Exception e) {
                                future.fail(e);
                             }
@@ -131,12 +131,13 @@ public class VertxClusteredSharedDataLogoutHandlerTest extends VertxSharedDataLo
         }, false)
         .doOnError(sessionDestructionFuture::completeExceptionally)
         .subscribe(sessionDestructionFuture::complete);
-        sessionDestructionFuture.get(1, TimeUnit.SECONDS); // Wait till we think session destruction is complete or we timeo
+        sessionDestructionFuture.get(1, TimeUnit.SECONDS); // Wait till we think session destruction is complete or
+                                                           // we timeout
 
         // Now check final state
         final String actualSessionId = getFromAsyncMap(clusteredVertx, TEST_TICKET);
         assertThat(actualSessionId, is(nullValue()));
-        final UserProfile profileFromSession = new VertxProfileManager<>(webContext).get(true).orElse(null);
+        final UserProfile profileFromSession = new VertxProfileManager(webContext).get(true).orElse(null);
         assertThat(profileFromSession, is(nullValue()));
 
     }

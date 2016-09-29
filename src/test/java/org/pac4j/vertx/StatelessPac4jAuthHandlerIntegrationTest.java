@@ -31,13 +31,13 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
 
     private static final String AUTH_HEADER_NAME = "Authorization";
     private static final String BASIC_AUTH_PREFIX = "Basic ";
-    public static final String TEST_USER_NAME = "testUser";
+    private static final String TEST_USER_NAME = "testUser";
     private static final String TEST_BASIC_AUTH_HEADER = BASIC_AUTH_PREFIX + Base64.encodeBase64String((TEST_USER_NAME + ":testUser").getBytes());
     private static final String TEST_FAILING_BASIC_AUTH_HEADER = BASIC_AUTH_PREFIX + Base64.encodeBase64String((TEST_USER_NAME + ":testUser2").getBytes());
-    public static final String PROTECTED_RESOURCE_URL = "/private/success.html";
-    public static final String BASIC_AUTH_CLIENT = "BasicAuthClient";
+    private static final String PROTECTED_RESOURCE_URL = "/private/success.html";
+    private static final String BASIC_AUTH_CLIENT = "BasicAuthClient";
     private static final String USERNAME_FIELD = "username";
-    public static final String EXCLUDED_PATH_MATCHER_NAME = "ExcludedPathMatcher";
+    private static final String EXCLUDED_PATH_MATCHER_NAME = "ExcludedPathMatcher";
 
     @Test
     public void testSuccessfulLogin() throws Exception {
@@ -65,10 +65,12 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
 
     @Override
     protected void validateProtectedResourceContent(JsonObject jsonObject) {
-        assertThat(jsonObject.getString(USERNAME_FIELD), is(TEST_USER_NAME));
+        assertThat(jsonObject
+                .getJsonObject(BASIC_AUTH_CLIENT)
+                .getString(USERNAME_FIELD), is(TEST_USER_NAME));
     }
 
-    protected Consumer<String> unprotectedResourceContentValidator() {
+    private Consumer<String> unprotectedResourceContentValidator() {
         return s -> s.equals(UNPROTECTED_RESOURCE_BODY);
     }
 
