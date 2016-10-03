@@ -95,7 +95,7 @@ public class Pac4jUser extends AbstractUser {
     }
 
     public void setUserProfile(final String clientName, final CommonProfile profile, final boolean multiProfile) {
-        if (multiProfile) {
+        if (!multiProfile) {
             profiles.clear();
         }
         profiles.put(clientName, profile);
