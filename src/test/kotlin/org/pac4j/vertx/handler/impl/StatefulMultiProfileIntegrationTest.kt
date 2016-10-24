@@ -57,7 +57,6 @@ class StatefulMultiProfileIntegrationTest: StatefulPac4jAuthHandlerIntegrationTe
                     Consumer {},
                     expectAndHandleRedirect(client, {},
                     { resp ->
-                        LOG.info(resp.statusCode())
                         resp.bodyHandler {
                             body ->
                                 try {
