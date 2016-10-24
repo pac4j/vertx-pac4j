@@ -64,7 +64,7 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
     }
 
     @Override
-    protected void validateProtectedResourceContent(JsonObject jsonObject) {
+    protected void validateProtectedResourceContentFollowingInitialLogin(JsonObject jsonObject) {
         assertThat(jsonObject
                 .getJsonObject(BASIC_AUTH_CLIENT)
                 .getString(USERNAME_FIELD), is(TEST_USER_NAME));

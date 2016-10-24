@@ -44,11 +44,6 @@ public class TestOAuth2Client extends BaseOAuth20StateClient<TestOAuth2Profile> 
         return profile;
     }
 
-//    @Override
-//    protected BaseClient<OAuthCredentials, TestOAuth2Profile> newClient() {
-//        return new TestOAuth2Client();
-//    }
-
     public String getAuthorizationUrlTemplate() {
         return authorizationUrlTemplate;
     }

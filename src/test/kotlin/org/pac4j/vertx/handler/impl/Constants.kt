@@ -1,6 +1,7 @@
 package org.pac4j.vertx.handler.impl
 
 /**
+ * Standard set of test constants for the Kotlin-based tests
  * @since 2.1.0
  */
 const val HOST = "localhost"
@@ -13,3 +14,12 @@ const val TEST_EMAIL = "testUser1@test.com"
 const val USER_ID_KEY = "userId"
 const val EMAIL_KEY = "email"
 const val SESSION_ID_KEY = "session_id"
+const val OAUTH2_CLIENT_NAME = "TestOAuth2Client"
+const val FIELD_ACCESS_TOKEN = "access_token"
+const val FIELD_EMAIL = "email"
+const val TEST_QUERY_PARAM_CLIENT_NAME = "QueryParamBasedIndirectClient"
+const val QUERY_PARAM_USER_ID = "userId"
+const val QUERY_PARAM_EMAIL = "email"
+const val QUERY_PARAM_CLIENT_NAME = "client_name"
+const val QUERY_PARAM_REDIRECT_URI = "redirect_uri"
+const val PROTECTED_RESOURCE_SUCCESS = "/private/success.html"

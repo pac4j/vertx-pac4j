@@ -57,7 +57,7 @@ public class CallbackHandler implements Handler<RoutingContext> {
         final VertxWebContext webContext = new VertxWebContext(event);
 
         vertx.executeBlocking(future -> {
-                    callbackLogic.perform(webContext, config, httpActionHandler, defaultUrl, false, renewSession);
+                    callbackLogic.perform(webContext, config, httpActionHandler, defaultUrl, multiProfile, renewSession);
                     future.complete(null);
                 },
                 false,

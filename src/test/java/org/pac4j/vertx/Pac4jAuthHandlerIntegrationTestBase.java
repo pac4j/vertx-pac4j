@@ -95,16 +95,16 @@ public abstract class Pac4jAuthHandlerIntegrationTestBase extends VertxTestBase 
     Consumer<String> protectedResourceContentValidator() {
         return body -> {
             final JsonObject json = new JsonObject(body);
-            validateProtectedResourceContent(json);
+            validateProtectedResourceContentFollowingInitialLogin(json);
         };
     }
 
-    void validateLoginSuccessResponse(final HttpClientResponse response, final Consumer<Void> subsequentActions) {
+    protected void validateInitialLoginSuccessResponse(final HttpClientResponse response, final Consumer<Void> subsequentActions) {
         response.bodyHandler(body -> {
             protectedResourceContentValidator().accept(body.toString());
             subsequentActions.accept(null);
         });
     }
 
-    protected abstract void validateProtectedResourceContent(final JsonObject jsonObject);
+    protected abstract void validateProtectedResourceContentFollowingInitialLogin(final JsonObject jsonObject);
 }
