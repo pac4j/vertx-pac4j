@@ -1,10 +1,7 @@
 package org.pac4j.vertx.handler.impl
 
 import io.vertx.core.Handler
-import io.vertx.core.buffer.Buffer
 import io.vertx.core.http.HttpMethod
-import io.vertx.core.json.JsonObject
-import io.vertx.core.logging.LoggerFactory
 import io.vertx.ext.web.RoutingContext
 import org.hamcrest.CoreMatchers.notNullValue
 import org.junit.Test
@@ -27,14 +24,10 @@ import org.hamcrest.core.Is.`is` as isEqualTo
  * client then force a login on a subsequent client, finally examining the resultant pac4j user's profiles to
  * ensure that both are present.
  */
-class StatefulMultiProfileIntegrationTest: StatefulPac4jAuthHandlerIntegrationTestBase() {
-
-    companion object {
-        private val LOG = LoggerFactory.getLogger(StatefulMultiProfileIntegrationTest::class.java)
-    }
+class StatefulMultiProfileIntegrationTest: StatefulPac4jAuthHandlerIntegrationTestBase(), MultiProfileTest {
 
     @Test
-    fun testMultiprofileSecondLoginWorksAsExpected() {
+    fun testMultiProfileSecondLoginWorksAsExpected() {
 
         startOAuthProviderMimic("testOAuth1User")
         startWebServer(TEST_OAUTH2_SUCCESS_URL, optionsWithBothNamesProvided(), callbackHandlerOptions(), null,
@@ -52,7 +45,7 @@ class StatefulMultiProfileIntegrationTest: StatefulPac4jAuthHandlerIntegrationTe
                     "/forceSecondLogin?$QUERY_PARAM_CLIENT_NAME=$TEST_QUERY_PARAM_CLIENT_NAME" +
                             "&$QUERY_PARAM_USER_ID=$TEST_USER1&$QUERY_PARAM_EMAIL=$TEST_EMAIL" +
                             "&$QUERY_PARAM_REDIRECT_URI=${URLEncoder.encode(successResourceUrl(), "UTF-8")}")
-            getSessionCookie().ifPresent({ cookie -> forceLoginRequest.putHeader("cookie", cookie) })
+            sessionCookie.ifPresent({ cookie -> forceLoginRequest.putHeader("cookie", cookie) })
             forceLoginRequest.handler(expectAndHandleRedirect(client,
                     Consumer {},
                     expectAndHandleRedirect(client, {},
@@ -60,7 +53,7 @@ class StatefulMultiProfileIntegrationTest: StatefulPac4jAuthHandlerIntegrationTe
                         resp.bodyHandler {
                             body ->
                                 try {
-                                    validateProfilesInBody(body,
+                                    validateProfilesInBody(this, body,
                                             listOf(
                                                     Pair(OAUTH2_CLIENT_NAME, Consumer { child ->
                                                         assertThat<Any>(child.getString(FIELD_ACCESS_TOKEN),
@@ -82,22 +75,6 @@ class StatefulMultiProfileIntegrationTest: StatefulPac4jAuthHandlerIntegrationTe
         }
         await(10, TimeUnit.SECONDS)
 
-    }
-
-    private fun validateProfilesInBody(body: Buffer, validations: List<Pair<String, Consumer<JsonObject>>>) {
-
-        val bodyAsJson = JsonObject(body.toString())
-        assertThat(bodyAsJson.size(), isEqualTo(validations.size))
-
-        validations.forEach {
-            validateJsonObjectChild(bodyAsJson, it.first, it.second)
-        }
-
-    }
-
-    private fun validateJsonObjectChild(jsonObject: JsonObject?, key: String, childValidator: Consumer<JsonObject>) {
-        assertThat<Any>(jsonObject!!.containsKey(key), isEqualTo(true))
-        childValidator.accept(jsonObject.getJsonObject(key))
     }
 
     private fun queryParamBasedIndirectClient(server: String, callbackPath: String): QueryParamBasedIndirectClient {

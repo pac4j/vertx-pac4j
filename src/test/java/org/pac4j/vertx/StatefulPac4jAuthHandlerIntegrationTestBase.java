@@ -66,10 +66,9 @@ public abstract class StatefulPac4jAuthHandlerIntegrationTestBase extends Pac4jA
 
 
     // This will be our session cookie header for use by requests
-    protected final AtomicReference<String> sessionCookie = new AtomicReference<>();
+    private final AtomicReference<String> sessionCookie = new AtomicReference<>();
 
-    @Override
-    protected void validateProtectedResourceContentFollowingInitialLogin(final JsonObject jsonObject) {
+    private void validateProtectedResourceContentFollowingInitialLogin(final JsonObject jsonObject) {
         assertThat(jsonObject
                 .getJsonObject(TEST_OAUTH_2_CLIENT_NAME)
                 .getString(FIELD_ACCESS_TOKEN), is(notNullValue()));
@@ -93,7 +92,7 @@ public abstract class StatefulPac4jAuthHandlerIntegrationTestBase extends Pac4jA
      * @param callbackHandlerOptions - CallbackHandlerOptions for configuring the callback handler
      * @param requiredPermissions - list of required permissions to access the protected endpoint
      * @param routerDecorator - modifications to the router (for example addition of custom endpoints for a test
-     * @throws Exception
+     * @throws Exception - any exception when running this code should trigger test failure
      */
     protected void startWebServer(final String baseAuthUrl,
                                   final SecurityHandlerOptions options,
@@ -139,7 +138,7 @@ public abstract class StatefulPac4jAuthHandlerIntegrationTestBase extends Pac4jA
         return LocalSessionStore.create(vertx);
     }
 
-    protected Config config(final Clients clients, List<String> requiredPermissions) {
+    private Config config(final Clients clients, List<String> requiredPermissions) {
         clients.setCallbackUrl("http://localhost:8080/authResult");
         return new  Config(clients, authorizers(requiredPermissions));
     }
@@ -160,7 +159,7 @@ public abstract class StatefulPac4jAuthHandlerIntegrationTestBase extends Pac4jA
         return client;
     }
 
-    protected TestOAuth1Client testOAuth1Client() {
+    TestOAuth1Client testOAuth1Client() {
         TestOAuth1Client client =  new TestOAuth1Client();
         client.setKey(TEST_CLIENT_ID);
         client.setSecret(TEST_CLIENT_SECRET);
@@ -173,14 +172,14 @@ public abstract class StatefulPac4jAuthHandlerIntegrationTestBase extends Pac4jA
                 .withClients(TEST_CLIENT_NAME);
     }
 
-    protected void startWebServer(final String baseAuthUrl,
-                                  final SecurityHandlerOptions options,
-                                  final CallbackHandlerOptions callbackHandlerOptions,
-                                  final List<String> requiredPermissions) throws Exception {
+    void startWebServer(final String baseAuthUrl,
+                        final SecurityHandlerOptions options,
+                        final CallbackHandlerOptions callbackHandlerOptions,
+                        final List<String> requiredPermissions) throws Exception {
         startWebServer(baseAuthUrl, options, callbackHandlerOptions, requiredPermissions, (router, consumer) -> {});
     }
 
-    protected void loginSuccessfullyExpectingAuthorizedUser(final Consumer<Void> subsequentActions) throws Exception {
+    void loginSuccessfullyExpectingAuthorizedUser(final Consumer<Void> subsequentActions) throws Exception {
         loginSuccessfullyExpectingAuthorizedUser(vertx.createHttpClient(), subsequentActions);
     }
 
@@ -191,7 +190,7 @@ public abstract class StatefulPac4jAuthHandlerIntegrationTestBase extends Pac4jA
         });
     }
 
-    protected void loginSuccessfully(final HttpClient client, final Handler<HttpClientResponse> finalResponseHandler) throws Exception {
+    void loginSuccessfully(final HttpClient client, final Handler<HttpClientResponse> finalResponseHandler) throws Exception {
         // Attempt to get a private url
         final HttpClientRequest successfulRequest = client.get(8080, "localhost", "/private/success.html");
         successfulRequest.handler(
@@ -208,7 +207,7 @@ public abstract class StatefulPac4jAuthHandlerIntegrationTestBase extends Pac4jA
 
     }
 
-    protected Consumer<HttpClientResponse> extractCookie() {
+    private Consumer<HttpClientResponse> extractCookie() {
         return clientResponse -> {
             final String setCookie = clientResponse.headers().get("set-cookie");
             assertNotNull(setCookie);
@@ -235,10 +234,26 @@ public abstract class StatefulPac4jAuthHandlerIntegrationTestBase extends Pac4jA
         request.end();
     }
 
-    protected OAuth2ProviderMimic getOAuthProviderMimic(final String userId) {
+    private Consumer<String> protectedResourceContentValidator() {
+        return body -> {
+            final JsonObject json = new JsonObject(body);
+            validateProtectedResourceContentFollowingInitialLogin(json);
+        };
+    }
+
+    void validateInitialLoginSuccessResponse(final HttpClientResponse response, final Consumer<Void> subsequentActions) {
+        response.bodyHandler(body -> {
+            protectedResourceContentValidator().accept(body.toString());
+            subsequentActions.accept(null);
+        });
+    }
+
+
+    private OAuth2ProviderMimic getOAuthProviderMimic(final String userId) {
         return new OAuth2ProviderMimic(userId);
     }
 
     protected abstract CallbackHandlerOptions callbackHandlerOptions();
     protected abstract Clients clients(final String baseAuthUrl);
+
 }
