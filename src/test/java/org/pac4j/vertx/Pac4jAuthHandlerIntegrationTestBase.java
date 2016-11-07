@@ -1,7 +1,7 @@
 package org.pac4j.vertx;
 
 import io.vertx.core.Handler;
-import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -10,6 +10,7 @@ import io.vertx.ext.auth.User;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.test.core.VertxTestBase;
+import org.hamcrest.Matcher;
 import org.pac4j.core.authorization.authorizer.Authorizer;
 import org.pac4j.core.authorization.authorizer.RequireAllPermissionsAuthorizer;
 import org.pac4j.vertx.profile.TestOAuth2Profile;
@@ -36,7 +37,17 @@ public abstract class Pac4jAuthHandlerIntegrationTestBase extends VertxTestBase 
     static final String FORBIDDEN_BODY = "Forbidden to access this resource";
     static final String UNAUTHORIZED_BODY = "Unauthorized for resource";
 
-    void startWebServer(Router router, Handler<RoutingContext> authHandler) throws Exception {
+    /**
+     * Expose assertThat publicly to enable convenient use of kotlin trait in multi-profile tests
+     * @param actual - the actual value of the value
+     * @param matcher - matcher relating to expected value or possible values
+     * @param <T> - type of the value we're matching
+     */
+    public <T> void assertThat(T actual, Matcher<T> matcher) {
+        super.assertThat(actual, matcher);
+    }
+
+    protected void startWebServer(Router router, Handler<RoutingContext> authHandler) throws Exception {
         HttpServer server = vertx.createHttpServer();
 
         router.route("/private/*").handler(authHandler);
@@ -73,14 +84,14 @@ public abstract class Pac4jAuthHandlerIntegrationTestBase extends VertxTestBase 
     private Handler<RoutingContext> loginSuccessHandler() {
         // Just write out the routing context's user principal, we can then validate against this
         return rc -> {
-            LOG.info("Login success");
+            LOG.info("Login success handler called");
             final User user = rc.user();
             final JsonObject json = user != null ? user.principal() : new JsonObject();
             rc.response().end(json.encodePrettily());
         };
     }
 
-    Map<String, Authorizer> authorizers(final List<String> permissions) {
+    protected Map<String, Authorizer> authorizers(final List<String> permissions) {
         return new HashMap<String, Authorizer>() {{
             put(REQUIRE_ALL_AUTHORIZER, authorizer(permissions));
         }};
@@ -92,19 +103,11 @@ public abstract class Pac4jAuthHandlerIntegrationTestBase extends VertxTestBase 
         return authorizer;
     }
 
-    Consumer<String> protectedResourceContentValidator() {
+    static Consumer<Buffer> validateJsonBody(final Consumer<JsonObject> jsonValidator) {
         return body -> {
-            final JsonObject json = new JsonObject(body);
-            validateProtectedResourceContentFollowingInitialLogin(json);
+            final JsonObject json = new JsonObject(body.toString());
+            jsonValidator.accept(json);
         };
     }
 
-    protected void validateInitialLoginSuccessResponse(final HttpClientResponse response, final Consumer<Void> subsequentActions) {
-        response.bodyHandler(body -> {
-            protectedResourceContentValidator().accept(body.toString());
-            subsequentActions.accept(null);
-        });
-    }
-
-    protected abstract void validateProtectedResourceContentFollowingInitialLogin(final JsonObject jsonObject);
 }

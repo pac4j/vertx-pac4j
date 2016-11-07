@@ -1,7 +1,6 @@
 package org.pac4j.vertx;
 
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import org.apache.commons.codec.binary.Base64;
@@ -13,12 +12,11 @@ import org.pac4j.core.matching.ExcludedPathMatcher;
 import org.pac4j.http.client.direct.DirectBasicAuthClient;
 import org.pac4j.http.credentials.authenticator.test.SimpleTestUsernamePasswordAuthenticator;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
-import org.pac4j.vertx.handler.impl.SecurityHandlerOptions;
 import org.pac4j.vertx.handler.impl.SecurityHandler;
+import org.pac4j.vertx.handler.impl.SecurityHandlerOptions;
 
 import java.util.ArrayList;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -27,14 +25,12 @@ import static org.hamcrest.CoreMatchers.is;
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIntegrationTestBase {
+public class StatelessPac4jAuthHandlerIntegrationTest extends StatelessPac4jAuthHandlerIntegrationTestBase {
 
-    private static final String AUTH_HEADER_NAME = "Authorization";
     private static final String BASIC_AUTH_PREFIX = "Basic ";
     private static final String TEST_USER_NAME = "testUser";
     private static final String TEST_BASIC_AUTH_HEADER = BASIC_AUTH_PREFIX + Base64.encodeBase64String((TEST_USER_NAME + ":testUser").getBytes());
     private static final String TEST_FAILING_BASIC_AUTH_HEADER = BASIC_AUTH_PREFIX + Base64.encodeBase64String((TEST_USER_NAME + ":testUser2").getBytes());
-    private static final String PROTECTED_RESOURCE_URL = "/private/success.html";
     private static final String BASIC_AUTH_CLIENT = "BasicAuthClient";
     private static final String USERNAME_FIELD = "username";
     private static final String EXCLUDED_PATH_MATCHER_NAME = "ExcludedPathMatcher";
@@ -42,14 +38,15 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
     @Test
     public void testSuccessfulLogin() throws Exception {
 
-        testProtectedResourceAccessWithCredentials(TEST_BASIC_AUTH_HEADER, 200, protectedResourceContentValidator());
+        testProtectedResourceAccessWithAuthHeader(TEST_BASIC_AUTH_HEADER, 200,
+                validateJsonBody(this::validateProtectedResourceContent));
 
     }
 
     @Test
     public void testFailedLogin() throws Exception {
 
-        testProtectedResourceAccessWithCredentials(TEST_FAILING_BASIC_AUTH_HEADER, 401, unauthorizedContentValidator());
+        testProtectedResourceAccessWithAuthHeader(TEST_FAILING_BASIC_AUTH_HEADER, 401, unauthorizedContentValidator());
 
     }
 
@@ -63,55 +60,28 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends Pac4jAuthHandlerIn
         testResourceAccess(EXCLUDED_PROTECTED_RESOURCE_URL, Optional.of(TEST_FAILING_BASIC_AUTH_HEADER), 200, unprotectedResourceContentValidator());
     }
 
-    @Override
-    protected void validateProtectedResourceContentFollowingInitialLogin(JsonObject jsonObject) {
+    private void validateProtectedResourceContent(JsonObject jsonObject) {
         assertThat(jsonObject
                 .getJsonObject(BASIC_AUTH_CLIENT)
                 .getString(USERNAME_FIELD), is(TEST_USER_NAME));
     }
 
-    private Consumer<String> unprotectedResourceContentValidator() {
-        return s -> s.equals(UNPROTECTED_RESOURCE_BODY);
+    private Consumer<Buffer> unprotectedResourceContentValidator() {
+        return b -> assertThat(b.toString(), is(UNPROTECTED_RESOURCE_BODY));
     }
 
     private void testResourceAccessWithoutCredentials(final String url,
                                                       final int expectedHttpStatus,
-                                                      final Consumer<String> bodyValidator) throws Exception {
+                                                      final Consumer<Buffer> bodyValidator) throws Exception {
         testResourceAccess(url, Optional.empty(), expectedHttpStatus, bodyValidator);
     }
 
-    private void testProtectedResourceAccessWithCredentials(final String credentialsHeader, final int expectedHttpStatus, final Consumer<String> bodyValidator) throws Exception {
-        testResourceAccess(PROTECTED_RESOURCE_URL, Optional.of(credentialsHeader), expectedHttpStatus, bodyValidator);
+    private Consumer<Buffer> unauthorizedContentValidator() {
+        return body -> assertEquals(UNAUTHORIZED_BODY, body.toString());
     }
 
-    private void testResourceAccess(final String url,
-                                    final Optional<String> credentialsHeader,
-                                    final int expectedHttpStatus,
-                                    final Consumer<String> bodyValidator) throws Exception {
-        startWebServer();
-        HttpClient client = vertx.createHttpClient();
-        // Attempt to get a private url
-        final HttpClientRequest request = client.get(8080, "localhost", url);
-        credentialsHeader.ifPresent(header -> request.putHeader(AUTH_HEADER_NAME, header));
-        // This should get the desired result straight away rather than operating through redirects
-        request.handler(response -> {
-            assertEquals(expectedHttpStatus, response.statusCode());
-            response.bodyHandler(body -> {
-                final String bodyContent = body.toString();
-                bodyValidator.accept(bodyContent);
-                testComplete();
-            });
-        });
-        request.end();
-        await(2, TimeUnit.SECONDS);
-
-    }
-
-    private Consumer<String> unauthorizedContentValidator() {
-        return body -> assertEquals(UNAUTHORIZED_BODY, body);
-    }
-
-    private void startWebServer() throws Exception {
+    @Override
+    protected void startWebServer() throws Exception {
 
         final Router router = Router.router(vertx);
         // Configure a pac4j stateless handler configured for basic http auth

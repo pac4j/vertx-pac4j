@@ -9,7 +9,7 @@ import org.pac4j.core.redirect.RedirectActionBuilder
 import org.pac4j.vertx.handler.impl.QUERY_PARAM_CLIENT_NAME
 import org.pac4j.vertx.handler.impl.QUERY_PARAM_EMAIL
 import org.pac4j.vertx.handler.impl.QUERY_PARAM_USER_ID
-import org.pac4j.vertx.profile.QueryParamBasedProfile
+import org.pac4j.vertx.profile.SimpleTestProfile
 import java.util.*
 
 /**
@@ -18,10 +18,10 @@ import java.util.*
  * to generate a callback url from a context by passing in the query params provided.
  *
  * This is not in any way a secure client and is only intended for automated test purposes to provide an easy route to
- * logging in with a second profile for multiprofile testing.
+ * logging in with a second profile for multi-profile testing.
  */
 class QueryParamBasedIndirectClient(val server: String, val callbackPath: String):
-        IndirectClientV2<TestCredentials, QueryParamBasedProfile>() {
+        IndirectClientV2<TestCredentials, SimpleTestProfile>() {
 
     init {
         credentialsExtractor = CredentialsExtractor { context ->
@@ -32,7 +32,7 @@ class QueryParamBasedIndirectClient(val server: String, val callbackPath: String
             Objects.requireNonNull(credentials.email)
         }
         profileCreator = ProfileCreator { credentials, webContext ->
-            QueryParamBasedProfile(credentials.userId, credentials.email)}
+            SimpleTestProfile(credentials.userId, credentials.email)}
         redirectActionBuilder = RedirectActionBuilder { webContext ->
 
             val clientNameKV = "$QUERY_PARAM_CLIENT_NAME=${webContext.getRequestParameter(QUERY_PARAM_CLIENT_NAME)}"
