@@ -2,7 +2,7 @@
   <img src="https://pac4j.github.io/pac4j/img/logo-vertx.png" width="300" />
 </p>
 
-The `vertx-pac4j` project is an **easy and powerful security library for Vertx 3** web applications which supports authentication and authorization, but also application logout and advanced features like CSRF protection. It's available under the Apache 2 license and based on the **[pac4j security engine](https://github.com/pac4j/pac4j)**.
+The `vertx-pac4j` project is an **easy and powerful security library for Vert.x 3** web applications which supports authentication and authorization, but also application logout and advanced features like CSRF protection. It's available under the Apache 2 license and based on the **[pac4j security engine](https://github.com/pac4j/pac4j)**.
 
 [**Main concepts and components:**](http://www.pac4j.org/docs/main-concepts-and-components.html)
 
@@ -14,11 +14,11 @@ The `vertx-pac4j` project is an **easy and powerful security library for Vertx 3
 
 &#9656; Roles / permissions - Anonymous / remember-me / (fully) authenticated - Profile type, attribute -  CORS - CSRF - Security headers - IP address, HTTP method
 
-3) The `RequiresAuthenticationHandler` protects an url by checking that the user is authenticated and that the authorizations are valid, according to the clients and authorizers configuration. If the user is not authenticated, it performs authentication for direct clients or starts the login process for indirect clients
+3) The `SecurityHandler` protects an url by checking that the user is authenticated and that the authorizations are valid, according to the clients and authorizers configuration. If the user is not authenticated, it performs authentication for direct clients or starts the login process for indirect clients
 
 4) The `CallbackHandler` finishes the login process for an indirect client
 
-5) The `ApplicationLogoutController` logs out the user from the application.
+5) The `ApplicationLogoutHandler` logs out the user from the application.
 
 For vert.x 2 and previous, use vertx-pac4j 1.1.x - this codebase can be found at [1.1.x](https://github.com/pac4j/vertx-pac4j/tree/vertx-pac4j-1.1.x)
 
@@ -26,20 +26,21 @@ For vert.x 2 and previous, use vertx-pac4j 1.1.x - this codebase can be found at
 
 First, you need to add a dependency on this library as well as on the appropriate `pac4j` submodules. Then, you must define the [**clients**](http://www.pac4j.org/docs/clients.html) for authentication and the [**authorizers**](http://www.pac4j.org/docs/authorizers.html) to check authorizations.
 
-Define the `CallbackHandler` to finish authentication processes if you use indirect clients (like Facebook).
+Define the `CallbackHandler` to finish authentication processes if you use indirect clients (like Facebook). Supply a `CallbackHandlerOptions` to configure the handler.
 
-Use the `RequiresAuthenticationHandler` to secure the urls of your web application (using the `clientName` parameter for authentication and the `authorizerName` parameter for authorizations).
+Use the `SecurityHandler` to secure the urls of your web application (using the `clientName` parameter for authentication and the `authorizerName` parameter for authorizations). Supply a `SecurityHandlerOptions` to configure the handler.
 
 Just follow these easy steps:
 
-### Add the required dependencies (`vertx-pac4j` + `pac4j-*` libraries)
+### 1) Add the required dependencies (`vertx-pac4j` + `pac4j-*` libraries)
 
-You need to add a dependency on the `vertx-pac4j` library (<em>groupId</em>: **org.pac4j**, *version*: **2.0.1**) as well as on the appropriate `pac4j` submodules (<em>groupId</em>: **org.pac4j**, *version*: **1.8.5**): the `pac4j-oauth` dependency for OAuth support, the `pac4j-cas` dependency for CAS support, the `pac4j-ldap` module for LDAP authentication, ...
+You need to add a dependency on the `vertx-pac4j` library (<em>groupId</em>: **org.pac4j**, *version*: **2.0.1**) as well as on the appropriate `pac4j` submodules (<em>groupId</em>: **org.pac4j**, *version*: **1.9.4**): the `pac4j-oauth` dependency for OAuth support, the `pac4j-cas` dependency for CAS support, the `pac4j-ldap` module for LDAP authentication, ...
 
 All released artifacts are available in the [Maven central repository](http://search.maven.org/#search%7Cga%7C1%7Cpac4j).
 
+---
 
-### Define the configuration (`Config` + `Clients` + `XXXClient` + `Authorizer`)
+### 2) Define the configuration (`Config` + `Clients` + `XXXClient` + `Authorizer`)
 
 Each authentication mechanism (Facebook, Twitter, a CAS server...) is defined by a client (implementing the `org.pac4j.core.client.Client` interface). All clients must be gathered in a `org.pac4j.core.client.Clients` class.
 
@@ -69,74 +70,125 @@ For example:
      
     final ParameterClient parameterClient = new ParameterClient("token", new JwtAuthenticator("salt"));
      
-    final Clients clients = new Clients("http://localhost:8080/callback", oidcClient, saml2Client, facebookClient, twitterClient, formClient, basicAuthClient, casClient, parameterClient);
-     
-    final Config config = new Config(clients);
+    Config config = new Config("http://localhost:8080/callback", oidcClient, saml2Client, facebookClient,
+                                      twitterClient, formClient, basicAuthClient, casClient, parameterClient);
     config.addAuthorizer("admin", new RequireAnyRoleAuthorizer("ROLE_ADMIN"));
     config.addAuthorizer("custom", new CustomAuthorizer());
 
 "http://localhost:8080/callback" is the url of the callback endpoint (see below). It may not be defined for REST support / direct clients only.
 
+Notice that you can define specific [matchers](http://www.pac4j.org/docs/matchers.html) via the `addMatcher(name, Matcher)` method.
 
-### Define the callback endpoint (only for stateful / indirect authentication mechanisms)
+---
 
-Indirect clients rely on external identity providers (like Facebook) and thus require to define a callback endpoint in the application where the user will be redirected after login at the identity provider. For REST support / direct clients only, this callback endpoint is not necessary.  
-It must be defined for your router (to handle callbacks on the /callback url):
+### 3) Protect urls (`SecurityHandler`)
 
-    final CallbackHandler callbackHandler = new CallbackHandler(vertx, config);
-    router.get("/callback").handler(callbackHandler);
-    router.post("/callback").handler(BodyHandler.create().setMergeFormAttributes(true));
-    router.post("/callback").handler(callbackHandler);
+You can protect (authentication + authorizations) the urls of your J2E application by using the `SecurityHandler` and defining the appropriate mapping. It has the following behaviour:
 
-The `defaultUrl` parameter can be set for the `CallbackHandler` to define where the user will be redirected after login if no url was originally requested.
+1) If the HTTP request matches the `matchers` configuration (or no `matchers` are defined), the security is applied. Otherwise, the user is automatically granted access.
+
+2) First, if the user is not authenticated (no profile) and if some clients have been defined in the `clients` parameter, a login is tried for the direct clients.
+
+3) Then, if the user has a profile, authorizations are checked according to the `authorizers` configuration. If the authorizations are valid, the user is granted access. Otherwise, a 403 error page is displayed.
+
+4) Finally, if the user is still not authenticated (no profile), he is redirected to the appropriate identity provider if the first defined client is an indirect one in the `clients` configuration. Otherwise, a 401 error page is displayed.
 
 
-### Protect an url (authentication + authorization)
+The following parameters are available (via a `SecurityHandlerOptions` instance you pass into your `SecurityHandler` constructoe):
 
-You can protect an url and require the user to be authenticated by a client (and optionally have the appropriate authorizations) by using the `RequiresAuthenticationHandler` and `Pac4jAuthProvider`:
+1) `clients` (optional): the list of client names (separated by commas) used for authentication:
+- in all cases, this filter requires the user to be authenticated. Thus, if the `clients` is blank or not defined, the user must have been previously authenticated
+- if the `client_name` request parameter is provided, only this client (if it exists in the `clients`) is selected.
+
+2) `authorizers` (optional): the list of authorizer names (separated by commas) used to check authorizations:
+- if the `authorizers` is blank or not defined, no authorization is checked
+- the following authorizers are available by default (without defining them in the configuration):
+  * `isFullyAuthenticated` to check if the user is authenticated but not remembered, `isRemembered` for a remembered user, `isAnonymous` to ensure the user is not authenticated, `isAuthenticated` to ensure the user is authenticated (not necessary by default unless you use the `AnonymousClient`)
+  * `hsts` to use the `StrictTransportSecurityHeader` authorizer, `nosniff` for `XContentTypeOptionsHeader`, `noframe` for `XFrameOptionsHeader `, `xssprotection` for `XSSProtectionHeader `, `nocache` for `CacheControlHeader ` or `securityHeaders` for the five previous authorizers
+  * `csrfToken` to use the `CsrfTokenGeneratorAuthorizer` with the `DefaultCsrfTokenGenerator` (it generates a CSRF token and saves it as the `pac4jCsrfToken` request attribute and in the `pac4jCsrfToken` cookie), `csrfCheck` to check that this previous token has been sent as the `pac4jCsrfToken` header or parameter in a POST request and `csrf` to use both previous authorizers.
+
+3) `matchers` (optional): the list of matcher names (separated by commas) that the request must satisfy to check authentication / authorizations
+
+4) `multiProfile` (optional): it indicates whether multiple authentications (and thus multiple profiles) must be kept at the same time (`false` by default).
 
     Pac4jAuthProvider authProvider = new Pac4jAuthProvider();
-    Pac4jAuthHandlerOptions options = new Pac4jAuthHandlerOptions().withClientName(clientNames);
+    SecurityHandlerOptions options = new SecurityHandlerOptions().withClients(clientNames);
     if (authName != null) {
-       options = options.withAuthorizerName(authName);
+       options = options.withAuthorizers(authName);
     }
     router.get(url).handler(new RequiresAuthenticationHandler(vertx, config, authProvider, options));
 
-Here are the available parameters of the `Pac4jAuthHandlerOptions`:
+---
 
-- `clientName` (optional): the list of client names (separated by commas) used for authentication. If the user is not authenticated, direct clients are tried successively then if the user is still not authenticated and if the first client is an indirect one, this client is used to start the authentication. Otherwise, a 401 HTTP error is returned. If the *client_name* request parameter is provided, only the matching client is selected
-- `authorizerName` (optional): the list of authorizer names (separated by commas) used to check authorizations. If the user is not authorized, a 403 HTTP error is returned. By default (if blank), the user only requires to be authenticated to access the resource
-- `matcherName` (optional): the list of matcher names (separated by commas) that the request must satisfy to apply authentication / authorization. By default, all requests are checked.
+### 4) Define the callback endpoint only for indirect clients (`CallbackFilter`)
 
-### Get the user profile
+For indirect clients (like Facebook), the user is redirected to an external identity provider for login and then back to the application.
+Thus, a callback endpoint is required in the application. It is managed by the `CallbackHandler` which has the following behaviour:
 
-You can test if the user is authenticated using the `VertxProfileManager.isAuthenticated()` method or get the user profile using the `VertxProfileManager.get(true)` method (`false` not to use the session, but only the current HTTP request):
+1) the credentials are extracted from the current request to fetch the user profile (from the identity provider) which is then saved in the web session
+
+2) finally, the user is redirected back to the originally requested url (or to the `defaultUrl`).
+
+The following parameters are available (via the CallbackHandlerOptions class):
+
+1) `defaultUrl` (optional): it's the default url after login if no url was originally requested (`/` by default)
+
+2) `multiProfile` (optional): it indicates whether multiple authentications (and thus multiple profiles) must be kept at the same time (`false` by default)
+
+3) `renewSession` (optional): it indicates whether the web session must be renewed after login, to avoid session hijacking (`true` by default). Currently vert.x does not provide a session renewal mechanism so this flag affects nothing, but it has been left in place for consistency.
+
+    final CallbackHandlerOptions = new CallbackHandlerOptions().setDefaultUrl("/loginSuccess").setMultiProfile(false);
+    final CallbackHandler callbackHandler = new CallbackHandler(vertx, config, options);
+    router.get("/callback").handler(callbackHandler);
+    router.post("/callback").handler(BodyHandler.create().setMergeFormAttributes(true));
+    router.post("/callback").handler(callbackHandler);
+    
+---
+
+### 5) Get the user profile (`VertxProfileManager`)
+
+You can get the profile of the authenticated user using `VertxProfileManager.get(true)` (`false` not to use the session, but only the current HTTP request).
+You can test if the user is authenticated using `VertxProfileManager.isAuthenticated()`.
+You can get all the profiles of the authenticated user (if ever multiple ones are kept) using `VertxProfileManager.getAll(true)`.
+
+Note that the above are all standard `ProfileManager` methods but the `VertxProfileManager` is an implementation which is integrated with vertx-web including session and user support.
 
     ProfileManager<CommonProfile> profileManager = new VertxProfileManager<>(new VertxWebContext(rc));
-    CommonProfile profile = profileManager.get(true);
+    Optional<CommonProfile> profile = profileManager.get(true);
 
 The retrieved profile is at least a `CommonProfile`, from which you can retrieve the most common properties that all profiles share. But you can also cast the user profile to the appropriate profile according to the provider used for authentication. For example, after a Facebook authentication:
  
     FacebookProfile facebookProfile = (FacebookProfile) commonProfile;
 
+---
 
-### Logout
+### 6) Logout
 
-You can log out the current authenticated user using the `ApplicationLogoutHandler`:
+You can log out the current authenticated user using the `ApplicationLogoutHandler`. It has the following behaviour (configured via an `ApplicationLogoutHandlerOptions` object):
 
-    router.get("/logout").handler(new ApplicationLogoutHandler());
+1) after logout, the user is redirected to the url defined by the `url` request parameter if it matches the `logoutUrlPattern`
+
+2) or the user is redirected to the `defaultUrl` if it is defined
+
+3) otherwise, a blank page is displayed.
 
 To perfom the logout, you must call the /logout url. A blank page is displayed by default unless an *url* request parameter is provided. In that case, the user will be redirected to this specified url (if it matches the logout url pattern defined) or to the default logout url otherwise.
 
-The following parameters can be defined on the `ApplicationLogoutHandler`:
+The following parameters can be defined on the `ApplicationLogoutHandler`via an `ApplicationLogoutHandlerOptions` object:
 
 - `defaultUrl` (optional): the default logout url if the provided *url* parameter does not match the `logoutUrlPattern` (by default: /)
 - `logoutUrlPattern` (optional): the logout url pattern that the logout url must match (it's a security check, only relative urls are allowed by default).
 
+Example: 
+
+    final ApplicationLogoutHandlerOptions options = new ApplicationLogoutHandlerOptions();
+    router.get("/logout").handler(new ApplicationLogoutHandler(vertx, options, config));
+    
+---
 
 ## Demo
 
-The demo webapp: [vertx-pac4j-demo](https://github.com/pac4j/vertx-pac4j-demo) is available for tests and implement many authentication mechanisms: Facebook, Twitter, form, basic auth, CAS, SAML, OpenID Connect, JWT...
+The demo webapp: [vertx-pac4j-demo](https://github.com/pac4j/vertx-pac4j-demo) is available for tests and implement many authentication mechanisms: Facebook, Twitter, form, basic auth, CAS, SAML, OpenID Connect, Strava, JWT...
 
 
 ## Release notes
