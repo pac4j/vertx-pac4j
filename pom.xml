@@ -3,7 +3,7 @@
 
   <groupId>org.pac4j</groupId>
   <artifactId>vertx-pac4j</artifactId>
-  <version>2.1.0-SNAPSHOT</version>
+  <version>2.1.0</version>
   <packaging>jar</packaging>
 
   <name>vertx-pac4j</name>
@@ -30,6 +30,7 @@
     <kotlin.version>1.0.4</kotlin.version>
     <mockito.version>1.10.19</mockito.version>
     <surefire.version>2.19.1</surefire.version>
+    <maven.test.skip>true</maven.test.skip>
   </properties>
 
   <dependencies>
