@@ -32,7 +32,7 @@ class StatelessMultiProfileIntegrationTest: StatelessPac4jAuthHandlerIntegration
         // Need to set userId and email headers
         val headers = mapOf(HEADER_AUTHORIZATION to "ABCGHI", HEADER_USER_ID to TEST_USER1, HEADER_EMAIL to TEST_EMAIL)
         testProtectedResourceAccessWithHeaders(headers, HttpConstants.OK, {
-            body -> validateProfilesInBody(this, body, listOf(
+            body -> validateProfilesInBody(body, listOf(
                 Pair("abc", Consumer(::validateUserIdAndEmailForJsonProfile)),
                 Pair("ghi", Consumer(::validateUserIdAndEmailForJsonProfile))
             ))

@@ -18,19 +18,23 @@ interface MultiProfileTest {
         private val LOG = LoggerFactory.getLogger(MultiProfileTest::class.java)
     }
 
-    fun validateProfilesInBody(test: Pac4jAuthHandlerIntegrationTestBase, body: Buffer, validations: List<Pair<String, Consumer<JsonObject>>>) {
+    fun validateProfilesInBody(body: Buffer, validations: List<Pair<String, Consumer<JsonObject>>>) {
 
         LOG.info("Validating profiles in " + body)
 
-        fun <T>assertThat(actual: T, matcher: Matcher<T>) = test.assertThat(actual, matcher)
+        fun <T>invokeAssertThat(actual: T, matcher: Matcher<T>) = if (this is Pac4jAuthHandlerIntegrationTestBase) {
+            this.assertThat(actual, matcher)
+        } else {
+            throw IllegalStateException("Only Pac4hAuthHandlerIntegrationTestBase extenders are permitted to call validateProfilesInBody")
+        }
 
         fun validateJsonObjectChild(jsonObject: JsonObject?, key: String, childValidator: Consumer<JsonObject>) {
-            assertThat<Any>(jsonObject!!.containsKey(key), Is.`is`(true))
+            invokeAssertThat<Any>(jsonObject!!.containsKey(key), Is.`is`(true))
             childValidator.accept(jsonObject.getJsonObject(key))
         }
 
         val bodyAsJson = JsonObject(body.toString())
-        assertThat(bodyAsJson.size(), Is.`is`(validations.size))
+        invokeAssertThat(bodyAsJson.size(), Is.`is`(validations.size))
 
         validations.forEach {
             validateJsonObjectChild(bodyAsJson, it.first, it.second)

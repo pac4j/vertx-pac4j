@@ -53,7 +53,7 @@ class StatefulMultiProfileIntegrationTest: StatefulPac4jAuthHandlerIntegrationTe
                         resp.bodyHandler {
                             body ->
                                 try {
-                                    validateProfilesInBody(this, body,
+                                    validateProfilesInBody(body,
                                             listOf(
                                                     Pair(OAUTH2_CLIENT_NAME, Consumer { child ->
                                                         assertThat<Any>(child.getString(FIELD_ACCESS_TOKEN),
