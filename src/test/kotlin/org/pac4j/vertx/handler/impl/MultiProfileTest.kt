@@ -23,7 +23,7 @@ interface MultiProfileTest {
         LOG.info("Validating profiles in " + body)
 
         fun <T>invokeAssertThat(actual: T, matcher: Matcher<T>) = if (this is Pac4jAuthHandlerIntegrationTestBase) {
-            this.assertThat(actual, matcher)
+            assertThat(actual, matcher)
         } else {
             throw IllegalStateException("Only Pac4hAuthHandlerIntegrationTestBase extenders are permitted to call validateProfilesInBody")
         }
