@@ -50,7 +50,7 @@ public class StatefulPac4jAuthHandlerSingleProfileIntegrationTest extends Statef
         final String[] permissions = {
                 "permission1", "permission2"
         };
-        startWebServer(TEST_OAUTH2_SUCCESS_URL, new SecurityHandlerOptions().withClients(TEST_CLIENT_NAME), callbackHandlerOptions(), Arrays.asList(permissions));
+        startWebServer(TEST_OAUTH2_SUCCESS_URL, new SecurityHandlerOptions().setClients(TEST_CLIENT_NAME), callbackHandlerOptions(), Arrays.asList(permissions));
         loginSuccessfullyExpectingAuthorizedUser(Void -> testComplete());
         await(1, TimeUnit.SECONDS);
     }

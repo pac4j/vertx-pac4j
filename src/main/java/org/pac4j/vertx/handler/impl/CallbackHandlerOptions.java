@@ -15,40 +15,24 @@
  */
 package org.pac4j.vertx.handler.impl;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+
 /**
  * Vert.x-style options class for a callback handler
  * @since 2.0.0
  */
+@Accessors(chain=true)
 public class CallbackHandlerOptions {
 
+    @Getter @Setter
     private String defaultUrl;
+
+    @Getter @Setter
     private Boolean multiProfile;
+
+    @Getter @Setter
     private Boolean renewSession;
 
-    public String getDefaultUrl() {
-        return defaultUrl;
-    }
-
-    public CallbackHandlerOptions setDefaultUrl(String defaultUrl) {
-        this.defaultUrl = defaultUrl;
-        return this;
-    }
-
-    public Boolean getMultiProfile() {
-        return multiProfile;
-    }
-
-    public CallbackHandlerOptions setMultiProfile(Boolean multiProfile) {
-        this.multiProfile = multiProfile;
-        return this;
-    }
-
-    public Boolean getRenewSession() {
-        return renewSession;
-    }
-
-    public CallbackHandlerOptions setRenewSession(Boolean renewSession) {
-        this.renewSession = renewSession;
-        return this;
-    }
 }

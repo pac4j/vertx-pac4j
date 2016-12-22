@@ -15,31 +15,21 @@
  */
 package org.pac4j.vertx.handler.impl;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+
 /**
  * Class with fluent API to wrap options which can be supplied to ApplicationLogoutHandler. This approach is consistent
  * with existing vert.x configuration mechanisms for optional configuration.
  * @since 2.1.0
  */
+@Accessors(chain = true)
 public class ApplicationLogoutHandlerOptions {
 
+    @Getter @Setter
     private String defaultUrl = null;
+
+    @Getter @Setter
     private String logoutUrlPattern = null;
-
-    public String getDefaultUrl() {
-        return defaultUrl;
-    }
-
-    public ApplicationLogoutHandlerOptions setDefaultUrl(String defaultUrl) {
-        this.defaultUrl = defaultUrl;
-        return this;
-    }
-
-    public String getLogoutUrlPattern() {
-        return logoutUrlPattern;
-    }
-
-    public ApplicationLogoutHandlerOptions setLogoutUrlPattern(String logoutUrlPattern) {
-        this.logoutUrlPattern = logoutUrlPattern;
-        return this;
-    }
 }

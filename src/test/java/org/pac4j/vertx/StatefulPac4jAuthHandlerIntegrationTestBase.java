@@ -168,8 +168,8 @@ public abstract class StatefulPac4jAuthHandlerIntegrationTestBase extends Pac4jA
     }
 
     protected SecurityHandlerOptions optionsWithBothNamesProvided() {
-        return new SecurityHandlerOptions().withAuthorizers(REQUIRE_ALL_AUTHORIZER)
-                .withClients(TEST_CLIENT_NAME);
+        return new SecurityHandlerOptions().setAuthorizers(REQUIRE_ALL_AUTHORIZER)
+                .setClients(TEST_CLIENT_NAME);
     }
 
     void startWebServer(final String baseAuthUrl,

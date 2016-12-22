@@ -45,10 +45,10 @@ public class SecurityHandler extends AuthHandlerImpl {
         CommonHelper.assertNotNull("authProvider", authProvider);
         CommonHelper.assertNotNull("options", options);
 
-        clientNames = options.clients();
-        authorizerName = options.authorizers();
-        matcherName = options.matchers();
-        multiProfile = options.multiProfile();
+        clientNames = options.getClients();
+        authorizerName = options.getAuthorizers();
+        matcherName = options.getMatchers();
+        multiProfile = options.isMultiProfile();
         this.vertx = vertx;
         this.config = config;
 
