@@ -30,6 +30,7 @@
     <kotlin.version>1.0.5</kotlin.version>
     <mockito.version>1.10.19</mockito.version>
     <surefire.version>2.19.1</surefire.version>
+    <slf4j.version>1.7.22</slf4j.version>
   </properties>
 
   <dependencies>
@@ -121,6 +122,13 @@
       <version>${kotlin.version}</version>
       <scope>test</scope>
     </dependency>
+    <!-- logging for tests -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>${slf4j.version}</version>
+      <scope>test</scope>
+    </dependency>
 
   </dependencies>
 
@@ -161,6 +169,16 @@
         <configuration>
           <source>${java.version}</source>
           <target>${java.version}</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${surefire.version}</version>
+        <configuration>
+          <systemPropertyVariables>
+            <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
+          </systemPropertyVariables>
         </configuration>
       </plugin>
     </plugins>
