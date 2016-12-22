@@ -53,9 +53,13 @@ public abstract class Pac4jAuthHandlerIntegrationTestBase extends VertxTestBase 
         router.route("/private/*").handler(authHandler);
         router.route(EXCLUDED_PROTECTED_RESOURCE_URL).handler(rc -> rc.response().end(UNPROTECTED_RESOURCE_BODY));
         router.route("/private/success.html").handler(loginSuccessHandler()); // Spit out the user
+
         router.route().failureHandler(rc -> {
-            rc.response().setStatusCode(rc.statusCode());
-            switch(rc.statusCode()) {
+
+            final int statusCode = rc.statusCode();
+            rc.response().setStatusCode(statusCode > 0 ? statusCode : 500); // use status code 500 in the event that vert.x hasn't set one,
+
+            switch (rc.response().getStatusCode()) {
 
                 case 401:
                     rc.response().end(UNAUTHORIZED_BODY);
@@ -66,6 +70,7 @@ public abstract class Pac4jAuthHandlerIntegrationTestBase extends VertxTestBase 
                     break;
 
                 default:
+                    LOG.error("Unexpected error in request handling", rc.failure());
                     rc.response().end("Unexpected error");
             }
         });
