@@ -243,4 +243,8 @@ public class VertxWebContext implements WebContext {
         routingContext.setUser(pac4jUser);
     }
 
+    public Session getVertxSession() {
+        return routingContext.session();
+    }
+
 }
