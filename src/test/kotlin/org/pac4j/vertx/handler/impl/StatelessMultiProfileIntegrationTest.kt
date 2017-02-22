@@ -54,7 +54,7 @@ class StatelessMultiProfileIntegrationTest: StatelessPac4jAuthHandlerIntegration
         // Configure a pac4j stateless handler configured for basic http auth
         val authProvider = Pac4jAuthProvider()
         val options = SecurityHandlerOptions().setClients("abc,def,ghi").setMultiProfile(true)
-        val handler = SecurityHandler(vertx, config(), authProvider, options)
+        val handler = SecurityHandler(vertx, sessionStore, config(), authProvider, options)
         startWebServer(router, handler)
 
     }

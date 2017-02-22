@@ -14,6 +14,9 @@ import io.vertx.test.core.VertxTestBase
 import org.junit.Before
 import org.junit.Test
 import org.pac4j.core.context.Pac4jConstants
+import org.pac4j.core.context.session.SessionStore
+import org.pac4j.vertx.VertxWebContext
+import org.pac4j.vertx.context.session.VertxSessionStore
 import org.pac4j.vertx.profile.TestOAuth1Profile
 import rx.Observable
 import java.util.concurrent.TimeUnit
@@ -37,13 +40,13 @@ class ApplicationLogoutHandlerIntegrationTest: VertxTestBase() {
          * A handler whose only job is to record a pac4j profile as logged in
          * so that we can subsequently log it out.
          */
-        fun spoofLoginHandler(rc: RoutingContext) {
+        fun spoofLoginHandler(rc: RoutingContext, sessionStore: SessionStore<VertxWebContext>) {
 
             LOG.info("Spoof login endpoint called")
             LOG.info("Session id = " + rc.session().id())
 
             // Set up a pac4j user and save into the session, we can interrogate later
-            val profileManager = getProfileManager(rc)
+            val profileManager = getProfileManager(rc, sessionStore)
             val profile = TestOAuth1Profile()
             with (profile) {
                 setId(TEST_USER1)
@@ -66,6 +69,8 @@ class ApplicationLogoutHandlerIntegrationTest: VertxTestBase() {
     // This will be our session cookie header for use by requests
     private val sessionCookie = AtomicReference<String>()
 
+    private val sessionStore = VertxSessionStore()
+
     @Before
     fun spinUpServerAndClient() {
         rxVertx = Vertx.newInstance(vertx)
@@ -73,9 +78,9 @@ class ApplicationLogoutHandlerIntegrationTest: VertxTestBase() {
         startServerWithSessionSupport(rxVertx!!, Consumer<Router> {
             r ->
             with(r) {
-                route(HttpMethod.POST, URL_SPOOF_LOGIN).handler  { spoofLoginHandler(it) }
-                route(HttpMethod.GET, URL_QUERY_PROFILE).handler { getProfileHandler(it) }
-                get(URL_LOGOUT).handler(logoutHandler(vertx))
+                route(HttpMethod.POST, URL_SPOOF_LOGIN).handler  { spoofLoginHandler(it, sessionStore) }
+                route(HttpMethod.GET, URL_QUERY_PROFILE).handler { getProfileHandler(it, sessionStore) }
+                get(URL_LOGOUT).handler(logoutHandler(vertx, sessionStore))
             }
         })
     }

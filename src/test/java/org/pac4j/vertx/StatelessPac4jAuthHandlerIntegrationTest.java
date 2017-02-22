@@ -90,7 +90,7 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends StatelessPac4jAuth
                 .setAuthorizers(REQUIRE_ALL_AUTHORIZER)
                 .setClients(BASIC_AUTH_CLIENT)
                 .setMatchers(EXCLUDED_PATH_MATCHER_NAME);
-        final SecurityHandler handler =  new SecurityHandler(vertx, config(), authProvider, options);
+        final SecurityHandler handler =  new SecurityHandler(vertx, sessionStore, config(), authProvider, options);
         startWebServer(router, handler);
 
     }

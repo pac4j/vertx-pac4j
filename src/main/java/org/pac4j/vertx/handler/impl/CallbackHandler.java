@@ -6,6 +6,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 import org.pac4j.core.config.Config;
+import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.engine.CallbackLogic;
 import org.pac4j.core.engine.DefaultCallbackLogic;
 import org.pac4j.core.exception.TechnicalException;
@@ -27,6 +28,7 @@ public class CallbackHandler implements Handler<RoutingContext> {
 
     private final HttpActionAdapter httpActionHandler = new DefaultHttpActionAdapter();
     private final Vertx vertx;
+    private final SessionStore<VertxWebContext> sessionStore;
     private final Config config;
 
     // Config elements which are all optional
@@ -41,9 +43,11 @@ public class CallbackHandler implements Handler<RoutingContext> {
     }
 
     public CallbackHandler(final Vertx vertx,
+                           final SessionStore<VertxWebContext> sessionStore,
                            final Config config,
                            final CallbackHandlerOptions options) {
         this.vertx = vertx;
+        this.sessionStore = sessionStore;
         this.config = config;
         this.multiProfile = options.getMultiProfile();
         this.renewSession = options.getRenewSession();
@@ -54,7 +58,7 @@ public class CallbackHandler implements Handler<RoutingContext> {
     public void handle(RoutingContext event) {
 
         // Can we complete the authentication process here?
-        final VertxWebContext webContext = new VertxWebContext(event);
+        final VertxWebContext webContext = new VertxWebContext(event, sessionStore);
 
         vertx.executeBlocking(future -> {
                     callbackLogic.perform(webContext, config, httpActionHandler, defaultUrl, multiProfile, renewSession);

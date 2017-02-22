@@ -32,4 +32,26 @@ public class ApplicationLogoutHandlerOptions {
 
     @Getter @Setter
     private String logoutUrlPattern = null;
+
+    /**
+     * True if the pac4j profiles are to be removed from the session on logoug, false otherwise.
+     * By default we remove these profiles from the session as we assume this is what is implied by a logout.
+     */
+    @Getter @Setter
+    private boolean localLogout = true;
+
+    /**
+     * True if following logout the entire web session should be cleared. By default we do not clear the entire session,
+     * as for example the contents of a shopping cart should not generally be thrown away on logoug but remain within
+     * the web session.
+     */
+    @Getter @Setter
+    private boolean destroySession = false;
+
+    /**
+     * True if on logout a centralised logout should also occur to log out of some SSO provider, for example. By default
+     * we assume existing pac4j behaviour which is not to do this.
+     */
+    @Getter @Setter
+    private boolean centralLogout= false;
 }

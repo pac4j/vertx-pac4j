@@ -127,7 +127,7 @@ public abstract class StatefulPac4jAuthHandlerIntegrationTestBase extends Pac4jA
                                                           final SecurityHandlerOptions options,
                                                           final CallbackHandlerOptions callbackHandlerOptions,
                                                           final List<String> requiredPermissions) {
-        return new CallbackDeployingPac4jAuthHandler(vertx, config(clients(baseAuthUrl), requiredPermissions), router, authProvider, options, callbackHandlerOptions);
+        return new CallbackDeployingPac4jAuthHandler(vertx, sessionStore, config(clients(baseAuthUrl), requiredPermissions), router, authProvider, options, callbackHandlerOptions);
     }
 
     private SessionHandler sessionHandler(SessionStore sessionStore) {
@@ -154,7 +154,7 @@ public abstract class StatefulPac4jAuthHandlerIntegrationTestBase extends Pac4jA
         client.setSecret(TEST_CLIENT_SECRET);
         client.setName("TestOAuth2Client");
         client.setIncludeClientNameInCallbackUrl(true);
-        client.setAuthorizationUrlTemplate(baseAuthUrl + "?client_id=%s&redirect_uri=%s&state=%s");
+        client.setBaseAuthorizationUrl(baseAuthUrl);
         client.addAuthorizationGenerator(new TestOAuth2AuthorizationGenerator());
         return client;
     }

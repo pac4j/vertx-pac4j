@@ -102,7 +102,7 @@ public class StatefulPac4jAuthHandlerSingleProfileIntegrationTest extends Statef
         // Start a web server with no required authorities (i.e. only authentication required) for the secured resource
         startWebServer(TEST_OAUTH2_SUCCESS_URL, optionsWithBothNamesProvided(), callbackHandlerOptions(), null,
                 (router, config) -> router.route(HttpMethod.GET, "/logout")
-                        .handler(new ApplicationLogoutHandler(vertx, new ApplicationLogoutHandlerOptions(), config)));
+                        .handler(new ApplicationLogoutHandler(vertx, sessionStore, new ApplicationLogoutHandlerOptions(), config)));
 
         HttpClient client = vertx.createHttpClient();
         loginSuccessfullyExpectingAuthorizedUser(client, Void -> {

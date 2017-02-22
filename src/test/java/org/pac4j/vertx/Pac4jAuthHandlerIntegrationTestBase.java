@@ -13,6 +13,8 @@ import io.vertx.test.core.VertxTestBase;
 import org.hamcrest.Matcher;
 import org.pac4j.core.authorization.authorizer.Authorizer;
 import org.pac4j.core.authorization.authorizer.RequireAllPermissionsAuthorizer;
+import org.pac4j.core.context.session.SessionStore;
+import org.pac4j.vertx.context.session.VertxSessionStore;
 import org.pac4j.vertx.profile.TestOAuth2Profile;
 
 import java.util.HashMap;
@@ -36,6 +38,8 @@ public abstract class Pac4jAuthHandlerIntegrationTestBase extends VertxTestBase 
     static final String REQUIRE_ALL_AUTHORIZER = "requireAllAuthorizer";
     static final String FORBIDDEN_BODY = "Forbidden to access this resource";
     static final String UNAUTHORIZED_BODY = "Unauthorized for resource";
+
+    protected SessionStore<VertxWebContext> sessionStore = new VertxSessionStore();
 
     /**
      * Expose assertThat publicly to enable convenient use of kotlin trait in multi-profile tests

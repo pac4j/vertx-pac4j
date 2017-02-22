@@ -8,7 +8,9 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.pac4j.core.config.Config;
+import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.util.CommonHelper;
+import org.pac4j.vertx.VertxWebContext;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
 
 import java.net.URI;
@@ -35,12 +37,13 @@ public class CallbackDeployingPac4jAuthHandler extends SecurityHandler {
 
     // Consider coalescing the manager options into the handler options and then generating the manageroptions from them
     public CallbackDeployingPac4jAuthHandler(final Vertx vertx,
+                                             final SessionStore<VertxWebContext> sessionStore,
                                              final Config config,
                                              final Router router,
                                              final Pac4jAuthProvider authProvider,
                                              final SecurityHandlerOptions options,
                                              final CallbackHandlerOptions callbackOptions) {
-        super(vertx, config, authProvider, options);
+        super(vertx, sessionStore, config, authProvider, options);
         // Other null checks performed by parent class
         CommonHelper.assertNotNull("router", router);
         CommonHelper.assertNotBlank("callbackUrl", config.getClients().getCallbackUrl());
@@ -54,13 +57,14 @@ public class CallbackDeployingPac4jAuthHandler extends SecurityHandler {
         }
 
         // Start manager verticle
-        router.route(HttpMethod.GET, uri.getPath()).handler(authResultHandler(vertx, config, callbackOptions));
+        router.route(HttpMethod.GET, uri.getPath()).handler(authResultHandler(vertx, sessionStore, config, callbackOptions));
     }
 
     private Handler<RoutingContext> authResultHandler(final Vertx vertx,
+                                                      final SessionStore<VertxWebContext> sessionStore,
                                                       final Config config,
                                                       final CallbackHandlerOptions callbackOptions) {
-        return new CallbackHandler(vertx, config, callbackOptions);
+        return new CallbackHandler(vertx, sessionStore,  config, callbackOptions);
     }
 
 }

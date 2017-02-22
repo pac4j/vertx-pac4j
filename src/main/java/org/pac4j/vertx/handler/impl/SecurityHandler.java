@@ -6,6 +6,7 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.impl.AuthHandlerImpl;
 import org.pac4j.core.config.Config;
+import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.engine.DefaultSecurityLogic;
 import org.pac4j.core.engine.SecurityLogic;
 import org.pac4j.core.exception.TechnicalException;
@@ -31,15 +32,19 @@ public class SecurityHandler extends AuthHandlerImpl {
     protected final String matcherName;
     protected final boolean multiProfile;
     protected final Vertx vertx;
+    private final SessionStore<VertxWebContext> sessionStore;
 
     protected final HttpActionAdapter<Void, VertxWebContext> httpActionAdapter = new DefaultHttpActionAdapter();
 
     private final SecurityLogic<Void, VertxWebContext> securityLogic;
 
-    public SecurityHandler(final Vertx vertx, final Config config, final Pac4jAuthProvider authProvider,
+    public SecurityHandler(final Vertx vertx,
+                           final SessionStore<VertxWebContext> sessionStore,
+                           final Config config, final Pac4jAuthProvider authProvider,
                            final SecurityHandlerOptions options) {
         super(authProvider);
         CommonHelper.assertNotNull("vertx", vertx);
+        CommonHelper.assertNotNull("sessionStore", sessionStore);
         CommonHelper.assertNotNull("config", config);
         CommonHelper.assertNotNull("config.getClients()", config.getClients());
         CommonHelper.assertNotNull("authProvider", authProvider);
@@ -50,6 +55,7 @@ public class SecurityHandler extends AuthHandlerImpl {
         matcherName = options.getMatchers();
         multiProfile = options.isMultiProfile();
         this.vertx = vertx;
+        this.sessionStore = sessionStore;
         this.config = config;
 
         final DefaultSecurityLogic<Void, VertxWebContext> securityLogic = new DefaultSecurityLogic<>();
@@ -66,7 +72,7 @@ public class SecurityHandler extends AuthHandlerImpl {
         // Note that at present the security logic call is blocking (and authorization contained within can also
         // be blocking) so we have to wrap the following call in an executeBlocking call to avoid blocking the
         // event loop
-        final VertxWebContext webContext = new VertxWebContext(routingContext);
+        final VertxWebContext webContext = new VertxWebContext(routingContext, sessionStore);
 
         vertx.executeBlocking(future -> securityLogic.perform(webContext, config,
             (ctx, parameters) -> {

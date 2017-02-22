@@ -7,6 +7,7 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
 import org.pac4j.core.context.Cookie;
 import org.pac4j.core.context.WebContext;
+import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.vertx.auth.Pac4jUser;
 import org.pac4j.vertx.core.DefaultJsonConverter;
 
@@ -37,13 +38,15 @@ public class VertxWebContext implements WebContext {
     private final JsonObject headers;
     private final JsonObject parameters;
     private final Map<String, String[]> mapParameters;
+    private final SessionStore<VertxWebContext> sessionStore;
 
     private boolean contentHasBeenWritten = false; // Need to set chunked before first write of any content
 
-    public VertxWebContext(final RoutingContext routingContext) {
+    public VertxWebContext(final RoutingContext routingContext, final SessionStore<VertxWebContext> sessionStore) {
         final HttpServerRequest request = routingContext.request();
         this.routingContext = routingContext;
         this.method = request.method().toString();
+        this.sessionStore = sessionStore;
 
         this.fullUrl = request.absoluteURI();
         URI uri;
@@ -176,7 +179,7 @@ public class VertxWebContext implements WebContext {
     }
 
     public Map<String, String> getResponseHeaders() {
-        return  routingContext.response().headers().entries().stream()
+        return routingContext.response().headers().entries().stream()
             .collect(Collectors.toMap(Map.Entry::getKey,
                     Map.Entry::getValue));
     }
@@ -229,6 +232,11 @@ public class VertxWebContext implements WebContext {
     @Override
     public String getPath() {
         return routingContext.request().path();
+    }
+
+    @Override
+    public SessionStore getSessionStore() {
+        return this.sessionStore;
     }
 
     public Pac4jUser getVertxUser() {

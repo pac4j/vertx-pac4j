@@ -1,13 +1,10 @@
 package org.pac4j.vertx.client;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.github.scribejava.core.builder.api.BaseApi;
-import com.github.scribejava.core.model.OAuth2AccessToken;
-import com.github.scribejava.core.oauth.OAuth20Service;
 import org.pac4j.core.context.WebContext;
-import org.pac4j.oauth.client.BaseOAuth20StateClient;
-import org.pac4j.oauth.profile.JsonHelper;
+import org.pac4j.oauth.client.OAuth20Client;
+import org.pac4j.oauth.config.OAuth20Configuration;
 import org.pac4j.vertx.profile.TestOAuth2Profile;
+import org.pac4j.vertx.profile.TestOAuth2ProfileDefinition;
 
 /**
  * Dumbed down OAuth2 client just to be used for testing purposes.
@@ -15,40 +12,27 @@ import org.pac4j.vertx.profile.TestOAuth2Profile;
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public class TestOAuth2Client extends BaseOAuth20StateClient<TestOAuth2Profile> {
+public class TestOAuth2Client extends OAuth20Client<TestOAuth2Profile> {
 
-    private String authorizationUrlTemplate;
+    private String baseAuthorizationUrl;
 
-    @Override
-    protected BaseApi<OAuth20Service> getApi() {
-        return new TestOAuthWrapperApi20(this.getAuthorizationUrlTemplate());
+    public TestOAuth2Client() {
+       setConfiguration(new OAuth20Configuration());
     }
 
     @Override
-    protected boolean hasBeenCancelled(WebContext context) {
-        return false;
+    protected void clientInit(WebContext context) {
+        configuration.setApi(new TestOAuthWrapperApi20(getBaseAuthorizationUrl()));
+        configuration.setProfileDefinition(new TestOAuth2ProfileDefinition());
+        configuration.setWithState(true);
+        super.clientInit(context);
     }
 
-    @Override
-    protected String getProfileUrl(OAuth2AccessToken accessToken) {
-        return "http://localhost:9292/profile";
+    public String getBaseAuthorizationUrl() {
+        return baseAuthorizationUrl;
     }
 
-    @Override
-    protected TestOAuth2Profile extractUserProfile(String body) {
-        final TestOAuth2Profile profile = new TestOAuth2Profile();
-        JsonNode json = JsonHelper.getFirstNode(body);
-        if (json != null) {
-            profile.setId(JsonHelper.getElement(json, "id"));
-        }
-        return profile;
-    }
-
-    public String getAuthorizationUrlTemplate() {
-        return authorizationUrlTemplate;
-    }
-
-    public void setAuthorizationUrlTemplate(String authorizationUrlTemplate) {
-        this.authorizationUrlTemplate = authorizationUrlTemplate;
+    public void setBaseAuthorizationUrl(String baseAuthorizationUrl) {
+        this.baseAuthorizationUrl = baseAuthorizationUrl;
     }
 }

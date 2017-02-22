@@ -1,6 +1,6 @@
 package org.pac4j.vertx.client
 
-import org.pac4j.core.client.DirectClientV2
+import org.pac4j.core.client.DirectClient
 import org.pac4j.core.context.WebContext
 import org.pac4j.vertx.handler.impl.HEADER_EMAIL
 import org.pac4j.vertx.handler.impl.HEADER_USER_ID
@@ -12,9 +12,9 @@ import javax.security.auth.login.CredentialException
  * header matching a specific pattern, extracts user id and email and writes them into a TestCredentuals object
  * @since 2.0.0
  */
-class HeaderBasedDirectClient(matchingPattern: String): DirectClientV2<TestCredentials, SimpleTestProfile>() {
+class HeaderBasedDirectClient(matchingPattern: String): DirectClient<TestCredentials, SimpleTestProfile>() {
 
-    override fun internalInit(context: WebContext?) {
+    override fun clientInit(context: WebContext?) {
         // Don't think this needs to do anything special
     }
 

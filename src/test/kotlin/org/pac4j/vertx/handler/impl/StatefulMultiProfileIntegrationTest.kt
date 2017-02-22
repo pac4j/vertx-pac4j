@@ -8,6 +8,7 @@ import org.junit.Test
 import org.pac4j.core.client.Clients
 import org.pac4j.core.config.Config
 import org.pac4j.core.context.Pac4jConstants
+import org.pac4j.core.context.session.SessionStore
 import org.pac4j.core.exception.HttpAction
 import org.pac4j.core.exception.TechnicalException
 import org.pac4j.vertx.StatefulPac4jAuthHandlerIntegrationTestBase
@@ -32,7 +33,7 @@ class StatefulMultiProfileIntegrationTest: StatefulPac4jAuthHandlerIntegrationTe
         startOAuthProviderMimic("testOAuth1User")
         startWebServer(TEST_OAUTH2_SUCCESS_URL, optionsWithBothNamesProvided(), callbackHandlerOptions(), null,
                 { router, config ->
-                    router.route(HttpMethod.GET, "/forceSecondLogin").handler(forceLoginHandler(config))
+                    router.route(HttpMethod.GET, "/forceSecondLogin").handler(forceLoginHandler(config, sessionStore))
                 })
 
         // First login successfully following approach for single profile oAuth2 test client
@@ -85,8 +86,8 @@ class StatefulMultiProfileIntegrationTest: StatefulPac4jAuthHandlerIntegrationTe
 
     private fun successResourceUrl() = "http://$HOST:$PORT$PROTECTED_RESOURCE_SUCCESS"
 
-    private fun forceLoginHandler(config: Config): Handler<RoutingContext> = Handler { rc ->
-        val context = VertxWebContext(rc)
+    private fun forceLoginHandler(config: Config, sessionStore: SessionStore<VertxWebContext>): Handler<RoutingContext> = Handler { rc ->
+        val context = VertxWebContext(rc, sessionStore)
         val client = config.clients.findClient(context.getRequestParameter(Clients.DEFAULT_CLIENT_NAME_PARAMETER))
         try {
             val redirectUri = context.getRequestParameter("redirect_uri")

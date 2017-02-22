@@ -1,9 +1,7 @@
 package org.pac4j.vertx.client;
 
 import com.github.scribejava.core.builder.api.DefaultApi20;
-import com.github.scribejava.core.model.OAuthConfig;
 import com.github.scribejava.core.model.Verb;
-import com.github.scribejava.core.utils.OAuthEncoder;
 
 /**
  * @author Jeremy Prime
@@ -11,10 +9,10 @@ import com.github.scribejava.core.utils.OAuthEncoder;
  */
 public class TestOAuthWrapperApi20 extends DefaultApi20 {
 
-    private final String authenticationUrlTemplate;
+    private final String baseAuthorizationUrl;
 
-    public TestOAuthWrapperApi20(final String authenticationUrlTemplate) {
-        this.authenticationUrlTemplate = authenticationUrlTemplate;
+    public TestOAuthWrapperApi20(final String baseAuthorizationUrl) {
+        this.baseAuthorizationUrl = baseAuthorizationUrl;
     }
 
     @Override
@@ -23,11 +21,8 @@ public class TestOAuthWrapperApi20 extends DefaultApi20 {
     }
 
     @Override
-    public String getAuthorizationUrl(OAuthConfig config) {
-
-
-        return String.format(this.authenticationUrlTemplate, config.getApiKey(),
-                OAuthEncoder.encode(config.getCallback()), OAuthEncoder.encode(config.getState()));
+    protected String getAuthorizationBaseUrl() {
+        return this.baseAuthorizationUrl;
     }
 
     @Override

@@ -1,10 +1,11 @@
 package org.pac4j.vertx.client
 
-import org.pac4j.core.client.IndirectClientV2
-import org.pac4j.core.client.RedirectAction
+import org.pac4j.core.client.IndirectClient
+import org.pac4j.core.context.WebContext
 import org.pac4j.core.credentials.authenticator.Authenticator
 import org.pac4j.core.credentials.extractor.CredentialsExtractor
 import org.pac4j.core.profile.creator.ProfileCreator
+import org.pac4j.core.redirect.RedirectAction
 import org.pac4j.core.redirect.RedirectActionBuilder
 import org.pac4j.vertx.handler.impl.QUERY_PARAM_CLIENT_NAME
 import org.pac4j.vertx.handler.impl.QUERY_PARAM_EMAIL
@@ -21,7 +22,11 @@ import java.util.*
  * logging in with a second profile for multi-profile testing.
  */
 class QueryParamBasedIndirectClient(val server: String, val callbackPath: String):
-        IndirectClientV2<TestCredentials, SimpleTestProfile>() {
+        IndirectClient<TestCredentials, SimpleTestProfile>() {
+
+    override fun clientInit(context: WebContext?) {
+        // Don't think this needs to do anything special
+    }
 
     init {
         credentialsExtractor = CredentialsExtractor { context ->

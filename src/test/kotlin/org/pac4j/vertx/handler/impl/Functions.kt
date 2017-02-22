@@ -13,10 +13,13 @@ import io.vertx.rxjava.ext.web.Router
 import io.vertx.rxjava.ext.web.RoutingContext
 import io.vertx.rxjava.ext.web.sstore.LocalSessionStore
 import org.hamcrest.MatcherAssert.assertThat
+import org.pac4j.core.client.Clients
 import org.pac4j.core.config.Config
+import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.vertx.VertxProfileManager
 import org.pac4j.vertx.VertxWebContext
 import org.pac4j.vertx.auth.Pac4jAuthProvider
+import org.pac4j.vertx.client.HeaderBasedDirectClient
 import rx.Observable
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
@@ -31,12 +34,12 @@ val LOG: Logger = LoggerFactory.getLogger("org.pac4j.vertx.handler.impl")
  * @author Jeremy Prime
  * @since 2.0.0
  */
-fun getProfileHandler(rc: RoutingContext) {
+fun getProfileHandler(rc: RoutingContext, sessionStore: SessionStore<VertxWebContext>) {
 
     LOG.info("Get profile endpoint called")
     LOG.info("Session id = " + rc.session().id())
     val sessionId = rc.session().id()
-    val profileManager = getProfileManager(rc)
+    val profileManager = getProfileManager(rc, sessionStore)
 
     val (userId, email) = profileManager.get(true)
             .map { p -> Pair(p.id, p.getAttribute(EMAIL_KEY)) }
@@ -53,8 +56,11 @@ fun getProfileHandler(rc: RoutingContext) {
     rc.response().end(json.encodePrettily())
 }
 
-fun logoutHandler(vertx: io.vertx.core.Vertx): Handler<RoutingContext> {
-    val applicationLogoutHandler = ApplicationLogoutHandler(vertx, ApplicationLogoutHandlerOptions(), Config())
+fun logoutHandler(vertx: io.vertx.core.Vertx, sessionStore: SessionStore<VertxWebContext>): Handler<RoutingContext> {
+    val config = Config()
+    val clients = Clients(HeaderBasedDirectClient("hello"))
+    config.clients = clients
+    val applicationLogoutHandler = ApplicationLogoutHandler(vertx, sessionStore, ApplicationLogoutHandlerOptions(), config)
     return Handler {
         val delegate = it.delegate
         if (delegate is io.vertx.ext.web.RoutingContext) {
@@ -64,8 +70,8 @@ fun logoutHandler(vertx: io.vertx.core.Vertx): Handler<RoutingContext> {
 }
 
 
-fun getProfileManager(rc: RoutingContext): VertxProfileManager {
-    val webContext = VertxWebContext(rc.delegate as io.vertx.ext.web.RoutingContext)
+fun getProfileManager(rc: RoutingContext, sessionStore: SessionStore<VertxWebContext>): VertxProfileManager {
+    val webContext = VertxWebContext(rc.delegate as io.vertx.ext.web.RoutingContext, sessionStore)
     return VertxProfileManager(webContext)
 }
 
