@@ -60,11 +60,11 @@ fun logoutHandler(vertx: io.vertx.core.Vertx, sessionStore: SessionStore<VertxWe
     val config = Config()
     val clients = Clients(HeaderBasedDirectClient("hello"))
     config.clients = clients
-    val applicationLogoutHandler = ApplicationLogoutHandler(vertx, sessionStore, ApplicationLogoutHandlerOptions(), config)
+    val logoutHandler = LogoutHandler(vertx, sessionStore, LogoutHandlerOptions(), config)
     return Handler {
         val delegate = it.delegate
         if (delegate is io.vertx.ext.web.RoutingContext) {
-            applicationLogoutHandler.handle(delegate)
+            logoutHandler.handle(delegate)
         }
     }
 }

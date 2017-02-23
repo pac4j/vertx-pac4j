@@ -20,7 +20,7 @@ import static org.pac4j.core.util.CommonHelper.assertNotNull;
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public class ApplicationLogoutHandler implements Handler<RoutingContext> {
+public class LogoutHandler implements Handler<RoutingContext> {
 
     protected final String defaultUrl;
     protected final String logoutUrlPattern;
@@ -37,9 +37,9 @@ public class ApplicationLogoutHandler implements Handler<RoutingContext> {
      *
      * @param options - the options to configure this handler
      */
-    public ApplicationLogoutHandler(final Vertx vertx,
-                                    final SessionStore<VertxWebContext> sessionStore ,
-                                    final ApplicationLogoutHandlerOptions options, final Config config) {
+    public LogoutHandler(final Vertx vertx,
+                         final SessionStore<VertxWebContext> sessionStore ,
+                         final LogoutHandlerOptions options, final Config config) {
         final DefaultLogoutLogic<Void, VertxWebContext> defaultApplicationLogoutLogic =
                 new DefaultLogoutLogic<>();
         defaultApplicationLogoutLogic.setProfileManagerFactory(VertxProfileManager::new);

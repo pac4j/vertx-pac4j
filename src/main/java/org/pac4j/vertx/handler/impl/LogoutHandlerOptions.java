@@ -20,12 +20,12 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 
 /**
- * Class with fluent API to wrap options which can be supplied to ApplicationLogoutHandler. This approach is consistent
+ * Class with fluent API to wrap options which can be supplied to LogoutHandler. This approach is consistent
  * with existing vert.x configuration mechanisms for optional configuration.
  * @since 2.1.0
  */
 @Accessors(chain = true)
-public class ApplicationLogoutHandlerOptions {
+public class LogoutHandlerOptions {
 
     @Getter @Setter
     private String defaultUrl = null;

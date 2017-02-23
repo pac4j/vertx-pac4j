@@ -30,11 +30,11 @@ import org.hamcrest.core.Is.`is` as isEqualTo
  * logic on application logout.
  * @since 2.0.0
  */
-class ApplicationLogoutHandlerIntegrationTest: VertxTestBase() {
+class LogoutHandlerIntegrationTest : VertxTestBase() {
 
     companion object {
 
-        val LOG: Logger = getLogger(ApplicationLogoutHandlerIntegrationTest::class.java)
+        val LOG: Logger = getLogger(LogoutHandlerIntegrationTest::class.java)
 
         /**
          * A handler whose only job is to record a pac4j profile as logged in

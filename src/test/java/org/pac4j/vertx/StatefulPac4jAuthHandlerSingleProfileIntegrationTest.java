@@ -10,8 +10,8 @@ import io.vertx.core.logging.LoggerFactory;
 import org.junit.Test;
 import org.pac4j.core.client.Clients;
 import org.pac4j.core.context.Pac4jConstants;
-import org.pac4j.vertx.handler.impl.ApplicationLogoutHandler;
-import org.pac4j.vertx.handler.impl.ApplicationLogoutHandlerOptions;
+import org.pac4j.vertx.handler.impl.LogoutHandler;
+import org.pac4j.vertx.handler.impl.LogoutHandlerOptions;
 import org.pac4j.vertx.handler.impl.CallbackHandlerOptions;
 import org.pac4j.vertx.handler.impl.SecurityHandlerOptions;
 
@@ -102,7 +102,7 @@ public class StatefulPac4jAuthHandlerSingleProfileIntegrationTest extends Statef
         // Start a web server with no required authorities (i.e. only authentication required) for the secured resource
         startWebServer(TEST_OAUTH2_SUCCESS_URL, optionsWithBothNamesProvided(), callbackHandlerOptions(), null,
                 (router, config) -> router.route(HttpMethod.GET, "/logout")
-                        .handler(new ApplicationLogoutHandler(vertx, sessionStore, new ApplicationLogoutHandlerOptions(), config)));
+                        .handler(new LogoutHandler(vertx, sessionStore, new LogoutHandlerOptions(), config)));
 
         HttpClient client = vertx.createHttpClient();
         loginSuccessfullyExpectingAuthorizedUser(client, Void -> {
