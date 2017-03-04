@@ -71,8 +71,11 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
 
     private val sessionStore = VertxSessionStore()
 
-    @Before
     fun spinUpServerAndClient() {
+        spinUpServerAndClient(LogoutHandlerOptions())
+    }
+
+    fun spinUpServerAndClient(logoutHandlerOptions: LogoutHandlerOptions) {
         rxVertx = Vertx.newInstance(vertx)
         client = rxVertx!!.createHttpClient()
         startServerWithSessionSupport(rxVertx!!, Consumer<Router> {
@@ -80,7 +83,7 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
             with(r) {
                 route(HttpMethod.POST, URL_SPOOF_LOGIN).handler  { spoofLoginHandler(it, sessionStore) }
                 route(HttpMethod.GET, URL_QUERY_PROFILE).handler { getProfileHandler(it, sessionStore) }
-                get(URL_LOGOUT).handler(logoutHandler(vertx, sessionStore))
+                get(URL_LOGOUT).handler(logoutHandler(vertx, sessionStore, logoutHandlerOptions))
             }
         })
     }
@@ -95,26 +98,64 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
      * removing all the user's details.
      */
     @Test
-    fun simpleLogoutTest() {
+    fun simpleLogoutTesWithDefaults() {
 
+        spinUpServerAndClient()
         val notNullClient = client!!
-        testLogout(notNullClient, URL_LOGOUT, {
+        testLogoutExpectingNoProfile(notNullClient, URL_LOGOUT, {
             assertThat(it.statusCode(), isEqualTo(200))
         })
     }
 
     @Test
+    fun testLogoutWithLocalLogoutTrue() {
+        spinUpServerAndClient(LogoutHandlerOptions().setLocalLogout(true))
+        val notNullClient = client!!
+        testLogoutExpectingNoProfile(notNullClient, URL_LOGOUT, {
+            assertThat(it.statusCode(), isEqualTo(200))
+        })
+    }
+
+    @Test
+    fun testLogoutWithLocalLogoutFalse() {
+        spinUpServerAndClient(LogoutHandlerOptions().setLocalLogout(false))
+        val notNullClient = client!!
+        testLogoutExpectingProfileToMatch(notNullClient, URL_LOGOUT,
+                {
+                    assertThat(it.statusCode(), isEqualTo(200))
+                },
+                {
+                    with (it) {
+                        assertThat(getString(USER_ID_KEY), isEqualTo(TEST_USER1))
+                        assertThat(getString(EMAIL_KEY), isEqualTo(TEST_EMAIL))
+                    }
+                })
+    }
+    @Test
     fun testLogoutWithRedirectToQueryParamUrl() {
+        spinUpServerAndClient()
         val notNullClient = client!!
         val urlWithRedirect = URL_LOGOUT + "?" + Pac4jConstants.URL + "=" + "/logoutDone"
 
-        testLogout(notNullClient, urlWithRedirect, {
+        testLogoutExpectingNoProfile(notNullClient, urlWithRedirect, {
             assertThat(it.statusCode(), isEqualTo(302))
             assertThat(it.getHeader("location"), isEqualTo("/logoutDone"))
         })
     }
 
-    fun testLogout(client: HttpClient, logoutUrl: String, responseValidator: (HttpClientResponse) -> Unit ) {
+    fun testLogoutExpectingNoProfile(client: HttpClient, logoutUrl: String, responseValidator: (HttpClientResponse) -> Unit ) {
+        testLogoutExpectingProfileToMatch(client, logoutUrl, responseValidator, {
+            with (it) {
+                assertThat(getString(org.pac4j.vertx.handler.impl.USER_ID_KEY), org.hamcrest.core.Is.`is`(org.hamcrest.CoreMatchers.nullValue()))
+                assertThat(getString(org.pac4j.vertx.handler.impl.EMAIL_KEY), org.hamcrest.core.Is.`is`(org.hamcrest.CoreMatchers.nullValue()))
+            }
+
+        })
+
+    }
+
+    fun testLogoutExpectingProfileToMatch(client: HttpClient, logoutUrl: String, responseValidator: (HttpClientResponse) -> Unit,
+                                   profileJsonValidator: (JsonObject) -> Unit) {
         successfulLoginObservable(client)
                 .flatMap { Observable.just(client.get(PORT, HOST, logoutUrl)) }
                 .flatMap { toResponseObservable(it, addHeader("cookie", retrieveSessionCookie())) }
@@ -127,18 +168,14 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
                 .map { assertThatResponseCodeIs(it, 200) }
                 .flatMap { it.toObservable() }
                 .reduce { accumulator: Buffer?, current: Buffer? ->  accumulator!!.appendBuffer(current) }
-                .map { it.toJsonObject() }
+                .map(Buffer::toJsonObject)
                 .doOnError { fail(it) }
                 .subscribe {
-                    with (it) {
-                        assertThat(getString(org.pac4j.vertx.handler.impl.USER_ID_KEY), org.hamcrest.core.Is.`is`(org.hamcrest.CoreMatchers.nullValue()))
-                        assertThat(getString(org.pac4j.vertx.handler.impl.EMAIL_KEY), org.hamcrest.core.Is.`is`(org.hamcrest.CoreMatchers.nullValue()))
-                    }
+                    profileJsonValidator(it)
                     testComplete()
                 }
 
         await(2, TimeUnit.SECONDS)
-
     }
 
     fun successfulLoginObservable(client: HttpClient): Observable<JsonObject> {

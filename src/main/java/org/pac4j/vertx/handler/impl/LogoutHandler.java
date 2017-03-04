@@ -29,6 +29,7 @@ public class LogoutHandler implements Handler<RoutingContext> {
     private final LogoutLogic<Void, VertxWebContext> logoutLogic;
     private final Vertx vertx;
     private final SessionStore<VertxWebContext> sessionStore;
+    private final boolean localLogout;
 
     protected HttpActionAdapter<Void, VertxWebContext> httpActionAdapter = new DefaultHttpActionAdapter();
 
@@ -49,6 +50,7 @@ public class LogoutHandler implements Handler<RoutingContext> {
         this.config = config;
         this.vertx = vertx;
         this.sessionStore = sessionStore;
+        this.localLogout = options.isLocalLogout();
     }
 
     @Override
@@ -60,7 +62,7 @@ public class LogoutHandler implements Handler<RoutingContext> {
         final VertxWebContext webContext = new VertxWebContext(routingContext, sessionStore);
 
         vertx.executeBlocking(future -> {
-                    logoutLogic.perform(webContext, config, httpActionAdapter, defaultUrl, logoutUrlPattern, true,
+                    logoutLogic.perform(webContext, config, httpActionAdapter, defaultUrl, logoutUrlPattern, localLogout,
                             false, false);
                     future.complete(null);
                 },

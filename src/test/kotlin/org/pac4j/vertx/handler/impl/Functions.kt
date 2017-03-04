@@ -56,11 +56,12 @@ fun getProfileHandler(rc: RoutingContext, sessionStore: SessionStore<VertxWebCon
     rc.response().end(json.encodePrettily())
 }
 
-fun logoutHandler(vertx: io.vertx.core.Vertx, sessionStore: SessionStore<VertxWebContext>): Handler<RoutingContext> {
+fun logoutHandler(vertx: io.vertx.core.Vertx, sessionStore: SessionStore<VertxWebContext>,
+                  handlerOptions: LogoutHandlerOptions): Handler<RoutingContext> {
     val config = Config()
     val clients = Clients(HeaderBasedDirectClient("hello"))
     config.clients = clients
-    val logoutHandler = LogoutHandler(vertx, sessionStore, LogoutHandlerOptions(), config)
+    val logoutHandler = LogoutHandler(vertx, sessionStore, handlerOptions, config)
     return Handler {
         val delegate = it.delegate
         if (delegate is io.vertx.ext.web.RoutingContext) {
