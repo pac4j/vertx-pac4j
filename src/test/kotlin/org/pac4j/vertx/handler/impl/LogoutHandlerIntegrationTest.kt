@@ -7,10 +7,14 @@ import io.vertx.core.logging.LoggerFactory.getLogger
 import io.vertx.rxjava.core.Vertx
 import io.vertx.rxjava.core.buffer.Buffer
 import io.vertx.rxjava.core.http.HttpClient
+import io.vertx.rxjava.core.http.HttpClientRequest
 import io.vertx.rxjava.core.http.HttpClientResponse
 import io.vertx.rxjava.ext.web.Router
 import io.vertx.rxjava.ext.web.RoutingContext
+import io.vertx.rxjava.ext.web.handler.BodyHandler
 import io.vertx.test.core.VertxTestBase
+import org.hamcrest.CoreMatchers.`is`
+import org.hamcrest.CoreMatchers.nullValue
 import org.junit.Before
 import org.junit.Test
 import org.pac4j.core.context.Pac4jConstants
@@ -19,6 +23,7 @@ import org.pac4j.vertx.VertxWebContext
 import org.pac4j.vertx.context.session.VertxSessionStore
 import org.pac4j.vertx.profile.TestOAuth1Profile
 import rx.Observable
+import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import java.util.function.Consumer
@@ -58,6 +63,28 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
             rc.response().setStatusCode(204).end()
         }
 
+        fun addValueToSessionHandler(rc: RoutingContext) {
+            LOG.info("Add value to session endpoint called")
+            val body = rc.bodyAsJson
+            val key = body.getString(FIELD_KEY)
+            val value = body.getString(FIELD_VALUE)
+            Objects.requireNonNull(key)
+            Objects.requireNonNull(value)
+            LOG.info("Setting session entry " + key + "to " + value)
+            rc.session().put(key, value)
+            rc.response().setStatusCode(200).end()
+        }
+
+        fun getValueFromSessionHandler(rc: RoutingContext) {
+            LOG.info("Get value from session endpoint called")
+            val key = rc.request().getParam(FIELD_KEY)
+            Objects.requireNonNull(key)
+            val value = rc.session().get<String>(key)
+            LOG.info("Value from session is " + value)
+            val responseBody = JsonObject().put(FIELD_VALUE, value)
+            rc.response().setChunked(true).setStatusCode(200).write(responseBody.toString()).end()
+        }
+
     }
 
     // rx Vertx reference
@@ -83,6 +110,9 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
             with(r) {
                 route(HttpMethod.POST, URL_SPOOF_LOGIN).handler  { spoofLoginHandler(it, sessionStore) }
                 route(HttpMethod.GET, URL_QUERY_PROFILE).handler { getProfileHandler(it, sessionStore) }
+                route(HttpMethod.POST, URL_SET_SESSION_VALUE).handler(BodyHandler.create())
+                route(HttpMethod.POST, URL_SET_SESSION_VALUE).handler { addValueToSessionHandler(it) }
+                route(HttpMethod.GET, URL_GET_SESSION_VALUE).handler { getValueFromSessionHandler(it) }
                 get(URL_LOGOUT).handler(logoutHandler(vertx, sessionStore, logoutHandlerOptions))
             }
         })
@@ -102,9 +132,23 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
 
         spinUpServerAndClient()
         val notNullClient = client!!
-        testLogoutExpectingNoProfile(notNullClient, URL_LOGOUT, {
-            assertThat(it.statusCode(), isEqualTo(200))
-        })
+        setSessionValue(notNullClient, TEST_SESSION_KEY, TEST_SESSION_VALUE)
+                .flatMap {loginThenLogoutObservable(notNullClient, URL_LOGOUT ,{
+                    assertThat(it.statusCode(), isEqualTo(200))
+                },
+                {
+                    with (it) {
+                        assertThat(getString(USER_ID_KEY),`is`(org.hamcrest.CoreMatchers.nullValue()))
+                        assertThat(getString(EMAIL_KEY), `is`(org.hamcrest.CoreMatchers.nullValue()))
+                    }
+                })}
+                .flatMap { retrieveSessionValue(notNullClient, TEST_SESSION_KEY) }
+                .doOnError { fail(it) }
+                .subscribe({
+                    assertThat(it, `is`(TEST_SESSION_VALUE))
+                    testComplete()
+                })
+        await(2, TimeUnit.SECONDS)
     }
 
     @Test
@@ -131,6 +175,53 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
                     }
                 })
     }
+
+    @Test
+    fun testLogoutWithDestroySessionFalseDoesNotDestroySession() {
+        spinUpServerAndClient(LogoutHandlerOptions().setDestroySession(false))
+        val notNullClient = client!!
+        setSessionValue(notNullClient, TEST_SESSION_KEY, TEST_SESSION_VALUE)
+                .flatMap {loginThenLogoutObservable(notNullClient, URL_LOGOUT ,{
+                    assertThat(it.statusCode(), isEqualTo(200))
+                },
+                        {
+                            with (it) {
+                                assertThat(getString(USER_ID_KEY),`is`(org.hamcrest.CoreMatchers.nullValue()))
+                                assertThat(getString(EMAIL_KEY), `is`(org.hamcrest.CoreMatchers.nullValue()))
+                            }
+                        })}
+                .flatMap { retrieveSessionValue(notNullClient, TEST_SESSION_KEY) }
+                .doOnError { fail(it) }
+                .subscribe({
+                    assertThat(it, `is`(TEST_SESSION_VALUE))
+                    testComplete()
+                })
+        await(2, TimeUnit.SECONDS)
+    }
+
+    @Test
+    fun testLogoutWithDestroySessionTrueDestroysSession() {
+        spinUpServerAndClient(LogoutHandlerOptions().setDestroySession(true))
+        val notNullClient = client!!
+        setSessionValue(notNullClient, TEST_SESSION_KEY, TEST_SESSION_VALUE)
+                .flatMap {loginThenLogoutObservable(notNullClient, URL_LOGOUT ,{
+                    assertThat(it.statusCode(), isEqualTo(200))
+                },
+                        {
+                            with (it) {
+                                assertThat(getString(USER_ID_KEY),`is`(org.hamcrest.CoreMatchers.nullValue()))
+                                assertThat(getString(EMAIL_KEY), `is`(org.hamcrest.CoreMatchers.nullValue()))
+                            }
+                        })}
+                .flatMap { retrieveSessionValue(notNullClient, TEST_SESSION_KEY) }
+                .doOnError { fail(it) }
+                .subscribe({
+                    assertThat(it, `is`(nullValue()))
+                    testComplete()
+                })
+        await(2, TimeUnit.SECONDS)
+    }
+
     @Test
     fun testLogoutWithRedirectToQueryParamUrl() {
         spinUpServerAndClient()
@@ -156,7 +247,17 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
 
     fun testLogoutExpectingProfileToMatch(client: HttpClient, logoutUrl: String, responseValidator: (HttpClientResponse) -> Unit,
                                    profileJsonValidator: (JsonObject) -> Unit) {
-        successfulLoginObservable(client)
+        loginThenLogoutObservable(client, logoutUrl, responseValidator, profileJsonValidator)
+                .subscribe {
+                    testComplete()
+                }
+
+        await(2, TimeUnit.SECONDS)
+    }
+
+    fun loginThenLogoutObservable(client: HttpClient, logoutUrl: String, responseValidator: (HttpClientResponse) -> Unit,
+                                  profileJsonValidator: (JsonObject) -> Unit): Observable<JsonObject> {
+        return successfulLoginObservable(client)
                 .flatMap { Observable.just(client.get(PORT, HOST, logoutUrl)) }
                 .flatMap { toResponseObservable(it, addHeader("cookie", retrieveSessionCookie())) }
                 .map {
@@ -169,13 +270,11 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
                 .flatMap { it.toObservable() }
                 .reduce { accumulator: Buffer?, current: Buffer? ->  accumulator!!.appendBuffer(current) }
                 .map(Buffer::toJsonObject)
-                .doOnError { fail(it) }
-                .subscribe {
+                .map {
                     profileJsonValidator(it)
-                    testComplete()
+                    it
                 }
-
-        await(2, TimeUnit.SECONDS)
+                .doOnError { fail(it) }
     }
 
     fun successfulLoginObservable(client: HttpClient): Observable<JsonObject> {
@@ -200,14 +299,36 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
 
     }
 
+    fun setSessionValue(client: HttpClient, keyName: String, keyValue: String): Observable<HttpClientResponse> {
+        val setSessionRequest = client.post(PORT, HOST, URL_SET_SESSION_VALUE).setChunked(true)
+        val requestBody = JsonObject()
+                .put(FIELD_KEY, keyName)
+                .put(FIELD_VALUE, keyValue)
+        return toResponseObservable(setSessionRequest, Consumer<HttpClientRequest>{it.write(requestBody.toString())})
+                .map { extractCookie(it, persistSessionCookie()) }
+    }
+
+    private fun retrieveSessionValue(client: HttpClient, sessionKey: String): Observable<String> =
+        Observable.just(client.get(PORT, HOST, "$URL_GET_SESSION_VALUE?$FIELD_KEY=$sessionKey"))
+            .flatMap { toResponseObservable(it, addHeader("cookie", retrieveSessionCookie())) }
+            .map { assertThatResponseCodeIs(it, 200)}
+            .flatMap { it.toObservable() }
+            .reduce { accumulator: Buffer?, current: Buffer? ->  accumulator!!.appendBuffer(current) }
+            .map(Buffer::toJsonObject)
+            .map { it.getString(FIELD_VALUE) }
+
     private fun persistSessionCookie(): Consumer<String> = Consumer {
 
+        LOG.info("Session cookie is ${sessionCookie.get()}")
         // Only bother setting it if not already set
         if(sessionCookie.get() == null) {
+            LOG.info("Setting session cookie $it")
             sessionCookie.set(it)
         }
     }
 
-    private fun retrieveSessionCookie(): Supplier<String?> = Supplier { sessionCookie.get() }
+    private fun retrieveSessionCookie(): Supplier<String?> = Supplier {
+        LOG.info("Retrieving session cookie ${sessionCookie.get()}")
+        sessionCookie.get() }
 
 }

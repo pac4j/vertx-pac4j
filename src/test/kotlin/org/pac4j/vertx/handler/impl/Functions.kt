@@ -84,8 +84,8 @@ fun toResponseObservable(request: HttpClientRequest, requestConfigurer: Consumer
                 Observable.empty<HttpClientResponse>()
             } else {
                 val requestObservable = request.toObservable()
-                requestConfigurer.accept(request)
                 requestObservable.subscribe(subscriber)
+                requestConfigurer.accept(request)
                 request.end()
             }
 
@@ -111,7 +111,7 @@ fun startServer(rxVertx: Vertx, routeConfigurer: Consumer<Router>) {
             .subscribe({ serverFuture.complete(it)
                 LOG.info("Server started")},
                     { LOG.info("Server failed to start") })
-    serverFuture.get(1, TimeUnit.SECONDS)
+    serverFuture.get(2, TimeUnit.SECONDS)
 }
 
 fun startServerWithSessionSupport(rxVertx: Vertx, routeConfigurer: Consumer<Router>) {
@@ -134,7 +134,8 @@ fun startServerWithSessionSupport(rxVertx: Vertx, routeConfigurer: Consumer<Rout
 
 fun extractCookie(resp: HttpClientResponse, cookiePersister: Consumer<String>): HttpClientResponse {
     val setCookie = resp.headers().get("set-cookie")
-    cookiePersister.accept(setCookie)
+    resp.headers().names().forEach { LOG.info(it) }
+    setCookie?.let { cookiePersister.accept(it) }
     return resp
 }
 

@@ -23,5 +23,9 @@ public class VertxSessionStore implements SessionStore<VertxWebContext> {
         context.getVertxSession().put(key, value);
     }
 
-
+    @Override
+    public boolean destroySession(VertxWebContext context) {
+        context.getVertxSession().destroy();
+        return true;
+    }
 }
