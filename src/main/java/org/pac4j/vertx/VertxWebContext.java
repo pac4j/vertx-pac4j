@@ -161,11 +161,13 @@ public class VertxWebContext implements WebContext {
 
     @Override
     public void writeResponseContent(String content) {
-        if (!contentHasBeenWritten) {
-            routingContext.response().setChunked(true);
-            contentHasBeenWritten = true;
+        if (content != null && !content.isEmpty()) {
+            if (!contentHasBeenWritten) {
+                routingContext.response().setChunked(true);
+                contentHasBeenWritten = true;
+            }
+            routingContext.response().write(content);
         }
-        routingContext.response().write(content);
     }
 
     @Override

@@ -31,6 +31,7 @@ public class LogoutHandler implements Handler<RoutingContext> {
     private final SessionStore<VertxWebContext> sessionStore;
     private final boolean localLogout;
     private final boolean destroySession;
+    private final boolean centralLogout;
 
     protected HttpActionAdapter<Void, VertxWebContext> httpActionAdapter = new DefaultHttpActionAdapter();
 
@@ -53,6 +54,7 @@ public class LogoutHandler implements Handler<RoutingContext> {
         this.sessionStore = sessionStore;
         this.localLogout = options.isLocalLogout();
         this.destroySession = options.isDestroySession();
+        this.centralLogout = options.isCentralLogout();
     }
 
     @Override
@@ -65,7 +67,7 @@ public class LogoutHandler implements Handler<RoutingContext> {
 
         vertx.executeBlocking(future -> {
                     logoutLogic.perform(webContext, config, httpActionAdapter, defaultUrl, logoutUrlPattern, localLogout,
-                            destroySession, false);
+                            destroySession, centralLogout);
                     future.complete(null);
                 },
                 false,

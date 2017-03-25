@@ -15,11 +15,11 @@ import io.vertx.rxjava.ext.web.sstore.LocalSessionStore
 import org.hamcrest.MatcherAssert.assertThat
 import org.pac4j.core.client.Clients
 import org.pac4j.core.config.Config
-import org.pac4j.core.context.session.SessionStore;
+import org.pac4j.core.context.session.SessionStore
 import org.pac4j.vertx.VertxProfileManager
 import org.pac4j.vertx.VertxWebContext
 import org.pac4j.vertx.auth.Pac4jAuthProvider
-import org.pac4j.vertx.client.HeaderBasedDirectClient
+import org.pac4j.vertx.client.QueryParamBasedIndirectClient
 import rx.Observable
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
@@ -59,7 +59,11 @@ fun getProfileHandler(rc: RoutingContext, sessionStore: SessionStore<VertxWebCon
 fun logoutHandler(vertx: io.vertx.core.Vertx, sessionStore: SessionStore<VertxWebContext>,
                   handlerOptions: LogoutHandlerOptions): Handler<RoutingContext> {
     val config = Config()
-    val clients = Clients(HeaderBasedDirectClient("hello"))
+    val client = QueryParamBasedIndirectClient("localhost", TEST_CALLBACK_URL)
+    client.name = TEST_QUERY_PARAM_CLIENT_NAME
+    client.callbackUrl = TEST_CALLBACK_URL
+
+    val clients = Clients(client)
     config.clients = clients
     val logoutHandler = LogoutHandler(vertx, sessionStore, handlerOptions, config)
     return Handler {

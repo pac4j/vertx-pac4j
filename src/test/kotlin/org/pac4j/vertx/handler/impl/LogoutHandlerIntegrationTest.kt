@@ -21,7 +21,7 @@ import org.pac4j.core.context.Pac4jConstants
 import org.pac4j.core.context.session.SessionStore
 import org.pac4j.vertx.VertxWebContext
 import org.pac4j.vertx.context.session.VertxSessionStore
-import org.pac4j.vertx.profile.TestOAuth1Profile
+import org.pac4j.vertx.profile.SimpleTestProfile
 import rx.Observable
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -52,11 +52,8 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
 
             // Set up a pac4j user and save into the session, we can interrogate later
             val profileManager = getProfileManager(rc, sessionStore)
-            val profile = TestOAuth1Profile()
-            with (profile) {
-                setId(TEST_USER1)
-                addAttribute(EMAIL_KEY, TEST_EMAIL)
-            }
+            val profile = SimpleTestProfile(TEST_USER1, TEST_EMAIL)
+            profile.clientName = TEST_QUERY_PARAM_CLIENT_NAME
             profileManager.save(true, profile, false)
 
             LOG.info("Spoof login endpoint completing")
@@ -125,7 +122,8 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
 
     /**
      * Test that hitting the logout endpoint actually logs the user out from the point of view of
-     * removing all the user's details.
+     * removing all the user's details. Effects should be as for centralLogout false, destroySession false,
+     * localLogout true
      */
     @Test
     fun simpleLogoutTesWithDefaults() {
@@ -133,7 +131,8 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
         spinUpServerAndClient()
         val notNullClient = client!!
         setSessionValue(notNullClient, TEST_SESSION_KEY, TEST_SESSION_VALUE)
-                .flatMap {loginThenLogoutObservable(notNullClient, URL_LOGOUT ,{
+                .flatMap {
+                    loginThenLogout(notNullClient, URL_LOGOUT ,{
                     assertThat(it.statusCode(), isEqualTo(200))
                 },
                 {
@@ -177,11 +176,64 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
     }
 
     @Test
+    fun testLogoutWithCentralLogoutFalse() {
+        spinUpServerAndClient(LogoutHandlerOptions().setCentralLogout(false))
+        val notNullClient = client!!
+        setSessionValue(notNullClient, TEST_SESSION_KEY, TEST_SESSION_VALUE)
+                .flatMap {
+                    loginThenLogout(notNullClient, URL_LOGOUT ,{
+                    assertThat(it.statusCode(), isEqualTo(200))
+                },
+                        {
+                            with (it) {
+                                assertThat(getString(USER_ID_KEY),`is`(org.hamcrest.CoreMatchers.nullValue()))
+                                assertThat(getString(EMAIL_KEY), `is`(org.hamcrest.CoreMatchers.nullValue()))
+                            }
+                        })}
+                .flatMap { retrieveSessionValue(notNullClient, TEST_SESSION_KEY) }
+                .doOnError { fail(it) }
+                .subscribe({
+                    assertThat(it, `is`(TEST_SESSION_VALUE))
+                    testComplete()
+                })
+        await(2, TimeUnit.SECONDS)
+    }
+
+    @Test
+    fun testLogoutWithCentralLogoutTrue() {
+        spinUpServerAndClient(LogoutHandlerOptions().setCentralLogout(true))
+        val notNullClient = client!!
+        successfulLogin(notNullClient)
+                .flatMap { logout(notNullClient, URL_LOGOUT) }
+                // We expect to be redirected to the url specified for the client
+                .map {
+                    LOG.info(it.statusMessage())
+                    LOG.info(it.statusCode())
+                    LOG.info(it.toString())
+                    assertThat(it.statusCode(), `is`(302))
+                    assertThat(it.getHeader("location"), `is`(CENTRAL_LOGOUT_URL))
+                    it
+                }
+                .flatMap { retrieveProfile(notNullClient) }
+                .subscribe {
+                    // Check that profile was cleared as well as the redirect
+                    with (it) {
+                        assertThat(getString(USER_ID_KEY),`is`(org.hamcrest.CoreMatchers.nullValue()))
+                        assertThat(getString(EMAIL_KEY), `is`(org.hamcrest.CoreMatchers.nullValue()))
+                        testComplete()
+                    }
+                }
+        await(3, TimeUnit.SECONDS)
+    }
+
+
+    @Test
     fun testLogoutWithDestroySessionFalseDoesNotDestroySession() {
         spinUpServerAndClient(LogoutHandlerOptions().setDestroySession(false))
         val notNullClient = client!!
         setSessionValue(notNullClient, TEST_SESSION_KEY, TEST_SESSION_VALUE)
-                .flatMap {loginThenLogoutObservable(notNullClient, URL_LOGOUT ,{
+                .flatMap {
+                    loginThenLogout(notNullClient, URL_LOGOUT ,{
                     assertThat(it.statusCode(), isEqualTo(200))
                 },
                         {
@@ -204,7 +256,8 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
         spinUpServerAndClient(LogoutHandlerOptions().setDestroySession(true))
         val notNullClient = client!!
         setSessionValue(notNullClient, TEST_SESSION_KEY, TEST_SESSION_VALUE)
-                .flatMap {loginThenLogoutObservable(notNullClient, URL_LOGOUT ,{
+                .flatMap {
+                    loginThenLogout(notNullClient, URL_LOGOUT ,{
                     assertThat(it.statusCode(), isEqualTo(200))
                 },
                         {
@@ -247,7 +300,7 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
 
     fun testLogoutExpectingProfileToMatch(client: HttpClient, logoutUrl: String, responseValidator: (HttpClientResponse) -> Unit,
                                    profileJsonValidator: (JsonObject) -> Unit) {
-        loginThenLogoutObservable(client, logoutUrl, responseValidator, profileJsonValidator)
+        loginThenLogout(client, logoutUrl, responseValidator, profileJsonValidator)
                 .subscribe {
                     testComplete()
                 }
@@ -255,21 +308,20 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
         await(2, TimeUnit.SECONDS)
     }
 
-    fun loginThenLogoutObservable(client: HttpClient, logoutUrl: String, responseValidator: (HttpClientResponse) -> Unit,
-                                  profileJsonValidator: (JsonObject) -> Unit): Observable<JsonObject> {
-        return successfulLoginObservable(client)
-                .flatMap { Observable.just(client.get(PORT, HOST, logoutUrl)) }
+    fun logout(client: HttpClient, logoutUrl: String): Observable<HttpClientResponse> {
+        return Observable.just(client.get(PORT, HOST, logoutUrl))
                 .flatMap { toResponseObservable(it, addHeader("cookie", retrieveSessionCookie())) }
+    }
+
+    fun loginThenLogout(client: HttpClient, logoutUrl: String, responseValidator: (HttpClientResponse) -> Unit,
+                        profileJsonValidator: (JsonObject) -> Unit): Observable<JsonObject> {
+        return successfulLogin(client)
+                .flatMap { logout(client, logoutUrl) }
                 .map {
                     responseValidator(it)
                     it
                 }
-                .flatMap { Observable.just(client.get(PORT, HOST, URL_QUERY_PROFILE)) }
-                .flatMap { toResponseObservable(it, addHeader("cookie", retrieveSessionCookie())) }
-                .map { assertThatResponseCodeIs(it, 200) }
-                .flatMap { it.toObservable() }
-                .reduce { accumulator: Buffer?, current: Buffer? ->  accumulator!!.appendBuffer(current) }
-                .map(Buffer::toJsonObject)
+                .flatMap { retrieveProfile(client) }
                 .map {
                     profileJsonValidator(it)
                     it
@@ -277,18 +329,13 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
                 .doOnError { fail(it) }
     }
 
-    fun successfulLoginObservable(client: HttpClient): Observable<JsonObject> {
+    fun successfulLogin(client: HttpClient): Observable<JsonObject> {
         val spoofLoginRequest = client.post(PORT, HOST, URL_SPOOF_LOGIN)
 
         return toResponseObservable(spoofLoginRequest, addHeader("cookie", retrieveSessionCookie()))
                 .map { extractCookie(it, persistSessionCookie()) }
                 .map { assertThatResponseCodeIs(it, 204)}
-                .flatMap { Observable.just(client.get(PORT, HOST, URL_QUERY_PROFILE)) }
-                .flatMap { toResponseObservable(it, addHeader("cookie", retrieveSessionCookie())) }
-                .map { assertThatResponseCodeIs(it, 200) }
-                .flatMap { it.toObservable() }
-                .reduce { accumulator: Buffer?, current: Buffer? ->  accumulator!!.appendBuffer(current) }
-                .map { it.toJsonObject() }
+                .flatMap { retrieveProfile(client) }
                 .map {
                     with (it) {
                         assertThat(getString(USER_ID_KEY), isEqualTo(TEST_USER1))
@@ -297,6 +344,15 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
                     it
                 }
 
+    }
+
+    fun retrieveProfile(client: HttpClient): Observable<JsonObject> {
+        return Observable.just(client.get(PORT, HOST, URL_QUERY_PROFILE))
+                .flatMap { toResponseObservable(it, addHeader("cookie", retrieveSessionCookie())) }
+                .map { assertThatResponseCodeIs(it, 200) }
+                .flatMap { it.toObservable() }
+                .reduce { accumulator: Buffer?, current: Buffer? ->  accumulator!!.appendBuffer(current) }
+                .map(Buffer::toJsonObject)
     }
 
     fun setSessionValue(client: HttpClient, keyName: String, keyValue: String): Observable<HttpClientResponse> {

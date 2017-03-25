@@ -7,6 +7,7 @@ import org.pac4j.core.credentials.extractor.CredentialsExtractor
 import org.pac4j.core.profile.creator.ProfileCreator
 import org.pac4j.core.redirect.RedirectAction
 import org.pac4j.core.redirect.RedirectActionBuilder
+import org.pac4j.vertx.handler.impl.CENTRAL_LOGOUT_URL
 import org.pac4j.vertx.handler.impl.QUERY_PARAM_CLIENT_NAME
 import org.pac4j.vertx.handler.impl.QUERY_PARAM_EMAIL
 import org.pac4j.vertx.handler.impl.QUERY_PARAM_USER_ID
@@ -46,6 +47,10 @@ class QueryParamBasedIndirectClient(val server: String, val callbackPath: String
             val location = "$server$callbackPath?$clientNameKV&$userIdKV&$emailKV"
             RedirectAction.redirect(location)
         }
+        setLogoutActionBuilder { context, currentProfile, targetUrl ->
+            RedirectAction.redirect(CENTRAL_LOGOUT_URL)
+        }
+
     }
 
 }
