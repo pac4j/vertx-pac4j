@@ -145,7 +145,7 @@ public class VertxWebContext implements WebContext {
     }
 
     @Override
-    public Object getSessionIdentifier() {
+    public String getSessionIdentifier() {
         return routingContext.session().id();
     }
 
@@ -239,6 +239,11 @@ public class VertxWebContext implements WebContext {
     @Override
     public SessionStore getSessionStore() {
         return this.sessionStore;
+    }
+
+    @Override
+    public void setSessionStore(SessionStore sessionStore) {
+        throw new UnsupportedOperationException("Not possible to change the session store for VertxWebContext");
     }
 
     public Pac4jUser getVertxUser() {

@@ -1,6 +1,7 @@
 package org.pac4j.vertx.client;
 
 import org.pac4j.core.authorization.generator.AuthorizationGenerator;
+import org.pac4j.core.context.WebContext;
 import org.pac4j.vertx.profile.TestOAuth2Profile;
 
 /**
@@ -10,7 +11,7 @@ import org.pac4j.vertx.profile.TestOAuth2Profile;
 public class TestOAuth2AuthorizationGenerator implements AuthorizationGenerator<TestOAuth2Profile> {
 
     @Override
-    public void generate(TestOAuth2Profile testOAuth2Profile) {
+    public TestOAuth2Profile generate(WebContext context, TestOAuth2Profile testOAuth2Profile) {
         switch (testOAuth2Profile.getId()) {
             case "testUser1":
                 // Don't add any authorities
@@ -29,9 +30,8 @@ public class TestOAuth2AuthorizationGenerator implements AuthorizationGenerator<
                 break;
 
             default:
-
         }
+        return testOAuth2Profile;
     }
-
 }
 

@@ -28,4 +28,21 @@ public class VertxSessionStore implements SessionStore<VertxWebContext> {
         context.getVertxSession().destroy();
         return true;
     }
+
+    @Override
+    public Object getTrackableSession(VertxWebContext context) {
+        return null;
+    }
+
+    @Override
+    public SessionStore<VertxWebContext> buildFromTrackableSession(VertxWebContext context, Object trackableSession) {
+        return null;
+    }
+
+    @Override
+    public boolean renewSession(VertxWebContext context) {
+        return false;
+    }
+
+
 }
