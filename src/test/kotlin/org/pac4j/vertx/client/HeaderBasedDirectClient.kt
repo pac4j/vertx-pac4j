@@ -28,7 +28,7 @@ class HeaderBasedDirectClient(matchingPattern: String): DirectClient<TestCredent
 
         }
         setAuthenticator { credentials, webContext ->
-            if (credentials.userId == null || credentials.email == null) {
+            if (credentials == null || credentials.userId == null || credentials.email == null) {
                 throw CredentialException("Authorization header does not pass authentication")
             }
         }

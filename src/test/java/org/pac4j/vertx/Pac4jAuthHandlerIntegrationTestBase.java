@@ -24,6 +24,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import static org.pac4j.vertx.TestConstants.FORBIDDEN_BODY;
+import static org.pac4j.vertx.TestConstants.UNAUTHORIZED_BODY;
+
 /**
  * @author Jeremy Prime
  * @since 2.0.0
@@ -36,8 +39,6 @@ public abstract class Pac4jAuthHandlerIntegrationTestBase extends VertxTestBase 
     static final String UNPROTECTED_RESOURCE_BODY = "Unprotected resource";
     static final String TEST_CLIENT_NAME = "TestOAuth2Client";
     static final String REQUIRE_ALL_AUTHORIZER = "requireAllAuthorizer";
-    static final String FORBIDDEN_BODY = "Forbidden to access this resource";
-    static final String UNAUTHORIZED_BODY = "Unauthorized for resource";
 
     protected SessionStore<VertxWebContext> sessionStore = new VertxSessionStore();
 

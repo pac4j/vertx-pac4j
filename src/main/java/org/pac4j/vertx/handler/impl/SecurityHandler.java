@@ -5,17 +5,24 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.impl.AuthHandlerImpl;
+import org.pac4j.core.client.IndirectClient;
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.engine.DefaultSecurityLogic;
 import org.pac4j.core.engine.SecurityLogic;
 import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.http.HttpActionAdapter;
+import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.core.util.CommonHelper;
 import org.pac4j.vertx.VertxProfileManager;
 import org.pac4j.vertx.VertxWebContext;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
+import org.pac4j.vertx.auth.Pac4jUser;
 import org.pac4j.vertx.http.DefaultHttpActionAdapter;
+
+import java.util.Map;
+
+import static java.util.stream.Collectors.toMap;
 
 /**
  * @author Jeremy Prime
@@ -73,6 +80,22 @@ public class SecurityHandler extends AuthHandlerImpl {
         // be blocking) so we have to wrap the following call in an executeBlocking call to avoid blocking the
         // event loop
         final VertxWebContext webContext = new VertxWebContext(routingContext, sessionStore);
+        // Strip out DirectClients from pac4j user at this point
+        final Pac4jUser pac4jUser = (Pac4jUser) routingContext.user();
+        if (pac4jUser != null) {
+            final Map<String, CommonProfile> indirectProfiles = pac4jUser.pac4jUserProfiles().entrySet().stream()
+                    .filter(e -> {
+                        final String clientName = e.getValue().getClientName();
+                        return (config.getClients().findClient(clientName) instanceof IndirectClient);
+                    })
+                    .collect(toMap(e -> e.getKey(), e -> e.getValue()));
+            if (!indirectProfiles.isEmpty()) {
+                pac4jUser.pac4jUserProfiles().clear();
+                pac4jUser.pac4jUserProfiles().putAll(indirectProfiles);
+            } else {
+                routingContext.clearUser();
+            }
+        }
 
         vertx.executeBlocking(future -> securityLogic.perform(webContext, config,
             (ctx, parameters) -> {

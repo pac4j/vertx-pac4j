@@ -25,9 +25,7 @@ import org.pac4j.vertx.profile.SimpleTestProfile
 import rx.Observable
 import java.util.*
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
 import java.util.function.Consumer
-import java.util.function.Supplier
 import org.hamcrest.core.Is.`is` as isEqualTo
 
 /**
@@ -91,7 +89,7 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
     private var client: HttpClient? = null
 
     // This will be our session cookie header for use by requests
-    private val sessionCookie = AtomicReference<String>()
+    private val sessionCookie = SessionCookieHolder()
 
     private val sessionStore = VertxSessionStore()
 
@@ -117,7 +115,7 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
 
     @Before
     fun resetSessionCookie() {
-        sessionCookie.set(null)
+        sessionCookie.reset()
     }
 
     /**
@@ -310,7 +308,7 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
 
     fun logout(client: HttpClient, logoutUrl: String): Observable<HttpClientResponse> {
         return Observable.just(client.get(PORT, HOST, logoutUrl))
-                .flatMap { toResponseObservable(it, addHeader("cookie", retrieveSessionCookie())) }
+                .flatMap { toResponseObservable(it, addHeader("cookie", sessionCookie.retrieve())) }
     }
 
     fun loginThenLogout(client: HttpClient, logoutUrl: String, responseValidator: (HttpClientResponse) -> Unit,
@@ -332,8 +330,8 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
     fun successfulLogin(client: HttpClient): Observable<JsonObject> {
         val spoofLoginRequest = client.post(PORT, HOST, URL_SPOOF_LOGIN)
 
-        return toResponseObservable(spoofLoginRequest, addHeader("cookie", retrieveSessionCookie()))
-                .map { extractCookie(it, persistSessionCookie()) }
+        return toResponseObservable(spoofLoginRequest, addHeader("cookie", sessionCookie.retrieve()))
+                .map { extractCookie(it, sessionCookie.persist()) }
                 .map { assertThatResponseCodeIs(it, 204)}
                 .flatMap { retrieveProfile(client) }
                 .map {
@@ -348,7 +346,7 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
 
     fun retrieveProfile(client: HttpClient): Observable<JsonObject> {
         return Observable.just(client.get(PORT, HOST, URL_QUERY_PROFILE))
-                .flatMap { toResponseObservable(it, addHeader("cookie", retrieveSessionCookie())) }
+                .flatMap { toResponseObservable(it, addHeader("cookie", sessionCookie.retrieve())) }
                 .map { assertThatResponseCodeIs(it, 200) }
                 .flatMap { it.toObservable() }
                 .reduce { accumulator: Buffer?, current: Buffer? ->  accumulator!!.appendBuffer(current) }
@@ -361,30 +359,16 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
                 .put(FIELD_KEY, keyName)
                 .put(FIELD_VALUE, keyValue)
         return toResponseObservable(setSessionRequest, Consumer<HttpClientRequest>{it.write(requestBody.toString())})
-                .map { extractCookie(it, persistSessionCookie()) }
+                .map { extractCookie(it, sessionCookie.persist()) }
     }
 
     private fun retrieveSessionValue(client: HttpClient, sessionKey: String): Observable<String> =
         Observable.just(client.get(PORT, HOST, "$URL_GET_SESSION_VALUE?$FIELD_KEY=$sessionKey"))
-            .flatMap { toResponseObservable(it, addHeader("cookie", retrieveSessionCookie())) }
+            .flatMap { toResponseObservable(it, addHeader("cookie", sessionCookie.retrieve())) }
             .map { assertThatResponseCodeIs(it, 200)}
             .flatMap { it.toObservable() }
             .reduce { accumulator: Buffer?, current: Buffer? ->  accumulator!!.appendBuffer(current) }
             .map(Buffer::toJsonObject)
             .map { it.getString(FIELD_VALUE) }
-
-    private fun persistSessionCookie(): Consumer<String> = Consumer {
-
-        LOG.info("Session cookie is ${sessionCookie.get()}")
-        // Only bother setting it if not already set
-        if(sessionCookie.get() == null) {
-            LOG.info("Setting session cookie $it")
-            sessionCookie.set(it)
-        }
-    }
-
-    private fun retrieveSessionCookie(): Supplier<String?> = Supplier {
-        LOG.info("Retrieving session cookie ${sessionCookie.get()}")
-        sessionCookie.get() }
 
 }

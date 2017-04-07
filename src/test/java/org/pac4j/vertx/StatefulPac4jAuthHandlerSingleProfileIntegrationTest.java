@@ -19,6 +19,8 @@ import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import static org.pac4j.vertx.TestConstants.FORBIDDEN_BODY;
+
 /**
  * @author Jeremy Prime
  * @since 2.0.0

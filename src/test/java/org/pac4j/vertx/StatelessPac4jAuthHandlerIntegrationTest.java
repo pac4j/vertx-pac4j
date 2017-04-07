@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.pac4j.vertx.TestConstants.UNAUTHORIZED_BODY;
 
 /**
  * @author Jeremy Prime
