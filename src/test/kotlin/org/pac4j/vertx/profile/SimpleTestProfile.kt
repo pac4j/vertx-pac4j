@@ -1,8 +1,8 @@
 package org.pac4j.vertx.profile
 
 import org.pac4j.core.profile.CommonProfile
-import org.pac4j.vertx.handler.impl.FIELD_EMAIL
-import org.pac4j.vertx.handler.impl.FIELD_USER_ID
+import org.pac4j.vertx.FIELD_EMAIL
+import org.pac4j.vertx.FIELD_USER_ID
 
 /**
  * Simple profile type for testing

@@ -7,10 +7,10 @@ import org.pac4j.core.credentials.extractor.CredentialsExtractor
 import org.pac4j.core.profile.creator.ProfileCreator
 import org.pac4j.core.redirect.RedirectAction
 import org.pac4j.core.redirect.RedirectActionBuilder
-import org.pac4j.vertx.handler.impl.CENTRAL_LOGOUT_URL
-import org.pac4j.vertx.handler.impl.QUERY_PARAM_CLIENT_NAME
-import org.pac4j.vertx.handler.impl.QUERY_PARAM_EMAIL
-import org.pac4j.vertx.handler.impl.QUERY_PARAM_USER_ID
+import org.pac4j.vertx.CENTRAL_LOGOUT_URL
+import org.pac4j.vertx.QUERY_PARAM_CLIENT_NAME
+import org.pac4j.vertx.QUERY_PARAM_EMAIL
+import org.pac4j.vertx.QUERY_PARAM_USER_ID
 import org.pac4j.vertx.profile.SimpleTestProfile
 import java.util.*
 
@@ -41,9 +41,9 @@ class QueryParamBasedIndirectClient(val server: String, val callbackPath: String
             SimpleTestProfile(credentials.userId, credentials.email)}
         redirectActionBuilder = RedirectActionBuilder { webContext ->
 
-            val clientNameKV = "$QUERY_PARAM_CLIENT_NAME=${webContext.getRequestParameter(QUERY_PARAM_CLIENT_NAME)}"
-            val userIdKV = "$QUERY_PARAM_USER_ID=${webContext.getRequestParameter(QUERY_PARAM_USER_ID)}"
-            val emailKV = "$QUERY_PARAM_EMAIL=${webContext.getRequestParameter(QUERY_PARAM_EMAIL)}"
+            val clientNameKV = "${QUERY_PARAM_CLIENT_NAME}=${webContext.getRequestParameter(QUERY_PARAM_CLIENT_NAME)}"
+            val userIdKV = "${QUERY_PARAM_USER_ID}=${webContext.getRequestParameter(QUERY_PARAM_USER_ID)}"
+            val emailKV = "${QUERY_PARAM_EMAIL}=${webContext.getRequestParameter(QUERY_PARAM_EMAIL)}"
             val location = "$server$callbackPath?$clientNameKV&$userIdKV&$emailKV"
             RedirectAction.redirect(location)
         }

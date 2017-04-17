@@ -16,8 +16,7 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.pac4j.core.client.Clients
 import org.pac4j.core.config.Config
 import org.pac4j.core.context.session.SessionStore
-import org.pac4j.vertx.VertxProfileManager
-import org.pac4j.vertx.VertxWebContext
+import org.pac4j.vertx.*
 import org.pac4j.vertx.auth.Pac4jAuthProvider
 import org.pac4j.vertx.client.QueryParamBasedIndirectClient
 import rx.Observable

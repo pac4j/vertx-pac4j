@@ -19,6 +19,9 @@ import org.junit.Test
 import org.pac4j.core.client.Clients
 import org.pac4j.core.client.direct.AnonymousClient
 import org.pac4j.core.config.Config
+import org.pac4j.vertx.FIELD_USER_ID
+import org.pac4j.vertx.HOST
+import org.pac4j.vertx.PORT
 import org.pac4j.vertx.TestConstants.FORBIDDEN_BODY
 import org.pac4j.vertx.TestConstants.UNAUTHORIZED_BODY
 import org.pac4j.vertx.auth.Pac4jAuthProvider

@@ -63,12 +63,12 @@ public abstract class StatelessPac4jAuthHandlerIntegrationTestBase extends Pac4j
                             final Consumer<Buffer> bodyValidator) throws Exception {
         startWebServer();
         HttpClient client = vertx.createHttpClient();
-        // Attempt to get a private url
+        // Attempt to testGet a private url
         final HttpClientRequest request = client.get(8080, "localhost", url);
         headers.entrySet().stream()
                 .filter(entry -> (entry.getValue() != null))
                 .forEach(entry -> request.putHeader(entry.getKey(), entry.getValue()));
-        // This should get the desired result straight away rather than operating through redirects
+        // This should testGet the desired result straight away rather than operating through redirects
         request.handler(response -> {
             assertEquals(expectedHttpStatus, response.statusCode());
             response.bodyHandler(body -> {

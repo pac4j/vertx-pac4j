@@ -1,4 +1,4 @@
-package org.pac4j.vertx.handler.impl
+package org.pac4j.vertx
 
 /**
  * Standard set of test constants for the Kotlin-based tests
@@ -9,7 +9,7 @@ const val PORT = 8080
 const val URL_SPOOF_LOGIN = "/spoof-login"
 const val URL_QUERY_PROFILE = "/profile"
 const val URL_SET_SESSION_VALUE = "/set-session-value"
-const val URL_GET_SESSION_VALUE = "/get-session-value"
+const val URL_GET_SESSION_VALUE = "/testGet-session-value"
 const val URL_LOGOUT = "/logout"
 const val TEST_USER1 = "testUser1"
 const val TEST_EMAIL = "testUser1@test.com"

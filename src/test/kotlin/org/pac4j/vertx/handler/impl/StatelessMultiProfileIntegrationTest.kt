@@ -8,7 +8,7 @@ import org.pac4j.core.client.Clients
 import org.pac4j.core.config.Config
 import org.pac4j.core.context.HttpConstants
 import org.pac4j.core.matching.ExcludedPathMatcher
-import org.pac4j.vertx.StatelessPac4jAuthHandlerIntegrationTestBase
+import org.pac4j.vertx.*
 import org.pac4j.vertx.auth.Pac4jAuthProvider
 import org.pac4j.vertx.client.HeaderBasedDirectClient
 import java.util.*

@@ -112,7 +112,7 @@ public class StatefulPac4jAuthHandlerSingleProfileIntegrationTest extends Statef
             logout(client, response -> {
                 // We don't need to actually bother to redirect to the url, we've validated that we're directed to following
                 // logout, what we do need to do, is with our session established, try and connect to a protected url again
-                // and ensure we get a redirect to the auth provider as expected
+                // and ensure we testGet a redirect to the auth provider as expected
                 final HttpClientRequest successfulRequest = client.get(8080, "localhost", "/private/success.html");
                 getSessionCookie().ifPresent(cookie -> successfulRequest.putHeader("cookie", cookie));
                 successfulRequest.handler(resp -> {

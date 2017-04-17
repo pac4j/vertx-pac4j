@@ -19,7 +19,7 @@ import org.junit.Before
 import org.junit.Test
 import org.pac4j.core.context.Pac4jConstants
 import org.pac4j.core.context.session.SessionStore
-import org.pac4j.vertx.VertxWebContext
+import org.pac4j.vertx.*
 import org.pac4j.vertx.context.session.VertxSessionStore
 import org.pac4j.vertx.profile.SimpleTestProfile
 import rx.Observable
@@ -288,8 +288,8 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
     fun testLogoutExpectingNoProfile(client: HttpClient, logoutUrl: String, responseValidator: (HttpClientResponse) -> Unit ) {
         testLogoutExpectingProfileToMatch(client, logoutUrl, responseValidator, {
             with (it) {
-                assertThat(getString(org.pac4j.vertx.handler.impl.USER_ID_KEY), org.hamcrest.core.Is.`is`(org.hamcrest.CoreMatchers.nullValue()))
-                assertThat(getString(org.pac4j.vertx.handler.impl.EMAIL_KEY), org.hamcrest.core.Is.`is`(org.hamcrest.CoreMatchers.nullValue()))
+                assertThat(getString(USER_ID_KEY), org.hamcrest.core.Is.`is`(org.hamcrest.CoreMatchers.nullValue()))
+                assertThat(getString(EMAIL_KEY), org.hamcrest.core.Is.`is`(org.hamcrest.CoreMatchers.nullValue()))
             }
 
         })
@@ -363,7 +363,7 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
     }
 
     private fun retrieveSessionValue(client: HttpClient, sessionKey: String): Observable<String> =
-        Observable.just(client.get(PORT, HOST, "$URL_GET_SESSION_VALUE?$FIELD_KEY=$sessionKey"))
+        Observable.just(client.get(PORT, HOST, "${URL_GET_SESSION_VALUE}?${FIELD_KEY}=$sessionKey"))
             .flatMap { toResponseObservable(it, addHeader("cookie", sessionCookie.retrieve())) }
             .map { assertThatResponseCodeIs(it, 200)}
             .flatMap { it.toObservable() }

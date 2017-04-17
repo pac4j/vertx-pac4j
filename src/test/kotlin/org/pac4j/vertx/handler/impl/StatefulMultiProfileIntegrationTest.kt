@@ -11,8 +11,7 @@ import org.pac4j.core.context.Pac4jConstants
 import org.pac4j.core.context.session.SessionStore
 import org.pac4j.core.exception.HttpAction
 import org.pac4j.core.exception.TechnicalException
-import org.pac4j.vertx.StatefulPac4jAuthHandlerIntegrationTestBase
-import org.pac4j.vertx.VertxWebContext
+import org.pac4j.vertx.*
 import org.pac4j.vertx.client.QueryParamBasedIndirectClient
 import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
@@ -43,9 +42,9 @@ class StatefulMultiProfileIntegrationTest: StatefulPac4jAuthHandlerIntegrationTe
 
             // now force a login
             val forceLoginRequest = client.get(8080, "localhost",
-                    "/forceSecondLogin?$QUERY_PARAM_CLIENT_NAME=$TEST_QUERY_PARAM_CLIENT_NAME" +
-                            "&$QUERY_PARAM_USER_ID=$TEST_USER1&$QUERY_PARAM_EMAIL=$TEST_EMAIL" +
-                            "&$QUERY_PARAM_REDIRECT_URI=${URLEncoder.encode(successResourceUrl(), "UTF-8")}")
+                    "/forceSecondLogin?${QUERY_PARAM_CLIENT_NAME}=${TEST_QUERY_PARAM_CLIENT_NAME}" +
+                            "&${QUERY_PARAM_USER_ID}=${TEST_USER1}&${QUERY_PARAM_EMAIL}=${TEST_EMAIL}" +
+                            "&${QUERY_PARAM_REDIRECT_URI}=${URLEncoder.encode(successResourceUrl(), "UTF-8")}")
             sessionCookie.ifPresent({ cookie -> forceLoginRequest.putHeader("cookie", cookie) })
             forceLoginRequest.handler(expectAndHandleRedirect(client,
                     Consumer {},
@@ -84,7 +83,7 @@ class StatefulMultiProfileIntegrationTest: StatefulPac4jAuthHandlerIntegrationTe
         return client
     }
 
-    private fun successResourceUrl() = "http://$HOST:$PORT$PROTECTED_RESOURCE_SUCCESS"
+    private fun successResourceUrl() = "http://${HOST}:${PORT}${PROTECTED_RESOURCE_SUCCESS}"
 
     private fun forceLoginHandler(config: Config, sessionStore: SessionStore<VertxWebContext>): Handler<RoutingContext> = Handler { rc ->
         val context = VertxWebContext(rc, sessionStore)

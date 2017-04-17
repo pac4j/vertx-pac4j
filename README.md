@@ -116,7 +116,7 @@ The following parameters are available (via a `SecurityHandlerOptions` instance 
     if (authName != null) {
        options = options.withAuthorizers(authName);
     }
-    router.get(url).handler(new RequiresAuthenticationHandler(vertx, config, authProvider, options));
+    router.testGet(url).handler(new RequiresAuthenticationHandler(vertx, config, authProvider, options));
 
 ---
 
@@ -139,7 +139,7 @@ The following parameters are available (via the CallbackHandlerOptions class):
 
     final CallbackHandlerOptions = new CallbackHandlerOptions().setDefaultUrl("/loginSuccess").setMultiProfile(false);
     final CallbackHandler callbackHandler = new CallbackHandler(vertx, config, options);
-    router.get("/callback").handler(callbackHandler);
+    router.testGet("/callback").handler(callbackHandler);
     router.post("/callback").handler(BodyHandler.create().setMergeFormAttributes(true));
     router.post("/callback").handler(callbackHandler);
     
@@ -147,14 +147,14 @@ The following parameters are available (via the CallbackHandlerOptions class):
 
 ### 5) Get the user profile (`VertxProfileManager`)
 
-You can get the profile of the authenticated user using `VertxProfileManager.get(true)` (`false` not to use the session, but only the current HTTP request).
+You can testGet the profile of the authenticated user using `VertxProfileManager.testGet(true)` (`false` not to use the session, but only the current HTTP request).
 You can test if the user is authenticated using `VertxProfileManager.isAuthenticated()`.
-You can get all the profiles of the authenticated user (if ever multiple ones are kept) using `VertxProfileManager.getAll(true)`.
+You can testGet all the profiles of the authenticated user (if ever multiple ones are kept) using `VertxProfileManager.getAll(true)`.
 
 Note that the above are all standard `ProfileManager` methods but the `VertxProfileManager` is an implementation which is integrated with vertx-web including session and user support.
 
     ProfileManager<CommonProfile> profileManager = new VertxProfileManager<>(new VertxWebContext(rc));
-    Optional<CommonProfile> profile = profileManager.get(true);
+    Optional<CommonProfile> profile = profileManager.testGet(true);
 
 The retrieved profile is at least a `CommonProfile`, from which you can retrieve the most common properties that all profiles share. But you can also cast the user profile to the appropriate profile according to the provider used for authentication. For example, after a Facebook authentication:
  
@@ -182,7 +182,7 @@ The following parameters can be defined on the `ApplicationLogoutHandler`via an 
 Example: 
 
     final ApplicationLogoutHandlerOptions options = new ApplicationLogoutHandlerOptions();
-    router.get("/logout").handler(new ApplicationLogoutHandler(vertx, options, config));
+    router.testGet("/logout").handler(new ApplicationLogoutHandler(vertx, options, config));
     
 ---
 

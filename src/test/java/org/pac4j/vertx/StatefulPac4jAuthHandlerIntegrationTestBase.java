@@ -191,7 +191,7 @@ public abstract class StatefulPac4jAuthHandlerIntegrationTestBase extends Pac4jA
     }
 
     void loginSuccessfully(final HttpClient client, final Handler<HttpClientResponse> finalResponseHandler) throws Exception {
-        // Attempt to get a private url
+        // Attempt to testGet a private url
         final HttpClientRequest successfulRequest = client.get(8080, "localhost", "/private/success.html");
         successfulRequest.handler(
                 // redirect to auth handler

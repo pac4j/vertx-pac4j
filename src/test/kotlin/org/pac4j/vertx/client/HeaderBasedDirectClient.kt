@@ -2,8 +2,8 @@ package org.pac4j.vertx.client
 
 import org.pac4j.core.client.DirectClient
 import org.pac4j.core.context.WebContext
-import org.pac4j.vertx.handler.impl.HEADER_EMAIL
-import org.pac4j.vertx.handler.impl.HEADER_USER_ID
+import org.pac4j.vertx.HEADER_EMAIL
+import org.pac4j.vertx.HEADER_USER_ID
 import org.pac4j.vertx.profile.SimpleTestProfile
 import javax.security.auth.login.CredentialException
 
