@@ -8,9 +8,7 @@ import org.pac4j.core.store.Store;
  * Implementation of pac4j store based on vert.x LocalMap implementation. If the store is to be cluster-wide then
  * the clustered map implementation should be used instead.
  */
-public class VertxLocalMapStore<K, V> implements Store<K, V> {
-
-    public static final String PAC4J_SHARED_DATA_KEY = "pac4jSharedData";
+public class VertxLocalMapStore<K, V> extends VertxMapStoreBase implements Store<K, V> {
 
     private final LocalMap<K, V> store;
 
