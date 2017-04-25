@@ -1,7 +1,5 @@
-package org.pac4j.context.session;
+package org.pac4j.vertx.context.session;
 
-
-import org.pac4j.vertx.context.session.Session;
 
 /**
  *
