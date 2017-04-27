@@ -53,7 +53,7 @@ class Pac4jUserCleanupTest: VertxTestBase() {
         val router = Router.router(vertx)
         val authProvider = Pac4jAuthProvider()
         val sessionStore = LocalSessionStore.create(vertx)
-        val pac4jSessionStore = VertxSessionStore()
+        val pac4jSessionStore = VertxSessionStore(sessionStore)
         val config = Config(clients())
         config.httpActionAdapter = DefaultHttpActionAdapter()
 

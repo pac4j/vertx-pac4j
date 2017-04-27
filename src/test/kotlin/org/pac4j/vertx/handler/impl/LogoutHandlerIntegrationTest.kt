@@ -4,6 +4,7 @@ import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.JsonObject
 import io.vertx.core.logging.Logger
 import io.vertx.core.logging.LoggerFactory.getLogger
+import io.vertx.ext.web.sstore.LocalSessionStore
 import io.vertx.rxjava.core.Vertx
 import io.vertx.rxjava.core.buffer.Buffer
 import io.vertx.rxjava.core.http.HttpClient
@@ -91,7 +92,7 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
     // This will be our session cookie header for use by requests
     private val sessionCookie = SessionCookieHolder()
 
-    private val sessionStore = VertxSessionStore()
+    private var sessionStore: SessionStore<VertxWebContext>? = null
 
     fun spinUpServerAndClient() {
         spinUpServerAndClient(LogoutHandlerOptions())
@@ -100,15 +101,16 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
     fun spinUpServerAndClient(logoutHandlerOptions: LogoutHandlerOptions) {
         rxVertx = Vertx.newInstance(vertx)
         client = rxVertx!!.createHttpClient()
+        sessionStore = VertxSessionStore(LocalSessionStore.create(vertx))
         startServerWithSessionSupport(rxVertx!!, Consumer<Router> {
             r ->
             with(r) {
-                route(HttpMethod.POST, URL_SPOOF_LOGIN).handler  { spoofLoginHandler(it, sessionStore) }
-                route(HttpMethod.GET, URL_QUERY_PROFILE).handler { getProfileHandler(it, sessionStore) }
+                route(HttpMethod.POST, URL_SPOOF_LOGIN).handler  { spoofLoginHandler(it, sessionStore!!) }
+                route(HttpMethod.GET, URL_QUERY_PROFILE).handler { getProfileHandler(it, sessionStore!!) }
                 route(HttpMethod.POST, URL_SET_SESSION_VALUE).handler(BodyHandler.create())
                 route(HttpMethod.POST, URL_SET_SESSION_VALUE).handler { addValueToSessionHandler(it) }
                 route(HttpMethod.GET, URL_GET_SESSION_VALUE).handler { getValueFromSessionHandler(it) }
-                get(URL_LOGOUT).handler(logoutHandler(vertx, sessionStore, logoutHandlerOptions))
+                get(URL_LOGOUT).handler(logoutHandler(vertx, sessionStore!!, logoutHandlerOptions))
             }
         })
     }

@@ -21,4 +21,9 @@ public class VertxSession implements Session {
     public void set(String key, Object value) {
         vertxSession.put(key, value);
     }
+
+    @Override
+    public <T> T get(String key) {
+        return vertxSession.get(key);
+    }
 }

@@ -40,7 +40,7 @@ public abstract class Pac4jAuthHandlerIntegrationTestBase extends VertxTestBase 
     static final String TEST_CLIENT_NAME = "TestOAuth2Client";
     static final String REQUIRE_ALL_AUTHORIZER = "requireAllAuthorizer";
 
-    protected SessionStore<VertxWebContext> sessionStore = new VertxSessionStore();
+    protected SessionStore<VertxWebContext> sessionStore = new VertxSessionStore(null);
 
     /**
      * Expose assertThat publicly to enable convenient use of kotlin trait in multi-profile tests
