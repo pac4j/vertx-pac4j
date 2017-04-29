@@ -1,7 +1,7 @@
 package org.pac4j.vertx;
 
 import org.pac4j.core.profile.CommonProfile;
-import org.pac4j.core.profile.ProfileManager;
+import org.pac4j.core.profile.ExtendedProfileManager;
 import org.pac4j.vertx.auth.Pac4jUser;
 
 import java.util.LinkedHashMap;
@@ -11,7 +11,7 @@ import java.util.Optional;
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public class VertxProfileManager extends ProfileManager<CommonProfile> {
+public class VertxProfileManager extends ExtendedProfileManager<CommonProfile> {
 
     private final VertxWebContext vertxWebContext;
 
