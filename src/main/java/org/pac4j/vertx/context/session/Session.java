@@ -10,4 +10,6 @@ public interface Session {
     void set(String key, Object value); // Set the session value
 
     <T> T get(String key); // Retrieve a session value
+
+    void remove(String key);
 }

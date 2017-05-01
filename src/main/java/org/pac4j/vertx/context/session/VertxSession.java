@@ -26,4 +26,9 @@ public class VertxSession implements Session {
     public <T> T get(String key) {
         return vertxSession.get(key);
     }
+
+    @Override
+    public void remove(String key) {
+        vertxSession.remove(key);
+    }
 }

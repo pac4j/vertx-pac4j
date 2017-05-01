@@ -1,8 +1,9 @@
 package org.pac4j.vertx;
 
 import org.pac4j.core.profile.CommonProfile;
-import org.pac4j.core.profile.ProfileManager;
+import org.pac4j.core.profile.ExtendedProfileManager;
 import org.pac4j.vertx.auth.Pac4jUser;
+import org.pac4j.vertx.context.session.Session;
 
 import java.util.LinkedHashMap;
 import java.util.Optional;
@@ -11,8 +12,9 @@ import java.util.Optional;
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public class VertxProfileManager extends ProfileManager<CommonProfile> {
+public class VertxProfileManager extends ExtendedProfileManager<CommonProfile> {
 
+    private static final String SESSION_USER_HOLDER_KEY = "__vertx.userHolder";
     private final VertxWebContext vertxWebContext;
 
     public VertxProfileManager(final VertxWebContext context) {
@@ -42,4 +44,9 @@ public class VertxProfileManager extends ProfileManager<CommonProfile> {
         vertxWebContext.setVertxUser(vertxUser);
     }
 
+    @Override
+    public void removeFromSession(final Session session) {
+        // Find the user profile in the session, if pac4j user profile
+        session.remove(SESSION_USER_HOLDER_KEY);
+    }
 }
