@@ -125,7 +125,7 @@ The following parameters are available (via a `SecurityHandlerOptions` instance 
 For indirect clients (like Facebook), the user is redirected to an external identity provider for login and then back to the application.
 Thus, a callback endpoint is required in the application. It is managed by the `CallbackHandler` which has the following behaviour:
 
-1) the credentials are extracted from the current request to fetch the user profile (from the identity provider) which is then saved in the web session
+1) the credentials are extracted from the current request to fetch the user profile (from the identity provider) which is then saved in the web otherSession
 
 2) finally, the user is redirected back to the originally requested url (or to the `defaultUrl`).
 
@@ -135,7 +135,7 @@ The following parameters are available (via the CallbackHandlerOptions class):
 
 2) `multiProfile` (optional): it indicates whether multiple authentications (and thus multiple profiles) must be kept at the same time (`false` by default)
 
-3) `renewSession` (optional): it indicates whether the web session must be renewed after login, to avoid session hijacking (`true` by default). Currently vert.x does not provide a session renewal mechanism so this flag affects nothing, but it has been left in place for consistency.
+3) `renewSession` (optional): it indicates whether the web otherSession must be renewed after login, to avoid otherSession hijacking (`true` by default). Currently vert.x does not provide a otherSession renewal mechanism so this flag affects nothing, but it has been left in place for consistency.
 
     final CallbackHandlerOptions = new CallbackHandlerOptions().setDefaultUrl("/loginSuccess").setMultiProfile(false);
     final CallbackHandler callbackHandler = new CallbackHandler(vertx, config, options);
@@ -147,11 +147,11 @@ The following parameters are available (via the CallbackHandlerOptions class):
 
 ### 5) Get the user profile (`VertxProfileManager`)
 
-You can testGet the profile of the authenticated user using `VertxProfileManager.testGet(true)` (`false` not to use the session, but only the current HTTP request).
+You can testGet the profile of the authenticated user using `VertxProfileManager.testGet(true)` (`false` not to use the otherSession, but only the current HTTP request).
 You can test if the user is authenticated using `VertxProfileManager.isAuthenticated()`.
 You can testGet all the profiles of the authenticated user (if ever multiple ones are kept) using `VertxProfileManager.getAll(true)`.
 
-Note that the above are all standard `ProfileManager` methods but the `VertxProfileManager` is an implementation which is integrated with vertx-web including session and user support.
+Note that the above are all standard `ProfileManager` methods but the `VertxProfileManager` is an implementation which is integrated with vertx-web including otherSession and user support.
 
     ProfileManager<CommonProfile> profileManager = new VertxProfileManager<>(new VertxWebContext(rc));
     Optional<CommonProfile> profile = profileManager.testGet(true);
