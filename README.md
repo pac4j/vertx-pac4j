@@ -193,8 +193,11 @@ The demo webapp: [vertx-pac4j-demo](https://github.com/pac4j/vertx-pac4j-demo) i
 
 ## Release notes
 
-See the [release notes](https://github.com/pac4j/vertx-pac4j/wiki/Release-Notes). Learn more by browsing the [vertx-pac4j Javadoc](http://www.javadoc.io/doc/org.pac4j/vertx-pac4j/2.1.0) and the [pac4j Javadoc](http://www.pac4j.org/apidocs/pac4j/1.9.5/index.html).
+See the [release notes](https://github.com/pac4j/vertx-pac4j/wiki/Release-Notes). Learn more by browsing the [vertx-pac4j Javadoc](http://www.javadoc.io/doc/org.pac4j/vertx-pac4j/3.0.0) and the [pac4j Javadoc](http://www.pac4j.org/apidocs/pac4j/2.0.0/index.html).
 
+## Supported versions
+
+vertx-pac4j 3.0.0 has been tested with vert.x 3.3.3 and 3.4.1, and pac4j 2.0.0. We would expect subsequent pac4j 2.x and vert.x 3.3.x and 3.4.x releases to be essentially drop-in replacements. 
 
 ## Need help?
 
@@ -205,7 +208,7 @@ If you have any question, please use the following mailing lists:
 
 ## Development
 
-The version 3.0.0-SNAPSHOT is under development.
+The version 3.0.1-SNAPSHOT is under development.
 
 Maven artifacts are built via Travis: [![Build Status](https://travis-ci.org/pac4j/vertx-pac4j.png?branch=master)](https://travis-ci.org/pac4j/vertx-pac4j) and available in the [Sonatype snapshots repository](https://oss.sonatype.org/content/repositories/snapshots/org/pac4j). This repository must be added in the Maven *pom.xml* file for example:
 
