@@ -81,7 +81,7 @@ fun getProfileManager(rc: RoutingContext, sessionStore: SessionStore<VertxWebCon
 
 fun toResponseObservable(request: HttpClientRequest, requestConfigurer: Consumer<HttpClientRequest>):
         Observable<HttpClientResponse> =
-        Observable.create<HttpClientResponse> { subscriber ->
+        Observable.unsafeCreate<HttpClientResponse> { subscriber ->
 
             if (subscriber.isUnsubscribed) {
                 Observable.empty<HttpClientResponse>()

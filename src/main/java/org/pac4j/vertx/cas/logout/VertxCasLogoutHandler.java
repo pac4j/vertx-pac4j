@@ -7,6 +7,7 @@ import org.pac4j.core.profile.ExtendedProfileManager;
 import org.pac4j.core.profile.ProfileManager;
 import org.pac4j.core.store.Store;
 import org.pac4j.core.util.CommonHelper;
+import org.pac4j.vertx.VertxProfileManager;
 import org.pac4j.vertx.VertxWebContext;
 import org.pac4j.vertx.context.session.Session;
 import org.slf4j.Logger;
@@ -30,7 +31,7 @@ public class VertxCasLogoutHandler implements CasLogoutHandler<VertxWebContext> 
 
 
     public VertxCasLogoutHandler(final Store<String, Object> store, final boolean destroySession) {
-        this(store, destroySession, webContext -> new ProfileManager(webContext));
+        this(store, destroySession, webContext -> new VertxProfileManager(webContext));
     }
 
     public VertxCasLogoutHandler(final Store<String, Object> store, final boolean destroySession, Function<VertxWebContext, ProfileManager> profileManagerFactory) {
@@ -51,6 +52,7 @@ public class VertxCasLogoutHandler implements CasLogoutHandler<VertxWebContext> 
             if (sessionId != null) {
                 logger.debug("ticket: {} -> sessionId: {}", ticket, sessionId);
                 store.set(ticket, sessionId);
+                logger.debug("Retrieved session id {}", store.get(ticket).toString());
                 context.setSessionAttribute(PAC4J_CAS_TICKET, ticket); // Gives us a two-way link
             } else {
                 logger.debug("Can not identify id for current session");
