@@ -86,7 +86,7 @@ class VertxCasLogoutHandlerIntegrationTest {
         serverObservable!!.subscribe { it.close() }
     }
 
-    @Test(timeout = 4000)
+    @Test(timeout = 5000)
     @Throws(Exception::class)
     fun testRecordSession() {
         val testFuture = CompletableFuture<Void>()
@@ -109,10 +109,10 @@ class VertxCasLogoutHandlerIntegrationTest {
                     testFuture.completeExceptionally(it)
                 }
                 .subscribe { Unit }
-        testFuture.get(2, TimeUnit.SECONDS)
+        testFuture.get(4, TimeUnit.SECONDS)
     }
 
-    @Test(timeout = 3000)
+    @Test(timeout = 5000)
     @Throws(Exception::class)
     fun testDestroySessionFront() {
         // Use a front-based logout
@@ -135,10 +135,10 @@ class VertxCasLogoutHandlerIntegrationTest {
                     testFuture.completeExceptionally(it)
                 }
                 .subscribe { Unit }
-        testFuture.get(2, TimeUnit.SECONDS)
+        testFuture.get(4, TimeUnit.SECONDS)
     }
 
-    @Test(timeout = 3000)
+    @Test(timeout = 5000)
     @Throws(Exception::class)
     fun testDestroySessionBack() {
         // Use a front-based logout
@@ -162,7 +162,7 @@ class VertxCasLogoutHandlerIntegrationTest {
                     testFuture.completeExceptionally(it)
                 }
                 .subscribe { Unit }
-        testFuture.get(2, TimeUnit.SECONDS)
+        testFuture.get(4, TimeUnit.SECONDS)
     }
 
     /**
