@@ -127,7 +127,7 @@ class VertxCasLogoutHandlerIntegrationTest {
                 .map { assertThat(it, `is`("/"))}
                 .flatMap { queryProfileAndStoredSessionId() }
                 .map {
-                    assertProfileAndStoredSessionId(notNullValue(), nullValue(), TEST_USER1).invoke(it)
+                    assertProfileAndStoredSessionId(notNullValue(), nullValue(), nullValue()).invoke(it)
                     testFuture.complete(null)
                 }
                 .doOnError {
