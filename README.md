@@ -185,6 +185,16 @@ Example:
     router.testGet("/logout").handler(new ApplicationLogoutHandler(vertx, options, config));
     
 ---
+## 7) CAS Single Sign-out
+
+The pac4j standard `DefaultCasLogoutHandler`, used when implementing CAS single sign-out, is not vert.x-compatible owing 
+to its underlying approach for modifying a different session. When working with vertx-pac4j, the `VertxCasLogoutHandler`
+should be used in its place. The `VertxCasLogoutHandler` implementation should be wired into the `CasConfiguration` to
+replace default single sign-out handling provided by `DefaultCasLogoutHandler`.
+
+Two `Store` implementations have been provided in this project - one based on a Vert.x `LocalMap` called 
+`VertxLocalMapStore` and one for use in clustered scenarios making use of Vert.x-provided clustering, the 
+`VertxClusteredMapStore`. 
 
 ## Demo
 
