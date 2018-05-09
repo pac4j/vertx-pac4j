@@ -120,7 +120,7 @@ The following parameters are available (via a `SecurityHandlerOptions` instance 
 
 ---
 
-### 4) Define the callback endpoint only for indirect clients (`CallbackFilter`)
+### 4) Define the callback endpoint only for indirect clients (`CallbackHandler`)
 
 For indirect clients (like Facebook), the user is redirected to an external identity provider for login and then back to the application.
 Thus, a callback endpoint is required in the application. It is managed by the `CallbackHandler` which has the following behaviour:
