@@ -53,7 +53,8 @@ public class VertxSessionStore implements ExtendedSessionStore<VertxWebContext> 
 
     @Override
     public boolean renewSession(VertxWebContext context) {
-        return false;
+        context.vertxSession.regenerateId();
+        return true;
     }
 
     @Override
