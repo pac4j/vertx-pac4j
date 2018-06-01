@@ -3,7 +3,7 @@
 
   <groupId>org.pac4j</groupId>
   <artifactId>vertx-pac4j</artifactId>
-  <version>3.0.2-SNAPSHOT</version>
+  <version>3.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>vertx-pac4j</name>
@@ -24,15 +24,17 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <vertx.version>3.4.2</vertx.version>
-    <pac4j.version>2.1.0</pac4j.version>
+    <pac4j.version>2.3.1</pac4j.version>
     <java.version>1.8</java.version>
     <maven.compiler.plugin.version>3.5.1</maven.compiler.plugin.version>
-    <kotlin.version>1.1.2</kotlin.version>
+    <kotlin.version>1.2.41</kotlin.version>
     <mockito.version>1.10.19</mockito.version>
-    <surefire.version>2.19.1</surefire.version>
-    <slf4j.version>1.7.22</slf4j.version>
-    <lombok.version>1.16.12</lombok.version>
-    <mockito-kotlin.version>1.4.0</mockito-kotlin.version>
+    <surefire.version>2.21.0</surefire.version>
+    <slf4j.version>1.7.25</slf4j.version>
+    <lombok.version>1.16.22</lombok.version>
+    <mockito-kotlin.version>1.5.0</mockito-kotlin.version>
+    <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
+    <junit.version>4.12</junit.version>
     <skipTests>true</skipTests>
   </properties>
 
@@ -53,7 +55,6 @@
       <groupId>io.vertx</groupId>
       <artifactId>vertx-web</artifactId>
       <version>${vertx.version}</version>
-
     </dependency>
 
     <dependency>
@@ -62,8 +63,6 @@
       <version>${vertx.version}</version>
       <scope>compile</scope>
     </dependency>
-
-
 
     <!-- Pac4j -->
     <dependency>
@@ -108,10 +107,9 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.11</version>
+      <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
-
 
     <dependency>
       <groupId>org.mockito</groupId>
@@ -119,7 +117,6 @@
       <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
-
 
     <dependency>
       <groupId>io.vertx</groupId>
