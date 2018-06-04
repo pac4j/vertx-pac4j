@@ -67,7 +67,13 @@ public class VertxSessionStore implements ExtendedSessionStore<VertxWebContext> 
                 vertxSessionFuture.completeExceptionally(asyncResult.cause());
             }
         });
-        final CompletableFuture<Session> pac4jSessionFuture = vertxSessionFuture.thenApply(s -> new VertxSession(s));
+        final CompletableFuture<Session> pac4jSessionFuture = vertxSessionFuture.thenApply(session -> {
+            if (session != null) {
+                return new VertxSession(session);
+            } else {
+                return null;
+            }
+        });
         try {
             return pac4jSessionFuture.get();
         } catch (InterruptedException|ExecutionException e) {
