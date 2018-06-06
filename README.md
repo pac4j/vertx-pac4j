@@ -34,7 +34,7 @@ Just follow these easy steps:
 
 ### 1) Add the required dependencies (`vertx-pac4j` + `pac4j-*` libraries)
 
-You need to add a dependency on the `vertx-pac4j` library (<em>groupId</em>: **org.pac4j**, *version*: **3.1.0-SNAPSHOT**) as well as on the appropriate `pac4j` submodules (<em>groupId</em>: **org.pac4j**, *version*: **2.3.1**): the `pac4j-oauth` dependency for OAuth support, the `pac4j-cas` dependency for CAS support, the `pac4j-ldap` module for LDAP authentication, ...
+You need to add a dependency on the `vertx-pac4j` library (<em>groupId</em>: **org.pac4j**, *version*: **3.1.0**) as well as on the appropriate `pac4j` submodules (<em>groupId</em>: **org.pac4j**, *version*: **2.3.1**): the `pac4j-oauth` dependency for OAuth support, the `pac4j-cas` dependency for CAS support, the `pac4j-ldap` module for LDAP authentication, ...
 
 All released artifacts are available in the [Maven central repository](http://search.maven.org/#search%7Cga%7C1%7Cpac4j).
 
@@ -218,7 +218,7 @@ If you have any question, please use the following mailing lists:
 
 ## Development
 
-The version 3.1.0-SNAPSHOT is under development.
+The version 3.1.1-SNAPSHOT is under development.
 
 Maven artifacts are built via Travis: [![Build Status](https://travis-ci.org/pac4j/vertx-pac4j.png?branch=master)](https://travis-ci.org/pac4j/vertx-pac4j) and available in the [Sonatype snapshots repository](https://oss.sonatype.org/content/repositories/snapshots/org/pac4j). This repository must be added in the Maven *pom.xml* file for example:
 
