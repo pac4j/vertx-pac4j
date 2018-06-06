@@ -1,6 +1,9 @@
 package org.pac4j.vertx.handler.impl;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
@@ -130,4 +133,8 @@ public class SecurityHandler extends AuthHandlerImpl {
         return (t instanceof TechnicalException) ? (TechnicalException) t : new TechnicalException(t);
     }
 
+    @Override
+    public void parseCredentials(RoutingContext context, Handler<AsyncResult<JsonObject>> handler) {
+
+    }
 }
