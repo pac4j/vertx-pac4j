@@ -104,8 +104,7 @@ public class SecurityHandler extends AuthHandlerImpl {
             (ctx, parameters) -> {
                 // This is what should occur if we are authenticated and authorized to view the requested
                 // resource
-                LOG.info("Authorised to view resource " + routingContext.request().path());
-                routingContext.next();
+                future.complete();
                 return null;
             },
             httpActionAdapter,
@@ -119,6 +118,9 @@ public class SecurityHandler extends AuthHandlerImpl {
             // However, if an error occurred we need to handle this here
             if (asyncResult.failed()) {
                 unexpectedFailure(routingContext, asyncResult.cause());
+            } else {
+                LOG.info("Authorised to view resource " + routingContext.request().path());
+                routingContext.next();
             }
         });
 
