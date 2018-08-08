@@ -14,7 +14,7 @@ import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.engine.DefaultSecurityLogic;
 import org.pac4j.core.engine.SecurityLogic;
 import org.pac4j.core.exception.TechnicalException;
-import org.pac4j.core.http.HttpActionAdapter;
+import org.pac4j.core.http.adapter.HttpActionAdapter;
 import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.core.util.CommonHelper;
 import org.pac4j.vertx.VertxProfileManager;
@@ -101,7 +101,7 @@ public class SecurityHandler extends AuthHandlerImpl {
         }
 
         vertx.executeBlocking(future -> securityLogic.perform(webContext, config,
-            (ctx, parameters) -> {
+            (ctx, profiles, parameters) -> {
                 // This is what should occur if we are authenticated and authorized to view the requested
                 // resource
                 future.complete();

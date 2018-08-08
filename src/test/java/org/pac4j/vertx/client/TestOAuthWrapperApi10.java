@@ -14,6 +14,11 @@ public class TestOAuthWrapperApi10 extends DefaultApi10a {
     public static final String TEST_AUTHORIZATION_URL = "http://localhost:9292/authenticate";
 
     @Override
+    protected String getAuthorizationBaseUrl() {
+        return null;
+    }
+
+    @Override
     public String getAccessTokenEndpoint() {
         return ACCESS_TOKEN_ENDPOINT;
     }

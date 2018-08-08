@@ -10,7 +10,7 @@ import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.engine.CallbackLogic;
 import org.pac4j.core.engine.DefaultCallbackLogic;
 import org.pac4j.core.exception.TechnicalException;
-import org.pac4j.core.http.HttpActionAdapter;
+import org.pac4j.core.http.adapter.HttpActionAdapter;
 import org.pac4j.vertx.VertxProfileManager;
 import org.pac4j.vertx.VertxWebContext;
 import org.pac4j.vertx.http.DefaultHttpActionAdapter;
@@ -32,9 +32,11 @@ public class CallbackHandler implements Handler<RoutingContext> {
     private final Config config;
 
     // Config elements which are all optional
+    private final String defaultUrl;
+    private final Boolean saveInSession;
     private final Boolean multiProfile;
     private final Boolean renewSession;
-    private final String defaultUrl;
+    private final String defaultClient;
 
     private final CallbackLogic<Void, VertxWebContext> callbackLogic = new DefaultCallbackLogic();
     {
@@ -49,9 +51,12 @@ public class CallbackHandler implements Handler<RoutingContext> {
         this.vertx = vertx;
         this.sessionStore = sessionStore;
         this.config = config;
+        this.defaultUrl = options.getDefaultUrl();
+        this.saveInSession = options.getSaveInSession();
         this.multiProfile = options.getMultiProfile();
         this.renewSession = options.getRenewSession();
-        this.defaultUrl = options.getDefaultUrl();
+        this.defaultClient = options.getDefaultClient();
+
     }
 
     @Override
@@ -61,18 +66,18 @@ public class CallbackHandler implements Handler<RoutingContext> {
         final VertxWebContext webContext = new VertxWebContext(event, sessionStore);
 
         vertx.executeBlocking(future -> {
-                    callbackLogic.perform(webContext, config, httpActionHandler, defaultUrl, multiProfile, renewSession);
-                    future.complete(null);
-                },
-                false,
-                asyncResult -> {
-                    // If we succeeded we're all good here, the job is done either through approving, or redirect, or
-                    // forbidding
-                    // However, if an error occurred we need to handle this here
-                    if (asyncResult.failed()) {
-                        event.fail(new TechnicalException(asyncResult.cause()));
-                    }
-                });
+            callbackLogic.perform(webContext, config, httpActionHandler, defaultUrl, saveInSession, multiProfile, renewSession, defaultClient);
+            future.complete(null);
+        },
+        false,
+        asyncResult -> {
+            // If we succeeded we're all good here, the job is done either through approving, or redirect, or
+            // forbidding
+            // However, if an error occurred we need to handle this here
+            if (asyncResult.failed()) {
+                event.fail(new TechnicalException(asyncResult.cause()));
+            }
+        });
 
     }
 

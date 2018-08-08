@@ -7,7 +7,7 @@ import org.junit.Test
 import org.pac4j.core.client.Clients
 import org.pac4j.core.config.Config
 import org.pac4j.core.context.HttpConstants
-import org.pac4j.core.matching.ExcludedPathMatcher
+import org.pac4j.core.matching.PathMatcher
 import org.pac4j.vertx.*
 import org.pac4j.vertx.auth.Pac4jAuthProvider
 import org.pac4j.vertx.client.HeaderBasedDirectClient
@@ -64,7 +64,7 @@ class StatelessMultiProfileIntegrationTest: StatelessPac4jAuthHandlerIntegration
                 HeaderBasedDirectClient("DEF"),
                 HeaderBasedDirectClient("GHI"))
         val config = Config(clients, authorizers(ArrayList<String>()))
-        config.setMatcher(ExcludedPathMatcher("^/private/public/.*$"))
+        config.setMatcher(PathMatcher().excludeRegex("^/private/public/.*$"))
         return config
     }
 

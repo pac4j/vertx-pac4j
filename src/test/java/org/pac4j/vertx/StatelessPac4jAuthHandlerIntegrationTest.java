@@ -8,7 +8,7 @@ import org.junit.Test;
 import org.pac4j.core.client.Client;
 import org.pac4j.core.client.Clients;
 import org.pac4j.core.config.Config;
-import org.pac4j.core.matching.ExcludedPathMatcher;
+import org.pac4j.core.matching.PathMatcher;
 import org.pac4j.http.client.direct.DirectBasicAuthClient;
 import org.pac4j.http.credentials.authenticator.test.SimpleTestUsernamePasswordAuthenticator;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
@@ -34,7 +34,7 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends StatelessPac4jAuth
     private static final String TEST_FAILING_BASIC_AUTH_HEADER = BASIC_AUTH_PREFIX + Base64.encodeBase64String((TEST_USER_NAME + ":testUser2").getBytes());
     private static final String BASIC_AUTH_CLIENT = "BasicAuthClient";
     private static final String USERNAME_FIELD = "username";
-    private static final String EXCLUDED_PATH_MATCHER_NAME = "ExcludedPathMatcher";
+    private static final String EXCLUDED_PATH_MATCHER_NAME = "PathMatcher";
 
     @Test
     public void testSuccessfulLogin() throws Exception {
@@ -99,7 +99,7 @@ public class StatelessPac4jAuthHandlerIntegrationTest extends StatelessPac4jAuth
     private Config config() {
         final Clients clients = new Clients(client());
         final Config config = new Config(clients, authorizers(new ArrayList<>()));
-        config.setMatcher(new ExcludedPathMatcher("^/private/public/.*$"));
+        config.setMatcher(new PathMatcher().excludeRegex("^/private/public/.*$"));
         return config;
     }
 

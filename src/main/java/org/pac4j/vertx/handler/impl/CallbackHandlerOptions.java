@@ -30,9 +30,15 @@ public class CallbackHandlerOptions {
     private String defaultUrl;
 
     @Getter @Setter
+    private Boolean saveInSession;
+
+    @Getter @Setter
     private Boolean multiProfile;
 
     @Getter @Setter
     private Boolean renewSession;
+
+    @Getter @Setter
+    private String defaultClient;
 
 }

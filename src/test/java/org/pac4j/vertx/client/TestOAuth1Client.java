@@ -26,7 +26,7 @@ public class TestOAuth1Client extends OAuth10Client<TestOAuth1Profile> {
     public static final String TEST_AUTHORIZATION_URL = "http://localhost:9292/authenticate";
 
     @Override
-    protected void clientInit(final WebContext context) {
+    protected void clientInit() {
         configuration.setApi(getApi());
         configuration.setProfileDefinition(new TwitterProfileDefinition());
         configuration.setHasBeenCancelledFactory(ctx -> {
@@ -40,7 +40,7 @@ public class TestOAuth1Client extends OAuth10Client<TestOAuth1Profile> {
         setConfiguration(configuration);
         setLogoutActionBuilder((ctx, profile, targetUrl) -> RedirectAction.redirect("http://localhost:9292/logout"));
 
-        super.clientInit(context);
+        super.clientInit();
     }
 
     protected BaseApi<OAuth10aService> getApi() {

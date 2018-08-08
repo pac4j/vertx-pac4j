@@ -1,7 +1,6 @@
 package org.pac4j.vertx.client
 
 import org.pac4j.core.client.DirectClient
-import org.pac4j.core.context.WebContext
 import org.pac4j.vertx.HEADER_EMAIL
 import org.pac4j.vertx.HEADER_USER_ID
 import org.pac4j.vertx.profile.SimpleTestProfile
@@ -14,7 +13,7 @@ import javax.security.auth.login.CredentialException
  */
 class HeaderBasedDirectClient(matchingPattern: String): DirectClient<TestCredentials, SimpleTestProfile>() {
 
-    override fun clientInit(context: WebContext?) {
+    override fun clientInit() {
         // Don't think this needs to do anything special
     }
 

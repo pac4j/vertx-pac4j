@@ -2,6 +2,7 @@ package org.pac4j.vertx.profile;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.scribejava.core.model.OAuth1Token;
+import org.pac4j.core.profile.ProfileHelper;
 import org.pac4j.oauth.config.OAuth10Configuration;
 import org.pac4j.oauth.profile.JsonHelper;
 import org.pac4j.oauth.profile.definition.OAuth10ProfileDefinition;
@@ -20,7 +21,7 @@ public class TestOAuth1ProfileDefinition extends OAuth10ProfileDefinition<TestOA
         final TestOAuth1Profile profile = new TestOAuth1Profile();
         JsonNode json = JsonHelper.getFirstNode(body);
         if (json != null) {
-            profile.setId(JsonHelper.getElement(json, "id"));
+            profile.setId(ProfileHelper.sanitizeIdentifier(profile, JsonHelper.getElement(json, "id")));
         }
         return profile;
     }
