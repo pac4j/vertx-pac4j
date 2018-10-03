@@ -133,7 +133,7 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
         setSessionValue(notNullClient, TEST_SESSION_KEY, TEST_SESSION_VALUE)
                 .flatMap {
                     loginThenLogout(notNullClient, URL_LOGOUT ,{
-                    assertThat(it.statusCode(), isEqualTo(200))
+                    assertThat(it.statusCode(), isEqualTo(204))
                 },
                 {
                     with (it) {
@@ -155,7 +155,7 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
         spinUpServerAndClient(LogoutHandlerOptions().setLocalLogout(true))
         val notNullClient = client!!
         testLogoutExpectingNoProfile(notNullClient, URL_LOGOUT, {
-            assertThat(it.statusCode(), isEqualTo(200))
+            assertThat(it.statusCode(), isEqualTo(204))
         })
     }
 
@@ -165,7 +165,7 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
         val notNullClient = client!!
         testLogoutExpectingProfileToMatch(notNullClient, URL_LOGOUT,
                 {
-                    assertThat(it.statusCode(), isEqualTo(200))
+                    assertThat(it.statusCode(), isEqualTo(204))
                 },
                 {
                     with (it) {
@@ -182,7 +182,7 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
         setSessionValue(notNullClient, TEST_SESSION_KEY, TEST_SESSION_VALUE)
                 .flatMap {
                     loginThenLogout(notNullClient, URL_LOGOUT ,{
-                    assertThat(it.statusCode(), isEqualTo(200))
+                    assertThat(it.statusCode(), isEqualTo(204))
                 },
                         {
                             with (it) {
@@ -234,7 +234,7 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
         setSessionValue(notNullClient, TEST_SESSION_KEY, TEST_SESSION_VALUE)
                 .flatMap {
                     loginThenLogout(notNullClient, URL_LOGOUT ,{
-                    assertThat(it.statusCode(), isEqualTo(200))
+                    assertThat(it.statusCode(), isEqualTo(204))
                 },
                         {
                             with (it) {
@@ -258,7 +258,7 @@ class LogoutHandlerIntegrationTest : VertxTestBase() {
         setSessionValue(notNullClient, TEST_SESSION_KEY, TEST_SESSION_VALUE)
                 .flatMap {
                     loginThenLogout(notNullClient, URL_LOGOUT ,{
-                    assertThat(it.statusCode(), isEqualTo(200))
+                    assertThat(it.statusCode(), isEqualTo(204))
                 },
                         {
                             with (it) {

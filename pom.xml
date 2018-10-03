@@ -23,8 +23,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <vertx.version>3.5.2</vertx.version>
-    <pac4j.version>3.0.2</pac4j.version>
+    <vertx.version>3.5.3</vertx.version>
+    <pac4j.version>3.2.0</pac4j.version>
     <java.version>1.8</java.version>
     <maven.compiler.plugin.version>3.8.0</maven.compiler.plugin.version>
     <kotlin.version>1.2.41</kotlin.version>
@@ -77,16 +77,6 @@
     </dependency>
     <dependency>
       <groupId>org.pac4j</groupId>
-      <artifactId>pac4j-openid</artifactId>
-      <version>${pac4j.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.pac4j</groupId>
-      <artifactId>pac4j-http</artifactId>
-      <version>${pac4j.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.pac4j</groupId>
       <artifactId>pac4j-oidc</artifactId>
       <version>${pac4j.version}</version>
     </dependency>
@@ -108,6 +98,19 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.pac4j</groupId>
+      <artifactId>pac4j-http</artifactId>
+      <version>${pac4j.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.pac4j</groupId>
+      <artifactId>pac4j-openid</artifactId>
+      <version>${pac4j.version}</version>
       <scope>test</scope>
     </dependency>
 

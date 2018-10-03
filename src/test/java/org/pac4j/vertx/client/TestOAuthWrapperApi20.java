@@ -17,7 +17,7 @@ public class TestOAuthWrapperApi20 extends DefaultApi20 {
 
     @Override
     public String getAccessTokenEndpoint() {
-        return "http://localhost:9292/authToken?grant_type=authorization_code";
+        return "http://localhost:9292/authToken?client_id=testClient";
     }
 
     @Override

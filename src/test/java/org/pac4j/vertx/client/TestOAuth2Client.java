@@ -16,7 +16,7 @@ public class TestOAuth2Client extends OAuth20Client<TestOAuth2Profile> {
     private String baseAuthorizationUrl;
 
     public TestOAuth2Client() {
-       setConfiguraton(new OAuth20Configuration());
+       setConfiguration(new OAuth20Configuration());
     }
 
     @Override
