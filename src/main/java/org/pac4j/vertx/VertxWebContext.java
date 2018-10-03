@@ -9,7 +9,6 @@ import org.pac4j.core.context.Cookie;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.vertx.auth.Pac4jUser;
-import org.pac4j.vertx.core.DefaultJsonConverter;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -122,34 +121,6 @@ public class VertxWebContext implements WebContext {
     }
 
     @Override
-    public void setSessionAttribute(String name, Object value) {
-        Session session = routingContext.session();
-        if (session == null) {
-            throw new IllegalStateException("Session required for use of getSessionAttribute");
-        }
-        // Need to convert to something that can be passed round a distributed vert.x session cleanly
-        if (value == null) {
-            session.remove(name);
-        } else {
-            session.put(name, DefaultJsonConverter.getInstance().encodeObject(value));
-        }
-    }
-
-    @Override
-    public Object getSessionAttribute(String name) {
-        Session session = routingContext.session();
-        if (session == null) {
-            throw new IllegalStateException("Session required for use of getSessionAttribute");
-        }
-        return DefaultJsonConverter.getInstance().decodeObject(session.get(name));
-    }
-
-    @Override
-    public String getSessionIdentifier() {
-        return routingContext.session().id();
-    }
-
-    @Override
     public String getRequestMethod() {
         return method;
     }
@@ -239,11 +210,6 @@ public class VertxWebContext implements WebContext {
     @Override
     public SessionStore getSessionStore() {
         return this.sessionStore;
-    }
-
-    @Override
-    public void setSessionStore(SessionStore sessionStore) {
-        throw new UnsupportedOperationException("Not possible to change the session store for VertxWebContext");
     }
 
     public Pac4jUser getVertxUser() {

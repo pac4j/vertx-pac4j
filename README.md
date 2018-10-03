@@ -2,7 +2,7 @@
   <img src="https://pac4j.github.io/pac4j/img/logo-vertx.png" width="300" />
 </p>
 
-The `vertx-pac4j` project is an **easy and powerful security library for Vert.x 3** web applications which supports authentication and authorization, but also application logout and advanced features like CSRF protection. It's available under the Apache 2 license and based on the **[pac4j security engine](https://github.com/pac4j/pac4j)**.
+The `vertx-pac4j` project is an **easy and powerful security library for Vert.x 3** web applications which supports authentication and authorization, but also application logout and advanced features like CSRF protection. It's available under the Apache 2 license and based on the **[pac4j security engine](https://github.com/pac4j/pac4j) v3**.
 
 [**Main concepts and components:**](http://www.pac4j.org/docs/main-concepts-and-components.html)
 
@@ -34,7 +34,7 @@ Just follow these easy steps:
 
 ### 1) Add the required dependencies (`vertx-pac4j` + `pac4j-*` libraries)
 
-You need to add a dependency on the `vertx-pac4j` library (<em>groupId</em>: **org.pac4j**, *version*: **4.0.0-SNAPSHOT**) as well as on the appropriate `pac4j` submodules (<em>groupId</em>: **org.pac4j**, *version*: **2.3.1**): the `pac4j-oauth` dependency for OAuth support, the `pac4j-cas` dependency for CAS support, the `pac4j-ldap` module for LDAP authentication, ...
+You need to add a dependency on the `vertx-pac4j` library (<em>groupId</em>: **org.pac4j**, *version*: **4.0.0-SNAPSHOT**) as well as on the appropriate `pac4j` submodules (<em>groupId</em>: **org.pac4j**, *version*: **3.2.0**): the `pac4j-oauth` dependency for OAuth support, the `pac4j-cas` dependency for CAS support, the `pac4j-ldap` module for LDAP authentication, ...
 
 All released artifacts are available in the [Maven central repository](http://search.maven.org/#search%7Cga%7C1%7Cpac4j).
 
@@ -129,13 +129,18 @@ Thus, a callback endpoint is required in the application. It is managed by the `
 
 2) finally, the user is redirected back to the originally requested url (or to the `defaultUrl`).
 
-The following parameters are available (via the CallbackHandlerOptions class):
+The following parameters are available (via the `CallbackHandlerOptions` class):
 
 1) `defaultUrl` (optional): it's the default url after login if no url was originally requested (`/` by default)
 
-2) `multiProfile` (optional): it indicates whether multiple authentications (and thus multiple profiles) must be kept at the same time (`false` by default)
+2) `saveInSession` (optional) : it indicates whether the profile should be saved into the web session (`true` by default)
 
-3) `renewSession` (optional): it indicates whether the web otherSession must be renewed after login, to avoid otherSession hijacking (`true` by default). Currently vert.x does not provide a otherSession renewal mechanism so this flag affects nothing, but it has been left in place for consistency.
+3) `multiProfile` (optional): it indicates whether multiple authentications (and thus multiple profiles) must be kept at the same time (`false` by default)
+
+4) `renewSession` (optional): it indicates whether the web session must be renewed after login, to avoid session hijacking (`true` by default)
+
+5) `defaultClient` (optional): it defines the default client to use to finish the login process if none is provided on the URL (not defined by default).
+
 
     final CallbackHandlerOptions = new CallbackHandlerOptions().setDefaultUrl("/loginSuccess").setMultiProfile(false);
     final CallbackHandler callbackHandler = new CallbackHandler(vertx, config, options);
@@ -203,7 +208,7 @@ The demo webapp: [vertx-pac4j-demo](https://github.com/pac4j/vertx-pac4j-demo) i
 
 ## Release notes
 
-See the [release notes](https://github.com/pac4j/vertx-pac4j/wiki/Release-Notes). Learn more by browsing the [vertx-pac4j Javadoc](http://www.javadoc.io/doc/org.pac4j/vertx-pac4j/4.0.0) and the [pac4j Javadoc](http://www.pac4j.org/apidocs/pac4j/2.3.1/index.html).
+See the [release notes](https://github.com/pac4j/vertx-pac4j/wiki/Release-Notes). Learn more by browsing the [vertx-pac4j Javadoc](http://www.javadoc.io/doc/org.pac4j/vertx-pac4j/4.0.0) and the [pac4j Javadoc](http://www.pac4j.org/apidocs/pac4j/3.2.0/index.html).
 
 ## Supported versions
 

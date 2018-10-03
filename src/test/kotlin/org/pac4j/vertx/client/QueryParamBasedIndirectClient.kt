@@ -1,7 +1,6 @@
 package org.pac4j.vertx.client
 
 import org.pac4j.core.client.IndirectClient
-import org.pac4j.core.context.WebContext
 import org.pac4j.core.credentials.authenticator.Authenticator
 import org.pac4j.core.credentials.extractor.CredentialsExtractor
 import org.pac4j.core.profile.creator.ProfileCreator
@@ -25,7 +24,7 @@ import java.util.*
 class QueryParamBasedIndirectClient(val server: String, val callbackPath: String):
         IndirectClient<TestCredentials, SimpleTestProfile>() {
 
-    override fun clientInit(context: WebContext?) {
+    override fun clientInit() {
         // Don't think this needs to do anything special
     }
 

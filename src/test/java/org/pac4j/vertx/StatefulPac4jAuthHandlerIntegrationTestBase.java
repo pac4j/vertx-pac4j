@@ -153,7 +153,6 @@ public abstract class StatefulPac4jAuthHandlerIntegrationTestBase extends Pac4jA
         client.setKey(TEST_CLIENT_ID);
         client.setSecret(TEST_CLIENT_SECRET);
         client.setName("TestOAuth2Client");
-        client.setIncludeClientNameInCallbackUrl(true);
         client.setBaseAuthorizationUrl(baseAuthUrl);
         client.addAuthorizationGenerator(new TestOAuth2AuthorizationGenerator());
         return client;

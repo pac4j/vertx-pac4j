@@ -213,7 +213,7 @@ class VertxCasLogoutHandlerIntegrationTest {
                         ) }
                 .map {
                     LOG.info("backLogout called")
-                    assertThat(it.statusCode(), `is`(HttpConstants.OK))
+                    assertThat(it.statusCode(), `is`(HttpConstants.NO_CONTENT))
                     it
                 }
                 .map { Unit }

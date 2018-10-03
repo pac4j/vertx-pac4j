@@ -1,6 +1,5 @@
 package org.pac4j.vertx.client;
 
-import org.pac4j.core.context.WebContext;
 import org.pac4j.oauth.client.OAuth20Client;
 import org.pac4j.oauth.config.OAuth20Configuration;
 import org.pac4j.vertx.profile.TestOAuth2Profile;
@@ -21,11 +20,11 @@ public class TestOAuth2Client extends OAuth20Client<TestOAuth2Profile> {
     }
 
     @Override
-    protected void clientInit(WebContext context) {
+    protected void clientInit() {
         configuration.setApi(new TestOAuthWrapperApi20(getBaseAuthorizationUrl()));
         configuration.setProfileDefinition(new TestOAuth2ProfileDefinition());
         configuration.setWithState(true);
-        super.clientInit(context);
+        super.clientInit();
     }
 
     public String getBaseAuthorizationUrl() {

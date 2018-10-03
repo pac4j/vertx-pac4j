@@ -4,7 +4,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.pac4j.core.context.HttpConstants;
 import org.pac4j.core.exception.TechnicalException;
-import org.pac4j.core.http.HttpActionAdapter;
+import org.pac4j.core.http.adapter.HttpActionAdapter;
 import org.pac4j.vertx.VertxWebContext;
 
 import java.util.Optional;
@@ -32,6 +32,9 @@ public class DefaultHttpActionAdapter implements HttpActionAdapter<Void, VertxWe
             // Content should already have been written
             context.setResponseStatus(HttpConstants.OK);
             context.setResponseHeader(HttpConstants.CONTENT_TYPE_HEADER, HttpConstants.HTML_CONTENT_TYPE);
+            context.completeResponse();
+        } else if (code == HttpConstants.NO_CONTENT) {
+            context.setResponseStatus(HttpConstants.NO_CONTENT);
             context.completeResponse();
         } else {
             final String message = "Unsupported HTTP action: " + code;

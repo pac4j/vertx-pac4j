@@ -87,10 +87,10 @@ class StatefulMultiProfileIntegrationTest: StatefulPac4jAuthHandlerIntegrationTe
 
     private fun forceLoginHandler(config: Config, sessionStore: SessionStore<VertxWebContext>): Handler<RoutingContext> = Handler { rc ->
         val context = VertxWebContext(rc, sessionStore)
-        val client = config.clients.findClient(context.getRequestParameter(Clients.DEFAULT_CLIENT_NAME_PARAMETER))
+        val client = config.clients.findClient(context.getRequestParameter(Pac4jConstants.DEFAULT_CLIENT_NAME_PARAMETER))
         try {
             val redirectUri = context.getRequestParameter("redirect_uri")
-            context.setSessionAttribute(Pac4jConstants.REQUESTED_URL, redirectUri)
+            context.getSessionStore().set(context, Pac4jConstants.REQUESTED_URL, redirectUri)
             val action = client.redirect(context)
             config.httpActionAdapter.adapt(action.code, context)
         } catch (e: HttpAction) {

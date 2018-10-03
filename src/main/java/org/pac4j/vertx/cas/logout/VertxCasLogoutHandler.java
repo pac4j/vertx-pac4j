@@ -53,7 +53,7 @@ public class VertxCasLogoutHandler implements CasLogoutHandler<VertxWebContext> 
                 logger.debug("ticket: {} -> sessionId: {}", ticket, sessionId);
                 store.set(ticket, sessionId);
                 logger.debug("Retrieved session id {}", store.get(ticket).toString());
-                context.setSessionAttribute(PAC4J_CAS_TICKET, ticket); // Gives us a two-way link
+                context.getSessionStore().set(context, PAC4J_CAS_TICKET, ticket); // Gives us a two-way link
             } else {
                 logger.debug("Can not identify id for current session");
             }
@@ -139,7 +139,7 @@ public class VertxCasLogoutHandler implements CasLogoutHandler<VertxWebContext> 
 
     @Override
     public void renewSession(String oldSessionId, VertxWebContext context) {
-        final String ticket = (String) context.getSessionAttribute(PAC4J_CAS_TICKET);
+        final String ticket = (String) context.getSessionStore().get(context, PAC4J_CAS_TICKET);
         logger.debug("oldSessionId: {} -> ticket: {}", oldSessionId, ticket);
         final SessionStore sessionStore = context.getSessionStore();
         if (!(sessionStore instanceof ExtendedSessionStore)) {
