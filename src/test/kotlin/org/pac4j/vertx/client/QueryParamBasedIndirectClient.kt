@@ -32,11 +32,11 @@ class QueryParamBasedIndirectClient(val server: String, val callbackPath: String
         credentialsExtractor = CredentialsExtractor { context ->
             TestCredentials(context.getRequestParameter(QUERY_PARAM_USER_ID),
                     context.getRequestParameter(QUERY_PARAM_EMAIL)) }
-        authenticator = Authenticator { credentials, webContext ->
+        authenticator = Authenticator { credentials, _ ->
             Objects.requireNonNull(credentials.userId)
             Objects.requireNonNull(credentials.email)
         }
-        profileCreator = ProfileCreator { credentials, webContext ->
+        profileCreator = ProfileCreator { credentials, _ ->
             SimpleTestProfile(credentials.userId, credentials.email)}
         redirectActionBuilder = RedirectActionBuilder { webContext ->
 
@@ -46,7 +46,7 @@ class QueryParamBasedIndirectClient(val server: String, val callbackPath: String
             val location = "$server$callbackPath?$clientNameKV&$userIdKV&$emailKV"
             RedirectAction.redirect(location)
         }
-        setLogoutActionBuilder { context, currentProfile, targetUrl ->
+        setLogoutActionBuilder { _, _, _ ->
             RedirectAction.redirect(CENTRAL_LOGOUT_URL)
         }
 

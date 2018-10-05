@@ -38,7 +38,7 @@ class StatefulMultiProfileIntegrationTest: StatefulPac4jAuthHandlerIntegrationTe
         // First login successfully following approach for single profile oAuth2 test client
         // Start a web server with no required authorities (i.e. only authentication required) for the secured resource
         val client = vertx.createHttpClient()
-        loginSuccessfullyExpectingAuthorizedUser(client) { Void ->
+        loginSuccessfullyExpectingAuthorizedUser(client) { _ ->
 
             // now force a login
             val forceLoginRequest = client.get(8080, "localhost",

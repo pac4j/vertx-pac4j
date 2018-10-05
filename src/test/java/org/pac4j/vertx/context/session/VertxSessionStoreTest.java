@@ -64,24 +64,24 @@ public class VertxSessionStoreTest {
 
 
     @Test
-    public void testGetOrCreateSessionId() throws Exception {
+    public void testGetOrCreateSessionId() {
         assertThat(sessionStore.getOrCreateSessionId(webContext), is(SESSION_ID));
     }
 
     @Test
-    public void testGetWhenValuePresent() throws Exception {
+    public void testGetWhenValuePresent() {
         // Let's put something into the session
         sessionContents.put(PRESENT, PRESENT_VALUE);
         assertThat(sessionStore.get(webContext, PRESENT), is(PRESENT_VALUE));
     }
 
     @Test
-    public void testGetWhenValueAbsent() throws Exception {
+    public void testGetWhenValueAbsent() {
         assertThat(sessionStore.get(webContext, ABSENT), is(nullValue()));
     }
 
     @Test
-    public void testSet() throws Exception {
+    public void testSet() {
         assertThat(sessionContents.get(PRESENT), is(nullValue()));
         sessionStore.set(webContext, PRESENT, PRESENT_VALUE);
         assertThat(sessionContents.get(PRESENT), is(PRESENT_VALUE));

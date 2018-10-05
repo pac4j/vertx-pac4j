@@ -26,11 +26,11 @@ class HeaderBasedDirectClient(matchingPattern: String): DirectClient<TestCredent
                     context.getRequestHeader(HEADER_EMAIL)) else null
 
         }
-        setAuthenticator { credentials, webContext ->
-            if (credentials == null || credentials.userId == null || credentials.email == null) {
+        setAuthenticator { credentials, _ ->
+            if (credentials == null) {
                 throw CredentialException("Authorization header does not pass authentication")
             }
         }
-        setProfileCreator { credentials, webContext ->  SimpleTestProfile(credentials.userId, credentials.email)}
+        setProfileCreator { credentials, _ ->  SimpleTestProfile(credentials.userId, credentials.email)}
     }
 }

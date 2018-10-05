@@ -38,7 +38,10 @@ public class LogoutHandler implements Handler<RoutingContext> {
     /**
      * Construct based on the option values provided
      *
+     * @param vertx the vertx API
+     * @param sessionStore the session store
      * @param options - the options to configure this handler
+     * @param config the pac4j configuration
      */
     public LogoutHandler(final Vertx vertx,
                          final SessionStore<VertxWebContext> sessionStore ,
