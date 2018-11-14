@@ -36,7 +36,7 @@ For vert.x 2 and previous, use vertx-pac4j 1.1.x - this codebase can be found at
 ### - the [callback configuration](https://github.com/pac4j/vertx-pac4j/wiki/Callback-configuration), only for web applications
 ### - the [logout configuration](https://github.com/pac4j/vertx-pac4j/wiki/Logout-configuration)
 
-### 3) [Apply security](https://github.com/pac4j/svertx-pac4j/wiki/Apply-security)
+### 3) [Apply security](https://github.com/pac4j/vertx-pac4j/wiki/Apply-security)
 
 ### 4) [Get the authenticated user profiles](https://github.com/pac4j/vertx-pac4j/wiki/Get-the-authenticated-user-profiles)
 
