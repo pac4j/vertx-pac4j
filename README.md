@@ -9,8 +9,6 @@ It's based on Java 8, Vert.x 3.5 and on the **[pac4j security engine](https://gi
 
 [**Main concepts and components:**](http://www.pac4j.org/docs/main-concepts-and-components.html)
 
-[**Main concepts and components:**](http://www.pac4j.org/docs/main-concepts-and-components.html)
-
 1) A [**client**](http://www.pac4j.org/docs/clients.html) represents an authentication mechanism. It performs the login process and returns a user profile. An indirect client is for web applications authentication while a direct client is for web services authentication:
 
 &#9656; OAuth - SAML - CAS - OpenID Connect - HTTP - OpenID - Google App Engine - Kerberos - LDAP - SQL - JWT - MongoDB - CouchDB - IP address - REST API
