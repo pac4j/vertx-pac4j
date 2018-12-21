@@ -1,7 +1,7 @@
 package org.pac4j.vertx.context.session
 
 import io.vertx.ext.web.Session
-import io.vertx.ext.web.sstore.impl.SessionImpl
+import io.vertx.ext.web.sstore.impl.SharedDataSessionImpl
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.MatcherAssert.assertThat
@@ -20,7 +20,7 @@ class VertxSessionTest {
 
     @Before
     fun setUp() {
-        vertxSession = SessionImpl()
+        vertxSession = SharedDataSessionImpl()
         pac4jSession = VertxSession(vertxSession)
     }
 
