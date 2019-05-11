@@ -199,7 +199,12 @@ public class VertxWebContext implements WebContext {
 
     @Override
     public void addResponseCookie(Cookie cookie) {
-        routingContext.addCookie(io.vertx.ext.web.Cookie.cookie(cookie.getName(), cookie.getValue()));
+        routingContext.addCookie(io.vertx.ext.web.Cookie.cookie(cookie.getName(), cookie.getValue())
+                .setHttpOnly(cookie.isHttpOnly())
+                .setSecure(cookie.isSecure())
+                .setDomain(cookie.getDomain())
+                .setMaxAge(cookie.getMaxAge())
+                .setPath(cookie.getPath()));
     }
 
     @Override
