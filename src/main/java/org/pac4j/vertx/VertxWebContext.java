@@ -199,7 +199,20 @@ public class VertxWebContext implements WebContext {
 
     @Override
     public void addResponseCookie(Cookie cookie) {
-        routingContext.addCookie(io.vertx.ext.web.Cookie.cookie(cookie.getName(), cookie.getValue()));
+        io.vertx.ext.web.Cookie vertxCookie =  io.vertx.ext.web.Cookie.cookie(cookie.getName(), cookie.getValue())
+                               .setHttpOnly(cookie.isHttpOnly())
+                               .setSecure(cookie.isSecure())
+                               .setDomain(cookie.getDomain())
+                               .setPath(cookie.getPath());
+        /*
+        *  dont use the default of one of org.pac4j.core.context.Cookie which is -1 but allow the default one of
+        *  io.vertx.ext.web.Cookie which uses netty Cookie internally
+        * */
+        if(cookie.getMaxAge()>0){
+            vertxCookie.setMaxAge(cookie.getMaxAge());
+        }
+
+        routingContext.addCookie(vertxCookie);
     }
 
     @Override
