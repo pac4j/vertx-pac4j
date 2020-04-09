@@ -26,7 +26,7 @@
     <vertx.version>3.6.2</vertx.version>
     <pac4j.version>3.4.0</pac4j.version>
     <java.version>1.8</java.version>
-    <maven.compiler.plugin.version>3.8.0</maven.compiler.plugin.version>
+    <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
     <kotlin.version>1.2.41</kotlin.version>
     <mockito.version>1.10.19</mockito.version>
     <surefire.version>2.21.0</surefire.version>
