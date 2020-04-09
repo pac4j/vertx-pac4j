@@ -34,7 +34,7 @@
     <lombok.version>1.16.22</lombok.version>
     <mockito-kotlin.version>1.6.0</mockito-kotlin.version>
     <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
-    <junit.version>4.12</junit.version>
+    <junit.version>4.13</junit.version>
     <skipTests>true</skipTests>
   </properties>
 
