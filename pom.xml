@@ -29,7 +29,7 @@
     <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
     <kotlin.version>1.2.41</kotlin.version>
     <mockito.version>1.10.19</mockito.version>
-    <surefire.version>2.21.0</surefire.version>
+    <surefire.version>2.22.2</surefire.version>
     <slf4j.version>1.7.25</slf4j.version>
     <lombok.version>1.16.22</lombok.version>
     <mockito-kotlin.version>1.6.0</mockito-kotlin.version>
