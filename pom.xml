@@ -31,7 +31,7 @@
     <mockito.version>1.10.19</mockito.version>
     <surefire.version>2.22.2</surefire.version>
     <slf4j.version>1.7.30</slf4j.version>
-    <lombok.version>1.16.22</lombok.version>
+    <lombok.version>1.18.12</lombok.version>
     <mockito-kotlin.version>1.6.0</mockito-kotlin.version>
     <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
     <junit.version>4.13</junit.version>
