@@ -48,14 +48,14 @@ public class VertxSessionStoreTest {
         vertxSession = mock(Session.class);
         when(webContext.getVertxSession()).thenReturn(vertxSession);
         when(vertxSession.get(anyString())).thenAnswer(invocation -> {
-            final String key = invocation.getArgumentAt(0, String.class);
+            final String key = invocation.getArgument(0, String.class);
             return sessionContents.get(key);
         });
         when(vertxSession.id()).thenReturn(SESSION_ID);
 
         doAnswer(invocation -> {
-            final String key = invocation.getArgumentAt(0, String.class);
-            final Object value = invocation.getArgumentAt(1, Object.class);
+            final String key = invocation.getArgument(0, String.class);
+            final Object value = invocation.getArgument(1, Object.class);
             sessionContents.put(key, value);
             return vertxSession;
         }).when(vertxSession).put(anyString(), anyObject());
