@@ -7,6 +7,7 @@ import org.pac4j.core.store.Store;
 import rx.Observable;
 import rx.functions.Func1;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -30,7 +31,7 @@ public class VertxClusteredMapStore<K, V> extends VertxMapStoreBase implements S
     }
 
     @Override
-    public V get(K key) {
+    public Optional<V> get(K key) {
         voidAsyncOpToBlocking(map -> map.getObservable((key)));
 
         final CompletableFuture<V> valueFuture = new CompletableFuture<>();
@@ -38,7 +39,7 @@ public class VertxClusteredMapStore<K, V> extends VertxMapStoreBase implements S
                 .flatMap(map -> map.getObservable(key))
                 .subscribe(valueFuture::complete);
         try {
-            return valueFuture.get(blockingTimeoutSeconds, TimeUnit.SECONDS);
+            return Optional.ofNullable(valueFuture.get(blockingTimeoutSeconds, TimeUnit.SECONDS));
         } catch (InterruptedException|ExecutionException|TimeoutException e) {
             throw new TechnicalException(e);
         }

@@ -4,6 +4,8 @@ import io.vertx.core.Vertx;
 import io.vertx.core.shareddata.LocalMap;
 import org.pac4j.core.store.Store;
 
+import java.util.Optional;
+
 /**
  * Implementation of pac4j store based on vert.x LocalMap implementation. If the store is to be cluster-wide then
  * the clustered map implementation should be used instead.
@@ -17,8 +19,8 @@ public class VertxLocalMapStore<K, V> extends VertxMapStoreBase implements Store
     }
 
     @Override
-    public V get(K key) {
-        return store.get(key);
+    public Optional<V> get(K key) {
+        return Optional.ofNullable(store.get(key));
     }
 
     @Override

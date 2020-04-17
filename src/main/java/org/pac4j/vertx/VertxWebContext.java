@@ -13,10 +13,7 @@ import org.pac4j.vertx.auth.Pac4jUser;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.InvalidParameterException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -38,8 +35,6 @@ public class VertxWebContext implements WebContext {
     private final JsonObject parameters;
     private final Map<String, String[]> mapParameters;
     private final SessionStore<VertxWebContext> sessionStore;
-
-    private boolean contentHasBeenWritten = false; // Need to set chunked before first write of any content
 
     public VertxWebContext(final RoutingContext routingContext, final SessionStore<VertxWebContext> sessionStore) {
         final HttpServerRequest request = routingContext.request();
@@ -83,21 +78,13 @@ public class VertxWebContext implements WebContext {
 
     }
 
-    public void failResponse(final int status) {
-        routingContext.fail(status);
-    }
-
-    public void completeResponse() {
-        routingContext.response().end();
-    }
-
     @Override
-    public String getRequestParameter(String name) {
+    public Optional<String> getRequestParameter(String name) {
         JsonArray values = parameters.getJsonArray(name);
         if (values != null && values.size() > 0) {
-            return values.getString(0);
+            return Optional.ofNullable(values.getString(0));
         }
-        return null;
+        return Optional.empty();
     }
 
     @Override
@@ -106,8 +93,8 @@ public class VertxWebContext implements WebContext {
     }
 
     @Override
-    public Object getRequestAttribute(String s) {
-        return routingContext.get(s);
+    public Optional<Object> getRequestAttribute(String s) {
+        return Optional.ofNullable(routingContext.get(s));
     }
 
     @Override
@@ -116,8 +103,8 @@ public class VertxWebContext implements WebContext {
     }
 
     @Override
-    public String getRequestHeader(String name) {
-        return headers.getString(name);
+    public Optional<String> getRequestHeader(String name) {
+        return Optional.ofNullable(headers.getString(name));
     }
 
     @Override
@@ -128,22 +115,6 @@ public class VertxWebContext implements WebContext {
     @Override
     public String getRemoteAddr() {
         return remoteAddress;
-    }
-
-    @Override
-    public void writeResponseContent(String content) {
-        if (content != null && !content.isEmpty()) {
-            if (!contentHasBeenWritten) {
-                routingContext.response().setChunked(true);
-                contentHasBeenWritten = true;
-            }
-            routingContext.response().write(content);
-        }
-    }
-
-    @Override
-    public void setResponseStatus(int code) {
-        routingContext.response().setStatusCode(code);
     }
 
     @Override
@@ -241,4 +212,7 @@ public class VertxWebContext implements WebContext {
         return routingContext.session();
     }
 
+    public RoutingContext getVertxRoutingContext() {
+        return routingContext;
+    }
 }

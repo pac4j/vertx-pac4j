@@ -11,9 +11,9 @@ import org.pac4j.core.engine.CallbackLogic;
 import org.pac4j.core.engine.DefaultCallbackLogic;
 import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.http.adapter.HttpActionAdapter;
-import org.pac4j.vertx.VertxProfileManager;
+import org.pac4j.core.util.FindBest;
 import org.pac4j.vertx.VertxWebContext;
-import org.pac4j.vertx.http.DefaultHttpActionAdapter;
+import org.pac4j.vertx.http.VertxHttpActionAdapter;
 
 /**
  * Callback handler for Vert.x pac4j binding. This handler finishes the stateful authentication process.
@@ -26,7 +26,6 @@ public class CallbackHandler implements Handler<RoutingContext> {
 
     protected static final Logger LOG = LoggerFactory.getLogger(CallbackHandler.class);
 
-    private final HttpActionAdapter httpActionHandler = new DefaultHttpActionAdapter();
     private final Vertx vertx;
     private final SessionStore<VertxWebContext> sessionStore;
     private final Config config;
@@ -37,12 +36,6 @@ public class CallbackHandler implements Handler<RoutingContext> {
     private final Boolean multiProfile;
     private final Boolean renewSession;
     private final String defaultClient;
-
-    private final CallbackLogic<Void, VertxWebContext> callbackLogic = new DefaultCallbackLogic();
-    {
-        ((DefaultCallbackLogic<Void, VertxWebContext>) callbackLogic)
-                .setProfileManagerFactory(VertxProfileManager::new);
-    }
 
     public CallbackHandler(final Vertx vertx,
                            final SessionStore<VertxWebContext> sessionStore,
@@ -62,11 +55,14 @@ public class CallbackHandler implements Handler<RoutingContext> {
     @Override
     public void handle(RoutingContext event) {
 
+        final CallbackLogic<Void, VertxWebContext> bestLogic = FindBest.callbackLogic(null, config, DefaultCallbackLogic.INSTANCE);
+        final HttpActionAdapter<Void, VertxWebContext> bestAdapter = FindBest.httpActionAdapter(null, config, VertxHttpActionAdapter.INSTANCE);
+
         // Can we complete the authentication process here?
         final VertxWebContext webContext = new VertxWebContext(event, sessionStore);
 
         vertx.executeBlocking(future -> {
-            callbackLogic.perform(webContext, config, httpActionHandler, defaultUrl, saveInSession, multiProfile, renewSession, defaultClient);
+            bestLogic.perform(webContext, config, bestAdapter, defaultUrl, saveInSession, multiProfile, renewSession, defaultClient);
             future.complete(null);
         },
         false,
@@ -80,5 +76,4 @@ public class CallbackHandler implements Handler<RoutingContext> {
         });
 
     }
-
 }

@@ -5,7 +5,7 @@
 
 The `vertx-pac4j` project is an **easy and powerful security library for Vert.x 3 web applications and web services** which supports authentication and authorization, but also application logout and advanced features like CSRF protection.
 It supports authentication and authorization, but also advanced features like session fixation and CSRF protection.
-It's based on Java 8, Vert.x 3.5 and on the **[pac4j security engine](https://github.com/pac4j/pac4j) v3**. It's available under the Apache 2 license.
+It's based on Java 8, Vert.x 3.9 and on the **[pac4j security engine](https://github.com/pac4j/pac4j) v4**. It's available under the Apache 2 license.
 
 [**Main concepts and components:**](http://www.pac4j.org/docs/main-concepts-and-components.html)
 
@@ -17,11 +17,13 @@ It's based on Java 8, Vert.x 3.5 and on the **[pac4j security engine](https://gi
 
 &#9656; Roles/permissions - Anonymous/remember-me/(fully) authenticated - Profile type, attribute -  CORS - CSRF - Security headers - IP address, HTTP method
 
-3) The `SecurityHandler` protects an url by checking that the user is authenticated and that the authorizations are valid, according to the clients and authorizers configuration. If the user is not authenticated, it performs authentication for direct clients or starts the login process for indirect clients
+3) A [**matcher**](http://www.pac4j.org/docs/matchers.html) defines whether the `SecurityHandler` must be applied and can be used for additional web processing
 
-4) The `CallbackHandler` finishes the login process for an indirect client
+4) The `SecurityHandler` protects an url by checking that the user is authenticated and that the authorizations are valid, according to the clients and authorizers configuration. If the user is not authenticated, it performs authentication for direct clients or starts the login process for indirect clients
 
-5) The `LogoutHandler` logs out the user from the application and triggers the logout at the identity provider level.
+5) The `CallbackHandler` finishes the login process for an indirect client
+
+6) The `LogoutHandler` logs out the user from the application and triggers the logout at the identity provider level.
 
 For vert.x 2 and previous, use vertx-pac4j 1.1.x - this codebase can be found at [1.1.x](https://github.com/pac4j/vertx-pac4j/tree/vertx-pac4j-1.1.x)
 
@@ -51,7 +53,7 @@ The demo webapp: [vertx-pac4j-demo](https://github.com/pac4j/vertx-pac4j-demo) i
 The latest released version is the [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.pac4j/vertx-pac4j/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/org.pac4j/vertx-pac4j), available in the [Maven central repository](https://repo.maven.apache.org/maven2).
 The [next version](https://github.com/pac4j/vertx-pac4j/wiki/Next-version) is under development.
 
-See the [release notes](https://github.com/pac4j/vertx-pac4j/wiki/Release-Notes). Learn more by browsing the [pac4j documentation](http://www.pac4j.org/3.3.x/docs/index.html) and the [vertx-pac4j Javadoc](http://www.javadoc.io/doc/org.pac4j/vertx-pac4j/4.0.0).
+See the [release notes](https://github.com/pac4j/vertx-pac4j/wiki/Release-Notes). Learn more by browsing the [pac4j documentation](https://www.javadoc.io/doc/org.pac4j/pac4j-core/4.0.0/index.html) and the [vertx-pac4j Javadoc](http://www.javadoc.io/doc/org.pac4j/vertx-pac4j/5.0.0).
 
 See the [migration guide](https://github.com/pac4j/vertx-pac4j/wiki/Migration-guide) as well.
 

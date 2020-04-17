@@ -9,11 +9,9 @@ import org.pac4j.core.engine.DefaultLogoutLogic;
 import org.pac4j.core.engine.LogoutLogic;
 import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.http.adapter.HttpActionAdapter;
-import org.pac4j.vertx.VertxProfileManager;
+import org.pac4j.core.util.FindBest;
 import org.pac4j.vertx.VertxWebContext;
-import org.pac4j.vertx.http.DefaultHttpActionAdapter;
-
-import static org.pac4j.core.util.CommonHelper.assertNotNull;
+import org.pac4j.vertx.http.VertxHttpActionAdapter;
 
 /**
  * Implementation of a handler for handling pac4j user logout
@@ -26,14 +24,11 @@ public class LogoutHandler implements Handler<RoutingContext> {
     protected final String logoutUrlPattern;
     protected final Config config;
 
-    private final LogoutLogic<Void, VertxWebContext> logoutLogic;
     private final Vertx vertx;
     private final SessionStore<VertxWebContext> sessionStore;
     private final boolean localLogout;
     private final boolean destroySession;
     private final boolean centralLogout;
-
-    protected HttpActionAdapter<Void, VertxWebContext> httpActionAdapter = new DefaultHttpActionAdapter();
 
     /**
      * Construct based on the option values provided
@@ -46,10 +41,6 @@ public class LogoutHandler implements Handler<RoutingContext> {
     public LogoutHandler(final Vertx vertx,
                          final SessionStore<VertxWebContext> sessionStore ,
                          final LogoutHandlerOptions options, final Config config) {
-        final DefaultLogoutLogic<Void, VertxWebContext> defaultApplicationLogoutLogic =
-                new DefaultLogoutLogic<>();
-        defaultApplicationLogoutLogic.setProfileManagerFactory(VertxProfileManager::new);
-        logoutLogic = defaultApplicationLogoutLogic;
         this.defaultUrl = options.getDefaultUrl();
         this.logoutUrlPattern = options.getLogoutUrlPattern();
         this.config = config;
@@ -63,14 +54,13 @@ public class LogoutHandler implements Handler<RoutingContext> {
     @Override
     public void handle(final RoutingContext routingContext) {
 
-        assertNotNull("applicationLogoutLogic", logoutLogic);
-        assertNotNull("config", config);
+        final LogoutLogic<Void, VertxWebContext> bestLogic = FindBest.logoutLogic(null, config, DefaultLogoutLogic.INSTANCE);
+        final HttpActionAdapter<Void, VertxWebContext> bestAdapter = FindBest.httpActionAdapter(null, config, VertxHttpActionAdapter.INSTANCE);
 
         final VertxWebContext webContext = new VertxWebContext(routingContext, sessionStore);
 
         vertx.executeBlocking(future -> {
-                    logoutLogic.perform(webContext, config, httpActionAdapter, defaultUrl, logoutUrlPattern, localLogout,
-                            destroySession, centralLogout);
+                    bestLogic.perform(webContext, config, bestAdapter, defaultUrl, logoutUrlPattern, localLogout, destroySession, centralLogout);
                     future.complete(null);
                 },
                 false,
@@ -84,5 +74,4 @@ public class LogoutHandler implements Handler<RoutingContext> {
                 });
 
     }
-
 }
