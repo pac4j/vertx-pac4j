@@ -37,6 +37,7 @@ public class VertxHttpActionAdapter implements HttpActionAdapter<Void, VertxWebC
             if (action instanceof WithLocationAction) {
                 final WithLocationAction withLocationAction = (WithLocationAction) action;
                 context.setResponseHeader(HttpConstants.LOCATION_HEADER, withLocationAction.getLocation());
+                routingContext.response().end();
 
             } else if (action instanceof WithContentAction) {
                 final WithContentAction withContentAction = (WithContentAction) action;
@@ -45,6 +46,7 @@ public class VertxHttpActionAdapter implements HttpActionAdapter<Void, VertxWebC
                 if (content != null) {
                     routingContext.response().setChunked(true);
                     routingContext.response().write(content);
+                    routingContext.response().end();
                 }
             }
             return null;
