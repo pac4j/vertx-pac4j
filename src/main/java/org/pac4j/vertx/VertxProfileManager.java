@@ -2,6 +2,7 @@ package org.pac4j.vertx;
 
 import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.core.profile.ProfileManager;
+import org.pac4j.vertx.auth.Pac4JUserProfiles;
 import org.pac4j.vertx.auth.Pac4jUser;
 import org.pac4j.vertx.context.session.VertxSessionStore;
 

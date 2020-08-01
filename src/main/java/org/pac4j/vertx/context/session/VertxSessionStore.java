@@ -2,12 +2,16 @@ package org.pac4j.vertx.context.session;
 
 import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.exception.TechnicalException;
+import org.pac4j.core.profile.CommonProfile;
+import org.pac4j.core.util.Pac4jConstants;
 import org.pac4j.vertx.VertxWebContext;
 
+import java.util.LinkedHashMap;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import io.vertx.ext.web.Session;
+import org.pac4j.vertx.auth.Pac4JUserProfiles;
 
 /**
  * Vert.x implementation of pac4j SessionStore interface to access the existing vertx-web session.
@@ -58,7 +62,11 @@ public class VertxSessionStore implements SessionStore<VertxWebContext> {
     public void set(final VertxWebContext context, final String key, final Object value) {
         final Session vertxSession = getVertxSession(context);
         if (vertxSession != null) {
-            vertxSession.put(key, value);
+            if (key.equals(Pac4jConstants.USER_PROFILES)) {
+                vertxSession.put(key, new Pac4JUserProfiles(value));
+            } else {
+                vertxSession.put(key, value);
+            }
         }
     }
 
