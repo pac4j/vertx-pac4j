@@ -5,6 +5,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.shareddata.impl.ClusterSerializable;
 import io.vertx.ext.auth.AbstractUser;
 import io.vertx.ext.auth.AuthProvider;
 import org.pac4j.core.profile.CommonProfile;
@@ -23,7 +24,7 @@ import static java.util.stream.Collectors.toMap;
  */
 public class Pac4jUser extends AbstractUser {
 
-    private final LinkedHashMap<String, CommonProfile> profiles = new LinkedHashMap<>();
+    private final Pac4JUserProfiles profiles = new Pac4JUserProfiles();
     private JsonObject principal;
 
     public Pac4jUser() {
@@ -55,38 +56,14 @@ public class Pac4jUser extends AbstractUser {
     @Override
     public void writeToBuffer(Buffer buff) {
         super.writeToBuffer(buff);
-        // Now write the remainder of our stuff to the buffer;
-        final JsonObject profilesAsJson = new JsonObject();
-        profiles.forEach((name, profile) -> {
-            final JsonObject profileAsJson = (JsonObject) DefaultJsonConverter.getInstance().encodeObject(profile);
-            profilesAsJson.put(name, profileAsJson);
-        });
-
-        final String json = profilesAsJson.toString();
-        byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
-        buff.appendInt(jsonBytes.length)
-            .appendBytes(jsonBytes);
-
+        profiles.writeToBuffer(buff);
     }
 
     @Override
     public int readFromBuffer(int pos, Buffer buffer) {
         int posLocal = super.readFromBuffer(pos, buffer);
-        final int jsonByteCount = buffer.getInt(posLocal);
-        posLocal += 4;
-        final byte[] jsonBytes = buffer.getBytes(posLocal, posLocal + jsonByteCount);
-        posLocal += jsonByteCount;
-
-        final String json = new String(jsonBytes, StandardCharsets.UTF_8);
-        final JsonObject profiles = new JsonObject(json);
-
-        final Map<String, CommonProfile> decodedUserProfiles = profiles.stream()
-                .filter(e -> e.getValue() instanceof JsonObject)
-                .map(e -> new MappedPair<>(e.getKey(),
-                        (CommonProfile) DefaultJsonConverter.getInstance().decodeObject(e.getValue())))
-                .collect(toMap(e -> e.key, e -> e.value));
-
-        setUserProfiles(decodedUserProfiles);
+        profiles.readFromBuffer(posLocal, buffer);
+        updatePrincipal();
         return posLocal;
     }
 
@@ -114,15 +91,5 @@ public class Pac4jUser extends AbstractUser {
                             jsonProfile.put(attributeName, attributeValue.toString()));
             principal.put(name, jsonProfile);
         });
-    }
-
-    private static class MappedPair<T, U> {
-        public final T key;
-        public final U value;
-
-        public MappedPair(final T key, final U value) {
-            this.key = key;
-            this.value = value;
-        }
     }
 }
