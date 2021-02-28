@@ -2,11 +2,9 @@ package org.pac4j.vertx.context.session;
 
 import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.exception.TechnicalException;
-import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.core.util.Pac4jConstants;
 import org.pac4j.vertx.VertxWebContext;
 
-import java.util.LinkedHashMap;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;

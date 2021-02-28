@@ -3,9 +3,9 @@ package org.pac4j.vertx.handler.impl;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.auth.authentication.Credentials;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.impl.AuthHandlerImpl;
 import org.pac4j.core.config.Config;
@@ -110,7 +110,7 @@ public class SecurityHandler extends AuthHandlerImpl {
     }
 
     @Override
-    public void parseCredentials(RoutingContext context, Handler<AsyncResult<JsonObject>> handler) {
+    public void parseCredentials(RoutingContext routingContext, Handler<AsyncResult<Credentials>> handler) {
 
     }
 }

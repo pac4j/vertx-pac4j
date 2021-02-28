@@ -160,7 +160,8 @@ public class VertxWebContext implements WebContext {
 
     @Override
     public Collection<Cookie> getRequestCookies() {
-        return routingContext.cookies().stream().map(cookie -> {
+        return routingContext.cookieMap().values().stream().map(cookie -> {
+            io.vertx.core.http.Cookie cookie1 = cookie;
             final Cookie p4jCookie = new Cookie(cookie.getName(), cookie.getValue());
             p4jCookie.setDomain(cookie.getDomain());
             p4jCookie.setPath(cookie.getPath());
@@ -170,7 +171,7 @@ public class VertxWebContext implements WebContext {
 
     @Override
     public void addResponseCookie(Cookie cookie) {
-        io.vertx.ext.web.Cookie vertxCookie =  io.vertx.ext.web.Cookie.cookie(cookie.getName(), cookie.getValue())
+        io.vertx.core.http.Cookie vertxCookie =  io.vertx.core.http.Cookie.cookie(cookie.getName(), cookie.getValue())
                                .setHttpOnly(cookie.isHttpOnly())
                                .setSecure(cookie.isSecure())
                                .setDomain(cookie.getDomain())
