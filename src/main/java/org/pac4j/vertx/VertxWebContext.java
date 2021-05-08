@@ -64,6 +64,9 @@ public class VertxWebContext implements WebContext {
         for (String name : request.params().names()) {
             parameters.put(name, new JsonArray(Arrays.asList(request.params().getAll(name).toArray())));
         }
+        for (String name : request.formAttributes().names()) {
+            parameters.put(name, new JsonArray(Arrays.asList(request.formAttributes().getAll(name).toArray())));
+        }
 
         mapParameters = new HashMap<>();
         for (String name : parameters.fieldNames()) {
