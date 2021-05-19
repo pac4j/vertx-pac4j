@@ -8,6 +8,8 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.impl.ClusterSerializable;
 import io.vertx.ext.auth.AbstractUser;
 import io.vertx.ext.auth.AuthProvider;
+import io.vertx.ext.auth.User;
+import io.vertx.ext.auth.authorization.Authorization;
 import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.vertx.core.DefaultJsonConverter;
 
@@ -42,6 +44,16 @@ public class Pac4jUser extends AbstractUser {
                 .anyMatch(p -> p.getPermissions().contains(permission))
         ));
 
+    }
+
+    @Override
+    public JsonObject attributes() {
+        return null;
+    }
+
+    @Override
+    public User isAuthorized(Authorization authorization, Handler<AsyncResult<Boolean>> handler) {
+        return null;
     }
 
     @Override
