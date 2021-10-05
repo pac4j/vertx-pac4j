@@ -34,9 +34,9 @@ public class VertxWebContext implements WebContext {
     private final JsonObject headers;
     private final JsonObject parameters;
     private final Map<String, String[]> mapParameters;
-    private final SessionStore<VertxWebContext> sessionStore;
+    private final SessionStore sessionStore;
 
-    public VertxWebContext(final RoutingContext routingContext, final SessionStore<VertxWebContext> sessionStore) {
+    public VertxWebContext(final RoutingContext routingContext, final SessionStore sessionStore) {
         final HttpServerRequest request = routingContext.request();
         this.routingContext = routingContext;
         this.method = request.method().toString();
@@ -64,6 +64,9 @@ public class VertxWebContext implements WebContext {
         for (String name : request.params().names()) {
             parameters.put(name, new JsonArray(Arrays.asList(request.params().getAll(name).toArray())));
         }
+        for (String name : request.formAttributes().names()) {
+            parameters.put(name, new JsonArray(Arrays.asList(request.formAttributes().getAll(name).toArray())));
+        }
 
         mapParameters = new HashMap<>();
         for (String name : parameters.fieldNames()) {
@@ -75,7 +78,6 @@ public class VertxWebContext implements WebContext {
             }
             mapParameters.put(name, values);
         }
-
     }
 
     @Override
@@ -122,6 +124,12 @@ public class VertxWebContext implements WebContext {
         routingContext.response().putHeader(name, value);
     }
 
+    @Override
+    public Optional<String> getResponseHeader(String s) {
+        //FIXME
+        return Optional.empty();
+    }
+
     public Map<String, String> getResponseHeaders() {
         return routingContext.response().headers().entries().stream()
             .collect(Collectors.toMap(Map.Entry::getKey,
@@ -160,7 +168,8 @@ public class VertxWebContext implements WebContext {
 
     @Override
     public Collection<Cookie> getRequestCookies() {
-        return routingContext.cookies().stream().map(cookie -> {
+        return routingContext.cookieMap().values().stream().map(cookie -> {
+            io.vertx.core.http.Cookie cookie1 = cookie;
             final Cookie p4jCookie = new Cookie(cookie.getName(), cookie.getValue());
             p4jCookie.setDomain(cookie.getDomain());
             p4jCookie.setPath(cookie.getPath());
@@ -170,7 +179,7 @@ public class VertxWebContext implements WebContext {
 
     @Override
     public void addResponseCookie(Cookie cookie) {
-        io.vertx.ext.web.Cookie vertxCookie =  io.vertx.ext.web.Cookie.cookie(cookie.getName(), cookie.getValue())
+        io.vertx.core.http.Cookie vertxCookie =  io.vertx.core.http.Cookie.cookie(cookie.getName(), cookie.getValue())
                                .setHttpOnly(cookie.isHttpOnly())
                                .setSecure(cookie.isSecure())
                                .setDomain(cookie.getDomain())
@@ -189,11 +198,6 @@ public class VertxWebContext implements WebContext {
     @Override
     public String getPath() {
         return routingContext.request().path();
-    }
-
-    @Override
-    public SessionStore getSessionStore() {
-        return this.sessionStore;
     }
 
     public Pac4jUser getVertxUser() {

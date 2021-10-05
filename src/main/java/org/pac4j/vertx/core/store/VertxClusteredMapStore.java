@@ -4,7 +4,7 @@ import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.core.shareddata.AsyncMap;
 import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.store.Store;
-import rx.Observable;
+import rx.Single;
 import rx.functions.Func1;
 
 import java.util.Optional;
@@ -32,11 +32,11 @@ public class VertxClusteredMapStore<K, V> extends VertxMapStoreBase implements S
 
     @Override
     public Optional<V> get(K key) {
-        voidAsyncOpToBlocking(map -> map.getObservable((key)));
+        voidAsyncOpToBlocking(map -> map.rxGet(key));
 
         final CompletableFuture<V> valueFuture = new CompletableFuture<>();
-        rxVertx.sharedData().<K, V>getClusterWideMapObservable(PAC4J_SHARED_DATA_KEY)
-                .flatMap(map -> map.getObservable(key))
+        rxVertx.sharedData().<K, V>rxGetClusterWideMap(PAC4J_SHARED_DATA_KEY)
+                .flatMap(map -> map.rxGet(key))
                 .subscribe(valueFuture::complete);
         try {
             return Optional.ofNullable(valueFuture.get(blockingTimeoutSeconds, TimeUnit.SECONDS));
@@ -47,18 +47,18 @@ public class VertxClusteredMapStore<K, V> extends VertxMapStoreBase implements S
 
     @Override
     public void set(K key, V value) {
-        voidAsyncOpToBlocking(map -> map.putObservable(key, value));
+        voidAsyncOpToBlocking(map -> map.rxPut(key, value));
     }
 
     @Override
     public void remove(K key) {
-        voidAsyncOpToBlocking(map -> map.removeObservable(key));
+        voidAsyncOpToBlocking(map -> map.rxRemove(key));
     }
 
-    public void voidAsyncOpToBlocking(Func1<AsyncMap, Observable> asyncOp) {
+    public void voidAsyncOpToBlocking(Func1<AsyncMap, Single> asyncOp) {
         CompletableFuture<Void> future = new CompletableFuture<>();
 
-        rxVertx.sharedData().getClusterWideMapObservable(PAC4J_SHARED_DATA_KEY)
+        rxVertx.sharedData().rxGetAsyncMap(PAC4J_SHARED_DATA_KEY)
                 .map(asyncOp)
                 .subscribe(result -> future.complete(null));
 

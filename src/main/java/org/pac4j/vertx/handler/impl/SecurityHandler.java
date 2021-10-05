@@ -3,11 +3,11 @@ package org.pac4j.vertx.handler.impl;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.auth.User;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.impl.AuthHandlerImpl;
+import io.vertx.ext.web.handler.impl.AuthenticationHandlerImpl;
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.engine.DefaultSecurityLogic;
@@ -26,7 +26,7 @@ import org.pac4j.vertx.http.VertxHttpActionAdapter;
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public class SecurityHandler extends AuthHandlerImpl {
+public class SecurityHandler extends AuthenticationHandlerImpl {
 
     private static final Logger LOG = LoggerFactory.getLogger(SecurityHandler.class);
 
@@ -37,15 +37,14 @@ public class SecurityHandler extends AuthHandlerImpl {
     protected final String matcherName;
     protected final boolean multiProfile;
     protected final Vertx vertx;
-    private final SessionStore<VertxWebContext> sessionStore;
+    private final SessionStore sessionStore;
 
     static {
-        Config.defaultProfileManagerFactory("VertxProfileManager", ctx -> new VertxProfileManager((VertxWebContext) ctx));
-        Config.defaultProfileManagerFactory2("VertxProfileManager2", (ctx, store) -> new VertxProfileManager((VertxWebContext) ctx, (VertxSessionStore) store));
+        Config.defaultProfileManagerFactory("VertxProfileManager", (ctx, store) -> new VertxProfileManager((VertxWebContext) ctx, (VertxSessionStore) store));
     }
 
     public SecurityHandler(final Vertx vertx,
-                           final SessionStore<VertxWebContext> sessionStore,
+                           final SessionStore sessionStore,
                            final Config config, final Pac4jAuthProvider authProvider,
                            final SecurityHandlerOptions options) {
         super(authProvider);
@@ -65,41 +64,37 @@ public class SecurityHandler extends AuthHandlerImpl {
         this.config = config;
     }
 
-    // Port of Pac4J auth to a handler in vert.x 3.
     @Override
-    public void handle(final RoutingContext routingContext) {
+    public void authenticate(RoutingContext routingContext, Handler<AsyncResult<User>> handler) {
 
-        final SecurityLogic<Void, VertxWebContext> bestLogic = FindBest.securityLogic(null, config, DefaultSecurityLogic.INSTANCE);
-        final HttpActionAdapter<Void, VertxWebContext> bestAdapter = FindBest.httpActionAdapter(null, config, VertxHttpActionAdapter.INSTANCE);
+        final SecurityLogic bestLogic = FindBest.securityLogic(null, config, DefaultSecurityLogic.INSTANCE);
+        final HttpActionAdapter bestAdapter = FindBest.httpActionAdapter(null, config, VertxHttpActionAdapter.INSTANCE);
 
         final VertxWebContext webContext = new VertxWebContext(routingContext, sessionStore);
 
-        vertx.executeBlocking(future -> bestLogic.perform(webContext, config,
-            (ctx, profiles, parameters) -> {
-                // This is what should occur if we are authenticated and authorized to view the requested
-                // resource
-                future.complete();
-                return null;
-            },
-            bestAdapter,
-            clientNames,
-            authorizerName,
-            matcherName,
-            multiProfile),
-        asyncResult -> {
-            // If we succeeded we're all good here, the job is done either through approving, or redirect, or
-            // forbidding
-            // However, if an error occurred we need to handle this here
-            if (asyncResult.failed()) {
-                unexpectedFailure(routingContext, asyncResult.cause());
-            } else {
-                LOG.info("Authorised to view resource " + routingContext.request().path());
-                routingContext.next();
-            }
-        });
-
+        vertx.executeBlocking(future -> bestLogic.perform(webContext, sessionStore, config,
+                        (ctx, store, profiles, parameters) -> {
+                            // This is what should occur if we are authenticated and authorized to view the requested
+                            // resource
+                            future.complete();
+                            return null;
+                        },
+                        bestAdapter,
+                        clientNames,
+                        authorizerName,
+                        matcherName),
+                asyncResult -> {
+                    // If we succeeded we're all good here, the job is done either through approving, or redirect, or
+                    // forbidding
+                    // However, if an error occurred we need to handle this here
+                    if (asyncResult.failed()) {
+                        unexpectedFailure(routingContext, asyncResult.cause());
+                    } else {
+                        LOG.info("Authorised to view resource " + routingContext.request().path());
+                        routingContext.next();
+                    }
+                });
     }
-
 
     protected void unexpectedFailure(final RoutingContext context, Throwable failure) {
         context.fail(toTechnicalException(failure));
@@ -107,10 +102,5 @@ public class SecurityHandler extends AuthHandlerImpl {
 
     protected final TechnicalException toTechnicalException(final Throwable t) {
         return (t instanceof TechnicalException) ? (TechnicalException) t : new TechnicalException(t);
-    }
-
-    @Override
-    public void parseCredentials(RoutingContext context, Handler<AsyncResult<JsonObject>> handler) {
-
     }
 }

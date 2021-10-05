@@ -4,6 +4,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.impl.ClusterSerializable;
 import org.pac4j.core.profile.CommonProfile;
+import org.pac4j.core.profile.UserProfile;
 import org.pac4j.vertx.core.DefaultJsonConverter;
 
 import java.nio.charset.StandardCharsets;
@@ -11,7 +12,7 @@ import java.util.LinkedHashMap;
 
 import static java.util.stream.Collectors.toMap;
 
-public class Pac4JUserProfiles extends LinkedHashMap<String, CommonProfile> implements ClusterSerializable {
+public class Pac4JUserProfiles extends LinkedHashMap<String, UserProfile> implements ClusterSerializable {
 
     public Pac4JUserProfiles() {
         super();
@@ -19,7 +20,7 @@ public class Pac4JUserProfiles extends LinkedHashMap<String, CommonProfile> impl
 
     public Pac4JUserProfiles(Object profiles) {
         super();
-        putAll((LinkedHashMap<String, CommonProfile>)profiles);
+        putAll((LinkedHashMap<String, UserProfile>)profiles);
     }
 
     @Override
