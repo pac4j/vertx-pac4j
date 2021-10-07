@@ -10,7 +10,6 @@ import io.vertx.ext.web.RoutingContext;
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.util.CommonHelper;
-import org.pac4j.vertx.VertxWebContext;
 import org.pac4j.vertx.auth.Pac4jAuthProvider;
 
 import java.net.URI;
@@ -37,7 +36,7 @@ public class CallbackDeployingPac4jAuthHandler extends SecurityHandler {
 
     // Consider coalescing the manager options into the handler options and then generating the manageroptions from them
     public CallbackDeployingPac4jAuthHandler(final Vertx vertx,
-                                             final SessionStore<VertxWebContext> sessionStore,
+                                             final SessionStore sessionStore,
                                              final Config config,
                                              final Router router,
                                              final Pac4jAuthProvider authProvider,
@@ -61,7 +60,7 @@ public class CallbackDeployingPac4jAuthHandler extends SecurityHandler {
     }
 
     private Handler<RoutingContext> authResultHandler(final Vertx vertx,
-                                                      final SessionStore<VertxWebContext> sessionStore,
+                                                      final SessionStore sessionStore,
                                                       final Config config,
                                                       final CallbackHandlerOptions callbackOptions) {
         return new CallbackHandler(vertx, sessionStore,  config, callbackOptions);

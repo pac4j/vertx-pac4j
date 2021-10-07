@@ -4,6 +4,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 import org.pac4j.core.context.HttpConstants;
+import org.pac4j.core.context.WebContext;
 import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.exception.http.HttpAction;
 import org.pac4j.core.exception.http.WithContentAction;
@@ -15,16 +16,16 @@ import org.pac4j.vertx.VertxWebContext;
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public class VertxHttpActionAdapter implements HttpActionAdapter<Void, VertxWebContext> {
+public class VertxHttpActionAdapter implements HttpActionAdapter {
 
     public static final VertxHttpActionAdapter INSTANCE = new VertxHttpActionAdapter();
 
     private static final Logger LOG = LoggerFactory.getLogger(VertxHttpActionAdapter.class);
 
     @Override
-    public Void adapt(final HttpAction action, final VertxWebContext context) {
+    public Object adapt(final HttpAction action, final WebContext context) {
         if (action != null) {
-            final RoutingContext routingContext = context.getVertxRoutingContext();
+            final RoutingContext routingContext = ((VertxWebContext)context).getVertxRoutingContext();
             int code = action.getCode();
             LOG.debug("Adapting action: {}", code);
 

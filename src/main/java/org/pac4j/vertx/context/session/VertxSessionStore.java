@@ -1,23 +1,22 @@
 package org.pac4j.vertx.context.session;
 
+import io.vertx.ext.web.Session;
+import org.pac4j.core.context.WebContext;
 import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.exception.TechnicalException;
-import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.core.util.Pac4jConstants;
 import org.pac4j.vertx.VertxWebContext;
+import org.pac4j.vertx.auth.Pac4JUserProfiles;
 
-import java.util.LinkedHashMap;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import io.vertx.ext.web.Session;
-import org.pac4j.vertx.auth.Pac4JUserProfiles;
 
 /**
  * Vert.x implementation of pac4j SessionStore interface to access the existing vertx-web session.
  *
  */
-public class VertxSessionStore implements SessionStore<VertxWebContext> {
+public class VertxSessionStore implements SessionStore {
 
     private final io.vertx.ext.web.sstore.SessionStore sessionStore;
 
@@ -32,25 +31,25 @@ public class VertxSessionStore implements SessionStore<VertxWebContext> {
         this.providedSession = providedSession;
     }
 
-    protected Session getVertxSession(final VertxWebContext context) {
+    protected Session getVertxSession(final WebContext context) {
         if (providedSession != null) {
             return providedSession;
         } else {
-            return context.getVertxSession();
+            return ((VertxWebContext)context).getVertxSession();
         }
     }
 
     @Override
-    public String getOrCreateSessionId(final VertxWebContext context) {
+    public Optional<String> getSessionId(WebContext context, boolean b) {
         final Session vertxSession = getVertxSession(context);
         if (vertxSession != null) {
-            return getVertxSession(context).id();
+            return Optional.of(getVertxSession(context).id());
         }
-        return null;
+        return Optional.empty();
     }
 
     @Override
-    public Optional<Object> get(final VertxWebContext context, final String key) {
+    public Optional<Object> get(final WebContext context, final String key) {
         final Session vertxSession = getVertxSession(context);
         if (vertxSession != null) {
             return Optional.ofNullable(vertxSession.get(key));
@@ -59,7 +58,7 @@ public class VertxSessionStore implements SessionStore<VertxWebContext> {
     }
 
     @Override
-    public void set(final VertxWebContext context, final String key, final Object value) {
+    public void set(final WebContext context, final String key, final Object value) {
         final Session vertxSession = getVertxSession(context);
         if (vertxSession != null) {
             if (key.equals(Pac4jConstants.USER_PROFILES)) {
@@ -71,7 +70,7 @@ public class VertxSessionStore implements SessionStore<VertxWebContext> {
     }
 
     @Override
-    public boolean destroySession(final VertxWebContext context) {
+    public boolean destroySession(final WebContext context) {
         final Session vertxSession = getVertxSession(context);
         if (vertxSession != null) {
             vertxSession.destroy();
@@ -81,7 +80,7 @@ public class VertxSessionStore implements SessionStore<VertxWebContext> {
     }
 
     @Override
-    public Optional<Object> getTrackableSession(final VertxWebContext context) {
+    public Optional<Object> getTrackableSession(final WebContext context) {
         final Session vertxSession = getVertxSession(context);
         if (vertxSession != null) {
             return Optional.of(getVertxSession(context).id());
@@ -90,7 +89,7 @@ public class VertxSessionStore implements SessionStore<VertxWebContext> {
     }
 
     @Override
-    public Optional<SessionStore<VertxWebContext>> buildFromTrackableSession(final VertxWebContext context, final Object trackableSession) {
+    public Optional<SessionStore> buildFromTrackableSession(final WebContext context, final Object trackableSession) {
         if (trackableSession != null) {
             final CompletableFuture<io.vertx.ext.web.Session> vertxSessionFuture = new CompletableFuture<>();
             sessionStore.get((String) trackableSession, asyncResult -> {
@@ -117,7 +116,7 @@ public class VertxSessionStore implements SessionStore<VertxWebContext> {
     }
 
     @Override
-    public boolean renewSession(VertxWebContext context) {
+    public boolean renewSession(WebContext context) {
         final Session vertxSession = getVertxSession(context);
         if (vertxSession != null) {
             vertxSession.regenerateId();
