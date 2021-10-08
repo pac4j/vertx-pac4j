@@ -5,7 +5,7 @@
 
 The `vertx-pac4j` project is an **easy and powerful security library for Vert.x 4 web applications and web services** which supports authentication and authorization, but also application logout and advanced features like CSRF protection.
 It supports authentication and authorization, but also advanced features like session fixation and CSRF protection.
-It's based on Java 11, Vert.x 4.1 and on the **[pac4j security engine](https://github.com/pac4j/pac4j) v4**. It's available under the Apache 2 license.
+It's based on Java 11, Vert.x 4.1 and on the **[pac4j security engine](https://github.com/pac4j/pac4j) v5**. It's available under the Apache 2 license.
 
 [**Main concepts and components:**](http://www.pac4j.org/docs/main-concepts-and-components.html)
 
