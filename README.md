@@ -25,8 +25,6 @@ It's based on Java 11, Vert.x 4.1 and on the **[pac4j security engine](https://g
 
 6) The `LogoutHandler` logs out the user from the application and triggers the logout at the identity provider level.
 
-For vert.x 2 and previous, use vertx-pac4j 1.1.x - this codebase can be found at [1.1.x](https://github.com/pac4j/vertx-pac4j/tree/vertx-pac4j-1.1.x)
-
 
 ## Usage
 
