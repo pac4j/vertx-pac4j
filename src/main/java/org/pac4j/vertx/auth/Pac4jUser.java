@@ -11,6 +11,7 @@ import io.vertx.ext.auth.User;
 import io.vertx.ext.auth.authorization.Authorization;
 import org.pac4j.core.profile.UserProfile;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -20,7 +21,7 @@ import java.util.Objects;
  */
 public class Pac4jUser extends AbstractUser {
 
-    private final Pac4JUserProfiles profiles = new Pac4JUserProfiles();
+    private final Map<String, UserProfile> profiles = new LinkedHashMap<>();
     private JsonObject principal;
 
     public Pac4jUser() {
@@ -57,20 +58,6 @@ public class Pac4jUser extends AbstractUser {
 
     @Override
     public void setAuthProvider(AuthProvider authProvider) {
-    }
-
-    @Override
-    public void writeToBuffer(Buffer buff) {
-        super.writeToBuffer(buff);
-        profiles.writeToBuffer(buff);
-    }
-
-    @Override
-    public int readFromBuffer(int pos, Buffer buffer) {
-        int posLocal = super.readFromBuffer(pos, buffer);
-        profiles.readFromBuffer(posLocal, buffer);
-        updatePrincipal();
-        return posLocal;
     }
 
     public Map<String, UserProfile> pac4jUserProfiles() {
