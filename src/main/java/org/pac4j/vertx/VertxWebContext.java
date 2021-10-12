@@ -126,8 +126,7 @@ public class VertxWebContext implements WebContext {
 
     @Override
     public Optional<String> getResponseHeader(String s) {
-        //FIXME
-        return Optional.empty();
+        return Optional.ofNullable(routingContext.response().headers().get(s));
     }
 
     public Map<String, String> getResponseHeaders() {
