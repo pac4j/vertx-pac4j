@@ -4,11 +4,11 @@ import io.vertx.ext.web.Session;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.exception.TechnicalException;
+import org.pac4j.core.profile.UserProfile;
 import org.pac4j.core.util.Pac4jConstants;
+import org.pac4j.core.util.serializer.JavaSerializer;
 import org.pac4j.vertx.VertxWebContext;
-import org.pac4j.vertx.auth.Pac4JUserProfiles;
-
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -19,6 +19,7 @@ import java.util.concurrent.ExecutionException;
 public class VertxSessionStore implements SessionStore {
 
     private final io.vertx.ext.web.sstore.SessionStore sessionStore;
+    private static final JavaSerializer JAVA_SERIALIZER = new JavaSerializer();
 
     private final Session providedSession;
 
@@ -52,6 +53,10 @@ public class VertxSessionStore implements SessionStore {
     public Optional<Object> get(final WebContext context, final String key) {
         final Session vertxSession = getVertxSession(context);
         if (vertxSession != null) {
+            if (key.equals(Pac4jConstants.USER_PROFILES)) {
+                var inputBytes = Base64.getDecoder().decode((String)vertxSession.get(key));
+                return Optional.ofNullable(JAVA_SERIALIZER.deserializeFromBytes(inputBytes));
+            }
             return Optional.ofNullable(vertxSession.get(key));
         }
         return Optional.empty();
@@ -60,9 +65,10 @@ public class VertxSessionStore implements SessionStore {
     @Override
     public void set(final WebContext context, final String key, final Object value) {
         final Session vertxSession = getVertxSession(context);
+
         if (vertxSession != null) {
             if (key.equals(Pac4jConstants.USER_PROFILES)) {
-                vertxSession.put(key, new Pac4JUserProfiles(value));
+                vertxSession.put(key, Base64.getEncoder().encodeToString(JAVA_SERIALIZER.serializeToBytes(value)));
             } else {
                 vertxSession.put(key, value);
             }
