@@ -54,8 +54,11 @@ public class VertxSessionStore implements SessionStore {
         final Session vertxSession = getVertxSession(context);
         if (vertxSession != null) {
             if (key.equals(Pac4jConstants.USER_PROFILES)) {
-                var inputBytes = Base64.getDecoder().decode((String)vertxSession.get(key));
-                return Optional.ofNullable(JAVA_SERIALIZER.deserializeFromBytes(inputBytes));
+                final String value = vertxSession.get(key);
+                if (value != null) {
+                    var inputBytes = Base64.getDecoder().decode(value);
+                    return Optional.ofNullable(JAVA_SERIALIZER.deserializeFromBytes(inputBytes));
+                }
             }
             return Optional.ofNullable(vertxSession.get(key));
         }
@@ -67,10 +70,14 @@ public class VertxSessionStore implements SessionStore {
         final Session vertxSession = getVertxSession(context);
 
         if (vertxSession != null) {
-            if (key.equals(Pac4jConstants.USER_PROFILES)) {
-                vertxSession.put(key, Base64.getEncoder().encodeToString(JAVA_SERIALIZER.serializeToBytes(value)));
+            if (value == null) {
+                vertxSession.remove(key);
             } else {
-                vertxSession.put(key, value);
+                if (key.equals(Pac4jConstants.USER_PROFILES)) {
+                    vertxSession.put(key, Base64.getEncoder().encodeToString(JAVA_SERIALIZER.serializeToBytes(value)));
+                } else {
+                    vertxSession.put(key, value);
+                }
             }
         }
     }
