@@ -5,40 +5,27 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.auth.AbstractUser;
+import io.vertx.core.shareddata.impl.ClusterSerializable;
 import io.vertx.ext.auth.AuthProvider;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.auth.authorization.Authorization;
+import io.vertx.ext.auth.impl.UserImpl;
 import org.pac4j.core.profile.UserProfile;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public class Pac4jUser extends AbstractUser {
+public class Pac4jUser extends UserImpl implements User, ClusterSerializable {
 
     private final Map<String, UserProfile> profiles = new LinkedHashMap<>();
+    private final Set<Authorization> cachedPermissions = new HashSet<>();
     private JsonObject principal;
 
     public Pac4jUser() {
         // I think this noop default constructor is required for deserialization from a clustered session
-    }
-
-    @Override
-    protected void doIsPermitted(String permission, Handler<AsyncResult<Boolean>> resultHandler) {
-
-        /*
-         * Assume permitted if any profile is permitted
-         */
-        resultHandler.handle(Future.succeededFuture(
-            profiles.values().stream()
-                .anyMatch(p -> p.getPermissions().contains(permission))
-        ));
-
     }
 
     @Override
@@ -47,8 +34,23 @@ public class Pac4jUser extends AbstractUser {
     }
 
     @Override
-    public User isAuthorized(Authorization authorization, Handler<AsyncResult<Boolean>> handler) {
-        return null;
+    public User isAuthorized(Authorization authorization, Handler<AsyncResult<Boolean>> resultHandler) {
+        if (cachedPermissions.contains(authorization)) {
+            resultHandler.handle(Future.succeededFuture(true));
+        } else {
+            ((Handler<AsyncResult<Boolean>>) res -> {
+                if (res.succeeded()) {
+                    if (res.result()) {
+                        cachedPermissions.add(authorization);
+                    }
+                }
+                resultHandler.handle(res);
+            }).handle(Future.succeededFuture(
+                profiles.values().stream()
+                    .anyMatch(p -> p.getPermissions().contains(authorization))
+            ));
+        }
+        return this;
     }
 
     @Override
@@ -58,6 +60,12 @@ public class Pac4jUser extends AbstractUser {
 
     @Override
     public void setAuthProvider(AuthProvider authProvider) {
+
+    }
+
+    @Override
+    public User merge(User user) {
+        return null;
     }
 
     public Map<String, UserProfile> pac4jUserProfiles() {
@@ -69,6 +77,12 @@ public class Pac4jUser extends AbstractUser {
         profiles.clear();
         profiles.putAll(userProfiles);
         updatePrincipal();
+    }
+
+    @Override
+    public User clearCache() {
+        cachedPermissions.clear();
+        return this;
     }
 
     /**
