@@ -37,7 +37,7 @@ public class Pac4jUser extends UserImpl implements User, ClusterSerializable {
     public User isAuthorized(Authorization authorization, Handler<AsyncResult<Boolean>> resultHandler) {
         resultHandler.handle(Future.succeededFuture(
                 profiles.values().stream()
-                        .anyMatch(p -> p.getPermissions().contains(authorization))
+                        .anyMatch(p -> p.getRoles().contains(authorization))
         ));
         return this;
     }
