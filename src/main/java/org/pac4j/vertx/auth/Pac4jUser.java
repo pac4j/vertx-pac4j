@@ -3,12 +3,12 @@ package org.pac4j.vertx.auth;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.auth.AbstractUser;
+import io.vertx.core.shareddata.impl.ClusterSerializable;
 import io.vertx.ext.auth.AuthProvider;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.auth.authorization.Authorization;
+import io.vertx.ext.auth.impl.UserImpl;
 import org.pac4j.core.profile.UserProfile;
 
 import java.util.LinkedHashMap;
@@ -19,7 +19,7 @@ import java.util.Objects;
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public class Pac4jUser extends AbstractUser {
+public class Pac4jUser extends UserImpl implements User, ClusterSerializable {
 
     private final Map<String, UserProfile> profiles = new LinkedHashMap<>();
     private JsonObject principal;
@@ -29,26 +29,17 @@ public class Pac4jUser extends AbstractUser {
     }
 
     @Override
-    protected void doIsPermitted(String permission, Handler<AsyncResult<Boolean>> resultHandler) {
-
-        /*
-         * Assume permitted if any profile is permitted
-         */
-        resultHandler.handle(Future.succeededFuture(
-            profiles.values().stream()
-                .anyMatch(p -> p.getPermissions().contains(permission))
-        ));
-
-    }
-
-    @Override
     public JsonObject attributes() {
         return null;
     }
 
     @Override
-    public User isAuthorized(Authorization authorization, Handler<AsyncResult<Boolean>> handler) {
-        return null;
+    public User isAuthorized(Authorization authorization, Handler<AsyncResult<Boolean>> resultHandler) {
+        resultHandler.handle(Future.succeededFuture(
+                profiles.values().stream()
+                        .anyMatch(p -> p.getPermissions().contains(authorization))
+        ));
+        return this;
     }
 
     @Override
@@ -58,10 +49,6 @@ public class Pac4jUser extends AbstractUser {
 
     @Override
     public void setAuthProvider(AuthProvider authProvider) {
-    }
-
-    public Map<String, UserProfile> pac4jUserProfiles() {
-        return profiles;
     }
 
     public void setUserProfiles(final Map<String, UserProfile> userProfiles) {
