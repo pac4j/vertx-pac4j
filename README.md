@@ -51,18 +51,12 @@ The demo webapp: [vertx-pac4j-demo](https://github.com/pac4j/vertx-pac4j-demo) i
 The latest released version is the [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.pac4j/vertx-pac4j/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/org.pac4j/vertx-pac4j), available in the [Maven central repository](https://repo.maven.apache.org/maven2).
 The [next version](https://github.com/pac4j/vertx-pac4j/wiki/Next-version) is under development.
 
-See the [release notes](https://github.com/pac4j/vertx-pac4j/wiki/Release-Notes). Learn more by browsing the [pac4j documentation](https://www.javadoc.io/doc/org.pac4j/pac4j-core/4.0.0/index.html) and the [vertx-pac4j Javadoc](http://www.javadoc.io/doc/org.pac4j/vertx-pac4j/5.0.0).
+See the [release notes](https://github.com/pac4j/vertx-pac4j/wiki/Release-Notes). Learn more by browsing the [pac4j documentation](https://www.javadoc.io/doc/org.pac4j/pac4j-core/5.1.5/index.html) and the [vertx-pac4j Javadoc](http://www.javadoc.io/doc/org.pac4j/vertx-pac4j/6.0.0).
 
 See the [migration guide](https://github.com/pac4j/vertx-pac4j/wiki/Migration-guide) as well.
 
 
 ## Need help?
 
-If you need commercial support (premium support or new/specific features), contact us at [info@pac4j.org](mailto:info@pac4j.org).
+You can use the [mailing lists](http://www.pac4j.org/mailing-lists.html) or the [commercial support](http://www.pac4j.org/commercial-support.html).
 
-If you have any questions, want to contribute or be notified about the new releases and security fixes, please subscribe to the following [mailing lists](http://www.pac4j.org/mailing-lists.html):
-
-- [pac4j-users](https://groups.google.com/forum/?hl=en#!forum/pac4j-users)
-- [pac4j-developers](https://groups.google.com/forum/?hl=en#!forum/pac4j-dev)
-- [pac4j-announce](https://groups.google.com/forum/?hl=en#!forum/pac4j-announce)
-- [pac4j-security](https://groups.google.com/forum/#!forum/pac4j-security)
