@@ -26,11 +26,9 @@ public class Pac4jUser extends UserImpl implements User, ClusterSerializable {
 
     public Pac4jUser() {
         // I think this noop default constructor is required for deserialization from a clustered session
-    }
 
-    @Override
-    public JsonObject attributes() {
-        return null;
+        // Initialize fields to non-null values to avoid io.vertx.ext.auth.impl.UserConverter from thowing NPE
+        super(new JsonObject(), new JsonObject());
     }
 
     @Override
