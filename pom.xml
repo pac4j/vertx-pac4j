@@ -26,7 +26,7 @@
     <vertx.version>4.5.13</vertx.version>
     <pac4j.version>5.7.7</pac4j.version>
     <java.version>11</java.version>
-    <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
+    <maven.compiler.plugin.version>3.14.0</maven.compiler.plugin.version>
     <lombok.version>1.18.36</lombok.version>
   </properties>
 
