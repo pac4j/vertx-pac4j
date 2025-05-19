@@ -15,6 +15,14 @@
     <version>7</version>
   </parent>
 
+  <distributionManagement>
+    <snapshotRepository>
+      <name>Central Portal Snapshots</name>
+      <id>central-portal-snapshots</id>
+      <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+    </snapshotRepository>
+  </distributionManagement>
+
   <scm>
     <url>https://github.com/pac4j/vertx-pac4j.git</url>
     <connection>scm:git:git@github.com:pac4j/vertx-pac4j.git</connection>
