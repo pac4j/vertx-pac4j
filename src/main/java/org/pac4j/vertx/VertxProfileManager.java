@@ -6,7 +6,7 @@ import org.pac4j.vertx.auth.Pac4jUser;
 import org.pac4j.vertx.context.session.VertxSessionStore;
 
 import java.util.LinkedHashMap;
-import java.util.Optional;
+import java.util.Collection;
 
 /**
  * @author Jeremy Prime
@@ -25,15 +25,21 @@ public class VertxProfileManager extends ProfileManager {
     protected void saveAll(final LinkedHashMap<String, UserProfile> profiles, final boolean saveInSession) {
         super.saveAll(profiles, saveInSession);
 
-        final Pac4jUser vertxUser = Optional.ofNullable(vertxWebContext.getVertxUser()).orElse(new Pac4jUser());
-        vertxUser.setUserProfiles(profiles);
+        final Collection<UserProfile> values = (profiles != null) ? profiles.values() : java.util.List.of();
+        final Pac4jUser vertxUser = new Pac4jUser(values);
         vertxWebContext.setVertxUser(vertxUser);
     }
 
     @Override
-    public void removeOrRenewExpiredProfiles(final LinkedHashMap<String, UserProfile> profiles, final boolean readFromSession) {
+    public void removeOrRenewExpiredProfiles(final LinkedHashMap<String, UserProfile> profiles,
+                                             final boolean readFromSession) {
         super.removeOrRenewExpiredProfiles(profiles, readFromSession);
 
-        vertxWebContext.removeVertxUser();
+       if (profiles == null || profiles.isEmpty()) {
+            vertxWebContext.removeVertxUser();
+        } else {
+            final Pac4jUser refreshed = new Pac4jUser(profiles.values());
+            vertxWebContext.setVertxUser(refreshed);
+        }
     }
 }

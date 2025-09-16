@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
+import io.vertx.ext.web.impl.UserContextInternal;
 import org.pac4j.core.context.Cookie;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.context.session.SessionStore;
@@ -167,7 +168,7 @@ public class VertxWebContext implements WebContext {
 
     @Override
     public Collection<Cookie> getRequestCookies() {
-        return routingContext.cookieMap().values().stream().map(cookie -> {
+        return routingContext.request().cookies().stream().map(cookie -> {
             io.vertx.core.http.Cookie cookie1 = cookie;
             final Cookie p4jCookie = new Cookie(cookie.getName(), cookie.getValue());
             p4jCookie.setDomain(cookie.getDomain());
@@ -191,7 +192,7 @@ public class VertxWebContext implements WebContext {
             vertxCookie.setMaxAge(cookie.getMaxAge());
         }
 
-        routingContext.addCookie(vertxCookie);
+        routingContext.response().addCookie(vertxCookie);
     }
 
     @Override
@@ -204,11 +205,17 @@ public class VertxWebContext implements WebContext {
     }
 
     public void removeVertxUser() {
-        routingContext.clearUser();
+        UserContextInternal uc = (UserContextInternal) routingContext.user();
+        if (uc != null) {
+            uc.setUser(null);
+        }
     }
 
     public void setVertxUser(final Pac4jUser pac4jUser) {
-        routingContext.setUser(pac4jUser);
+        UserContextInternal uc = (UserContextInternal) routingContext.user();
+        if (uc != null) {
+            uc.setUser(pac4jUser);
+        }
     }
 
     public Session getVertxSession() {

@@ -2,18 +2,15 @@ package org.pac4j.vertx.handler.impl;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.engine.CallbackLogic;
 import org.pac4j.core.engine.DefaultCallbackLogic;
 import org.pac4j.core.exception.TechnicalException;
-import org.pac4j.core.http.adapter.HttpActionAdapter;
-import org.pac4j.core.util.FindBest;
-import org.pac4j.vertx.VertxWebContext;
-import org.pac4j.vertx.http.VertxHttpActionAdapter;
+import org.pac4j.vertx.VertxFrameworkParameters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Callback handler for Vert.x pac4j binding. This handler finishes the stateful authentication process.
@@ -24,7 +21,7 @@ import org.pac4j.vertx.http.VertxHttpActionAdapter;
  */
 public class CallbackHandler implements Handler<RoutingContext> {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(CallbackHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CallbackHandler.class);
 
     private final Vertx vertx;
     private final SessionStore sessionStore;
@@ -48,25 +45,28 @@ public class CallbackHandler implements Handler<RoutingContext> {
     }
 
     @Override
-    public void handle(RoutingContext event) {
+    public void handle(final RoutingContext rc) {
+        final CallbackLogic callbackLogic =
+                (config.getCallbackLogic() != null) ? config.getCallbackLogic() : DefaultCallbackLogic.INSTANCE;
 
-        final CallbackLogic bestLogic = FindBest.callbackLogic(null, config, DefaultCallbackLogic.INSTANCE);
-        final HttpActionAdapter bestAdapter = FindBest.httpActionAdapter(null, config, VertxHttpActionAdapter.INSTANCE);
-
-        // Can we complete the authentication process here?
-        final VertxWebContext webContext = new VertxWebContext(event, sessionStore);
-
-        vertx.executeBlocking(future -> {
-            bestLogic.perform(webContext, sessionStore, config, bestAdapter, defaultUrl, renewSession, defaultClient);
-            future.complete(null);
-        },
-        false,
-        asyncResult -> {
-            // If we succeeded we're all good here, the job is done either through approving, or redirect, or
-            // forbidding. However, if an error occurred we need to handle this here
-            if (asyncResult.failed()) {
-                event.fail(new TechnicalException(asyncResult.cause()));
-            }
-        });
+        vertx.<Void>executeBlocking(() -> {
+                            callbackLogic.perform(
+                                    config,
+                                    defaultUrl,
+                                    renewSession,
+                                    defaultClient,
+                                    new VertxFrameworkParameters(rc)
+                            );
+                            return null;
+                        },
+                        false
+                )
+                .onComplete(ar -> {
+                    if (ar.failed()) {
+                        rc.fail(new TechnicalException(ar.cause()));
+                    } else {
+                        LOG.debug("Callback handled for {}", rc.request().path());
+                    }
+                });
     }
 }

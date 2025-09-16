@@ -1,34 +1,35 @@
 package org.pac4j.vertx.context.session;
 
 import io.vertx.ext.web.Session;
+import io.vertx.ext.web.sstore.SessionStore;
 import org.pac4j.core.context.WebContext;
-import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.exception.TechnicalException;
-import org.pac4j.core.profile.UserProfile;
 import org.pac4j.core.util.Pac4jConstants;
 import org.pac4j.core.util.serializer.JavaSerializer;
 import org.pac4j.vertx.VertxWebContext;
-import java.util.*;
+
+import java.util.Base64;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 /**
  * Vert.x implementation of pac4j SessionStore interface to access the existing vertx-web session.
- *
  */
-public class VertxSessionStore implements SessionStore {
+public class VertxSessionStore implements org.pac4j.core.context.session.SessionStore {
 
-    private final io.vertx.ext.web.sstore.SessionStore sessionStore;
+    private final SessionStore sessionStore;
     private static final JavaSerializer JAVA_SERIALIZER = new JavaSerializer();
 
     private final Session providedSession;
 
-    public VertxSessionStore(final io.vertx.ext.web.sstore.SessionStore sessionStore) {
+    public VertxSessionStore(final SessionStore sessionStore) {
         this(sessionStore, null);
     }
 
-    public VertxSessionStore(final io.vertx.ext.web.sstore.SessionStore sessionStore, final Session providedSession) {
-        this.sessionStore = sessionStore;
+    public VertxSessionStore(final SessionStore sessionStore, final Session providedSession) {
+        this.sessionStore = Objects.requireNonNull(sessionStore, "sessionStore");
         this.providedSession = providedSession;
     }
 
@@ -36,15 +37,15 @@ public class VertxSessionStore implements SessionStore {
         if (providedSession != null) {
             return providedSession;
         } else {
-            return ((VertxWebContext)context).getVertxSession();
+            return ((VertxWebContext) context).getVertxSession();
         }
     }
 
     @Override
-    public Optional<String> getSessionId(WebContext context, boolean b) {
+    public Optional<String> getSessionId(final WebContext context, final boolean createSession) {
         final Session vertxSession = getVertxSession(context);
         if (vertxSession != null) {
-            return Optional.of(getVertxSession(context).id());
+            return Optional.of(vertxSession.id());
         }
         return Optional.empty();
     }
@@ -53,10 +54,10 @@ public class VertxSessionStore implements SessionStore {
     public Optional<Object> get(final WebContext context, final String key) {
         final Session vertxSession = getVertxSession(context);
         if (vertxSession != null) {
-            if (key.equals(Pac4jConstants.USER_PROFILES)) {
+            if (Pac4jConstants.USER_PROFILES.equals(key)) {
                 final String value = vertxSession.get(key);
                 if (value != null) {
-                    var inputBytes = Base64.getDecoder().decode(value);
+                    byte[] inputBytes = Base64.getDecoder().decode(value);
                     return Optional.ofNullable(JAVA_SERIALIZER.deserializeFromBytes(inputBytes));
                 }
             }
@@ -68,12 +69,11 @@ public class VertxSessionStore implements SessionStore {
     @Override
     public void set(final WebContext context, final String key, final Object value) {
         final Session vertxSession = getVertxSession(context);
-
         if (vertxSession != null) {
             if (value == null) {
                 vertxSession.remove(key);
             } else {
-                if (key.equals(Pac4jConstants.USER_PROFILES)) {
+                if (Pac4jConstants.USER_PROFILES.equals(key)) {
                     vertxSession.put(key, Base64.getEncoder().encodeToString(JAVA_SERIALIZER.serializeToBytes(value)));
                 } else {
                     vertxSession.put(key, value);
@@ -96,32 +96,38 @@ public class VertxSessionStore implements SessionStore {
     public Optional<Object> getTrackableSession(final WebContext context) {
         final Session vertxSession = getVertxSession(context);
         if (vertxSession != null) {
-            return Optional.of(getVertxSession(context).id());
+            return Optional.of(vertxSession.id());
         }
         return Optional.empty();
     }
 
     @Override
-    public Optional<SessionStore> buildFromTrackableSession(final WebContext context, final Object trackableSession) {
+    public Optional<org.pac4j.core.context.session.SessionStore> buildFromTrackableSession(final WebContext context, final Object trackableSession) {
         if (trackableSession != null) {
-            final CompletableFuture<io.vertx.ext.web.Session> vertxSessionFuture = new CompletableFuture<>();
-            sessionStore.get((String) trackableSession, asyncResult -> {
-                if (asyncResult.succeeded()) {
-                    vertxSessionFuture.complete(asyncResult.result());
-                } else {
-                    vertxSessionFuture.completeExceptionally(asyncResult.cause());
-                }
-            });
-            final CompletableFuture<VertxSessionStore> pac4jSessionFuture = vertxSessionFuture.thenApply(session -> {
-                if (session != null) {
-                    return new VertxSessionStore(sessionStore, session);
+            final CompletableFuture<Session> vertxSessionFuture = new CompletableFuture<>();
+
+            sessionStore
+                    .get((String) trackableSession)
+                    .onComplete(ar -> {
+                        if (ar.succeeded()) {
+                            vertxSessionFuture.complete(ar.result());
+                        } else {
+                            vertxSessionFuture.completeExceptionally(ar.cause());
+                        }
+                    });
+
+            final CompletableFuture<VertxSessionStore> pac4jSessionFuture = vertxSessionFuture.thenApply(sess -> {
+                if (sess != null) {
+                    return new VertxSessionStore(sessionStore, sess);
                 } else {
                     return null;
                 }
             });
+
             try {
                 return Optional.ofNullable(pac4jSessionFuture.get());
-            } catch (final InterruptedException|ExecutionException e) {
+            } catch (InterruptedException | ExecutionException e) {
+                Thread.currentThread().interrupt();
                 throw new TechnicalException(e);
             }
         }
@@ -129,7 +135,7 @@ public class VertxSessionStore implements SessionStore {
     }
 
     @Override
-    public boolean renewSession(WebContext context) {
+    public boolean renewSession(final WebContext context) {
         final Session vertxSession = getVertxSession(context);
         if (vertxSession != null) {
             vertxSession.regenerateId();
