@@ -1,106 +1,62 @@
 package org.pac4j.vertx.handler.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.auth.User;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.impl.AuthenticationHandlerImpl;
+import io.vertx.ext.web.handler.AuthenticationHandler;
+import io.vertx.ext.web.impl.UserContextInternal;
 import org.pac4j.core.config.Config;
-import org.pac4j.core.context.session.SessionStore;
-import org.pac4j.core.engine.DefaultSecurityLogic;
+import org.pac4j.core.context.WebContext;
+import org.pac4j.core.engine.SecurityGrantedAccessAdapter;
 import org.pac4j.core.engine.SecurityLogic;
-import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.http.adapter.HttpActionAdapter;
-import org.pac4j.core.util.CommonHelper;
-import org.pac4j.core.util.FindBest;
-import org.pac4j.vertx.VertxProfileManager;
+import org.pac4j.vertx.VertxFrameworkParameters;
 import org.pac4j.vertx.VertxWebContext;
-import org.pac4j.vertx.auth.Pac4jAuthProvider;
+import org.pac4j.vertx.auth.Pac4jUser;
 import org.pac4j.vertx.context.session.VertxSessionStore;
-import org.pac4j.vertx.http.VertxHttpActionAdapter;
+
+import java.util.Objects;
 
 /**
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public class SecurityHandler extends AuthenticationHandlerImpl {
+public class SecurityHandler implements AuthenticationHandler {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SecurityHandler.class);
-
-    protected final Config config;
-
-    protected final String clientNames;
-    protected final String authorizerName;
-    protected final String matcherName;
-    protected final boolean multiProfile;
-    protected final Vertx vertx;
-    private final SessionStore sessionStore;
-
-    static {
-        Config.defaultProfileManagerFactory("VertxProfileManager", (ctx, store) -> new VertxProfileManager((VertxWebContext) ctx, (VertxSessionStore) store));
-    }
+    private final Vertx vertx;
+    private final VertxSessionStore sessionStore;
+    private final Config config;
+    private final SecurityHandlerOptions options;
 
     public SecurityHandler(final Vertx vertx,
-                           final SessionStore sessionStore,
-                           final Config config, final Pac4jAuthProvider authProvider,
+                           final VertxSessionStore sessionStore,
+                           final Config config,
                            final SecurityHandlerOptions options) {
-        super(authProvider);
-        CommonHelper.assertNotNull("vertx", vertx);
-        CommonHelper.assertNotNull("sessionStore", sessionStore);
-        CommonHelper.assertNotNull("config", config);
-        CommonHelper.assertNotNull("config.getClients()", config.getClients());
-        CommonHelper.assertNotNull("authProvider", authProvider);
-        CommonHelper.assertNotNull("options", options);
-
-        clientNames = options.getClients();
-        authorizerName = options.getAuthorizers();
-        matcherName = options.getMatchers();
-        multiProfile = options.isMultiProfile();
-        this.vertx = vertx;
-        this.sessionStore = sessionStore;
-        this.config = config;
+        this.vertx = Objects.requireNonNull(vertx, "vertx");
+        this.sessionStore = Objects.requireNonNull(sessionStore, "sessionStore");
+        this.config = Objects.requireNonNull(config, "config");
+        this.options = Objects.requireNonNull(options, "options");
     }
 
     @Override
-    public void authenticate(RoutingContext routingContext, Handler<AsyncResult<User>> handler) {
+    public void handle(final RoutingContext ctx) {
+        final SecurityLogic securityLogic = config.getSecurityLogic();
 
-        final SecurityLogic bestLogic = FindBest.securityLogic(null, config, DefaultSecurityLogic.INSTANCE);
-        final HttpActionAdapter bestAdapter = FindBest.httpActionAdapter(null, config, VertxHttpActionAdapter.INSTANCE);
+        final SecurityGrantedAccessAdapter granted = (context, store, profiles) -> {
+            final Pac4jUser user = new Pac4jUser(profiles);
 
-        final VertxWebContext webContext = new VertxWebContext(routingContext, sessionStore);
+           ((UserContextInternal) ctx.user()).setUser(user);
 
-        vertx.executeBlocking(future -> bestLogic.perform(webContext, sessionStore, config,
-                        (ctx, store, profiles, parameters) -> {
-                            // This is what should occur if we are authenticated and authorized to view the requested
-                            // resource
-                            future.complete();
-                            return null;
-                        },
-                        bestAdapter,
-                        clientNames,
-                        authorizerName,
-                        matcherName),
-                asyncResult -> {
-                    // If we succeeded we're all good here, the job is done either through approving, or redirect, or
-                    // forbidding
-                    // However, if an error occurred we need to handle this here
-                    if (asyncResult.failed()) {
-                        unexpectedFailure(routingContext, asyncResult.cause());
-                    } else {
-                        LOG.info("Authorised to view resource " + routingContext.request().path());
-                        routingContext.next();
-                    }
-                });
-    }
+            ctx.next();
+            return null;
+        };
 
-    protected void unexpectedFailure(final RoutingContext context, Throwable failure) {
-        context.fail(toTechnicalException(failure));
-    }
-
-    protected final TechnicalException toTechnicalException(final Throwable t) {
-        return (t instanceof TechnicalException) ? (TechnicalException) t : new TechnicalException(t);
+        securityLogic.perform(
+                config,
+                granted,
+                options.getClients(),
+                options.getAuthorizers(),
+                options.getMatchers(),
+                new VertxFrameworkParameters(ctx)
+        );
     }
 }

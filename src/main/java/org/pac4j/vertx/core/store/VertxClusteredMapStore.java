@@ -1,14 +1,12 @@
 package org.pac4j.vertx.core.store;
 
-import io.vertx.rxjava.core.Vertx;
-import io.vertx.rxjava.core.shareddata.AsyncMap;
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
+import io.vertx.core.shareddata.AsyncMap;
 import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.store.Store;
-import rx.Single;
-import rx.functions.Func1;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -18,53 +16,47 @@ import java.util.concurrent.TimeoutException;
  */
 public class VertxClusteredMapStore<K, V> extends VertxMapStoreBase implements Store<K, V> {
 
-    private final Vertx rxVertx;
+    private final Vertx vertx;
     private final int blockingTimeoutSeconds;
 
-    public VertxClusteredMapStore(final io.vertx.core.Vertx vertx) {
+    public VertxClusteredMapStore(final Vertx vertx) {
         this(vertx, 1);
     }
 
-    public VertxClusteredMapStore(final io.vertx.core.Vertx vertx, final int timeoutSeconds) {
-        rxVertx = Vertx.newInstance(vertx);
-        blockingTimeoutSeconds = timeoutSeconds;
+    public VertxClusteredMapStore(final Vertx vertx, final int timeoutSeconds) {
+        this.vertx = vertx;
+        this.blockingTimeoutSeconds = timeoutSeconds;
     }
 
     @Override
-    public Optional<V> get(K key) {
-        voidAsyncOpToBlocking(map -> map.rxGet(key));
+    public Optional<V> get(final K key) {
+        final AsyncMap<K, V> map = await(vertx.sharedData().<K, V>getAsyncMap(PAC4J_SHARED_DATA_KEY));
+        final V value = await(map.get(key));
+        return Optional.ofNullable(value);
+    }
 
-        final CompletableFuture<V> valueFuture = new CompletableFuture<>();
-        rxVertx.sharedData().<K, V>rxGetClusterWideMap(PAC4J_SHARED_DATA_KEY)
-                .flatMap(map -> map.rxGet(key))
-                .subscribe(valueFuture::complete);
+    @Override
+    public void set(final K key, final V value) {
+        final AsyncMap<K, V> map = await(vertx.sharedData().<K, V>getAsyncMap(PAC4J_SHARED_DATA_KEY));
+        await(map.put(key, value));
+    }
+
+    @Override
+    public void remove(final K key) {
+        final AsyncMap<K, V> map = await(vertx.sharedData().<K, V>getAsyncMap(PAC4J_SHARED_DATA_KEY));
+        await(map.remove(key));
+    }
+
+    /** Helper: block on a Vert.x Future with a bounded timeout (Store API is sync). */
+    private <T> T await(final Future<T> fut) {
         try {
-            return Optional.ofNullable(valueFuture.get(blockingTimeoutSeconds, TimeUnit.SECONDS));
-        } catch (InterruptedException|ExecutionException|TimeoutException e) {
-            throw new TechnicalException(e);
-        }
-    }
-
-    @Override
-    public void set(K key, V value) {
-        voidAsyncOpToBlocking(map -> map.rxPut(key, value));
-    }
-
-    @Override
-    public void remove(K key) {
-        voidAsyncOpToBlocking(map -> map.rxRemove(key));
-    }
-
-    public void voidAsyncOpToBlocking(Func1<AsyncMap, Single> asyncOp) {
-        CompletableFuture<Void> future = new CompletableFuture<>();
-
-        rxVertx.sharedData().rxGetAsyncMap(PAC4J_SHARED_DATA_KEY)
-                .map(asyncOp)
-                .subscribe(result -> future.complete(null));
-
-        try {
-            future.get(blockingTimeoutSeconds, TimeUnit.SECONDS);
-        } catch (InterruptedException|ExecutionException |TimeoutException e) {
+            return fut.toCompletionStage()
+                    .toCompletableFuture()
+                    .get(blockingTimeoutSeconds, TimeUnit.SECONDS);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            throw new TechnicalException(ie);
+        } catch (ExecutionException | TimeoutException e) {
             throw new TechnicalException(e);
         }
     }

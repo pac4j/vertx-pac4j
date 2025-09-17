@@ -1,44 +1,31 @@
 package org.pac4j.vertx.auth;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.shareddata.impl.ClusterSerializable;
-import io.vertx.ext.auth.AuthProvider;
 import io.vertx.ext.auth.User;
-import io.vertx.ext.auth.authorization.Authorization;
-import io.vertx.ext.auth.impl.UserImpl;
 import org.pac4j.core.profile.UserProfile;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * @author Jeremy Prime
  * @since 2.0.0
  */
-public class Pac4jUser extends UserImpl implements User, ClusterSerializable {
+public class Pac4jUser implements User {
 
-    private final Map<String, UserProfile> profiles = new LinkedHashMap<>();
-    private JsonObject principal;
+    private final List<UserProfile> profiles;
+    private final JsonObject principal;
+    private final JsonObject attributes;
 
-    public Pac4jUser() {
-        // I think this noop default constructor is required for deserialization from a clustered session
+    public Pac4jUser(final Collection<UserProfile> profiles) {
+        this.profiles = (profiles == null) ? List.of() : List.copyOf(profiles);
 
-        // Initialize fields to non-null values to avoid io.vertx.ext.auth.impl.UserConverter from thowing NPE
-        super(new JsonObject(), new JsonObject());
+        this.principal = new JsonObject().put("profilesCount", this.profiles.size());
+        this.attributes = new JsonObject();
     }
 
-    @Override
-    public User isAuthorized(Authorization authorization, Handler<AsyncResult<Boolean>> resultHandler) {
-        resultHandler.handle(Future.succeededFuture(
-                profiles.values().stream()
-                        .anyMatch(p -> p.getRoles().contains(authorization))
-        ));
-        return this;
-    }
+
+    // ----- io.vertx.ext.auth.User -----
 
     @Override
     public JsonObject principal() {
@@ -46,28 +33,27 @@ public class Pac4jUser extends UserImpl implements User, ClusterSerializable {
     }
 
     @Override
-    public void setAuthProvider(AuthProvider authProvider) {
+    public JsonObject attributes() {
+        return attributes;
     }
 
-    public void setUserProfiles(final Map<String, UserProfile> userProfiles) {
-        Objects.requireNonNull(userProfiles);
-        profiles.clear();
-        profiles.putAll(userProfiles);
-        updatePrincipal();
-    }
+    @Override
+    public User merge(User other) {
+        if (other == null) return this;
 
-    /**
-     * Update the principal, to be called on any modification of the profiles map internally.
-     */
-    private void updatePrincipal() {
+        JsonObject otherPrinc = other.principal();
+        if (otherPrinc != null) {
+            for (String k : otherPrinc.fieldNames()) {
+                this.principal.put(k, otherPrinc.getValue(k));
+            }
+        }
 
-        principal = new JsonObject();
-        profiles.forEach((name, profile) -> {
-            final JsonObject jsonProfile = new JsonObject();
-            profile.getAttributes()
-                    .forEach((attributeName, attributeValue) ->
-                            jsonProfile.put(attributeName, attributeValue.toString()));
-            principal.put(name, jsonProfile);
-        });
+        JsonObject otherAttr = other.attributes();
+        if (otherAttr != null) {
+            for (String k : otherAttr.fieldNames()) {
+                this.attributes.put(k, otherAttr.getValue(k));
+            }
+        }
+        return this;
     }
 }
