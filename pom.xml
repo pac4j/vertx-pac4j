@@ -3,7 +3,7 @@
 
   <groupId>org.pac4j</groupId>
   <artifactId>vertx-pac4j</artifactId>
-  <version>7.0.1-SNAPSHOT</version>
+  <version>7.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>vertx-pac4j</name>
@@ -122,5 +122,35 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>release-sign-artifacts</id>
+      <activation>
+        <property>
+          <name>performRelease</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>3.2.7</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 </project>
