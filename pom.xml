@@ -3,17 +3,19 @@
 
   <groupId>org.pac4j</groupId>
   <artifactId>vertx-pac4j</artifactId>
-  <version>7.0.1-SNAPSHOT</version>
+  <version>7.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>vertx-pac4j</name>
-  <url>http://maven.apache.org</url>
+  <url>https://github.com/pac4j/vertx-pac4j</url>
 
-  <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>7</version>
-  </parent>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
 
   <distributionManagement>
     <snapshotRepository>
@@ -28,6 +30,14 @@
     <connection>scm:git:git@github.com:pac4j/vertx-pac4j.git</connection>
     <developerConnection>scm:git:git@github.com:pac4j/vertx-pac4j.git</developerConnection>
   </scm>
+
+  <developers>
+    <developer>
+      <id>leleuj</id>
+      <name>Jerome LELEU</name>
+      <email>leleuj@gmail.com</email>
+    </developer>
+  </developers>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
