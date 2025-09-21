@@ -15,7 +15,7 @@ It's based on Java 17, Vert.x 5.0 and on the **[pac4j security engine](https://g
 
 2) An [**authorizer**](http://www.pac4j.org/docs/authorizers.html) is meant to check authorizations on the authenticated user profile(s) or on the current web context:
 
-&#9656; Roles/permissions - Anonymous/remember-me/(fully) authenticated - Profile type, attribute -  CORS - CSRF - Security headers - IP address, HTTP method
+&#9656; Roles / permissions - Anonymous / remember-me / (fully) authenticated - Profile type, attribute -  CORS - CSRF - Security headers - IP address, HTTP method
 
 3) A [**matcher**](http://www.pac4j.org/docs/matchers.html) defines whether the `SecurityHandler` must be applied and can be used for additional web processing
 
