@@ -51,7 +51,7 @@ The demo webapp: [vertx-pac4j-demo](https://github.com/pac4j/vertx-pac4j-demo) i
 The latest released version is available in the [Maven central repository](https://repo.maven.apache.org/maven2).
 The [next version](https://github.com/pac4j/vertx-pac4j/wiki/Next-version) is under development.
 
-See the [release notes](https://github.com/pac4j/vertx-pac4j/wiki/Release-Notes). Learn more by browsing the [pac4j documentation](https://www.javadoc.io/doc/org.pac4j/pac4j-core/6.2.2/index.html) and the [vertx-pac4j Javadoc](http://www.javadoc.io/doc/org.pac4j/vertx-pac4j/7.0.0).
+See the [release notes](https://github.com/pac4j/vertx-pac4j/wiki/Release-Notes).
 
 See the [migration guide](https://github.com/pac4j/vertx-pac4j/wiki/Migration-guide) as well.
 
