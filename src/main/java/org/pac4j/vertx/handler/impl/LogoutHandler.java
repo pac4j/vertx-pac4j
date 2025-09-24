@@ -4,6 +4,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
 
+import lombok.val;
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.engine.DefaultLogoutLogic;
@@ -58,8 +59,7 @@ public class LogoutHandler implements Handler<RoutingContext> {
 
     @Override
     public void handle(final RoutingContext rc) {
-        final LogoutLogic logoutLogic =
-                (config.getCallbackLogic() != null) ? config.getLogoutLogic() : DefaultLogoutLogic.INSTANCE;
+        val logoutLogic = config.getLogoutLogic();
 
         vertx.<Void>executeBlocking(() -> {
             logoutLogic.perform(

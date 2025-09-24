@@ -4,6 +4,7 @@ import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.AuthenticationHandler;
 import io.vertx.ext.web.impl.UserContextInternal;
+import lombok.val;
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.engine.*;
@@ -38,8 +39,7 @@ public class SecurityHandler implements AuthenticationHandler {
 
     @Override
     public void handle(final RoutingContext ctx) {
-        final SecurityLogic securityLogic =
-                (config.getSecurityLogic() != null) ? config.getSecurityLogic() : DefaultSecurityLogic.INSTANCE;
+        val securityLogic = config.getSecurityLogic();
 
         final SecurityGrantedAccessAdapter granted = (context, store, profiles) -> {
             final Pac4jUser user = new Pac4jUser(profiles);

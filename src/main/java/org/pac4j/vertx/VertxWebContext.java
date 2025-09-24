@@ -35,13 +35,11 @@ public class VertxWebContext implements WebContext {
     private final JsonObject headers;
     private final JsonObject parameters;
     private final Map<String, String[]> mapParameters;
-    private final SessionStore sessionStore;
 
-    public VertxWebContext(final RoutingContext routingContext, final SessionStore sessionStore) {
+    public VertxWebContext(final RoutingContext routingContext) {
         final HttpServerRequest request = routingContext.request();
         this.routingContext = routingContext;
         this.method = request.method().toString();
-        this.sessionStore = sessionStore;
 
         this.fullUrl = request.absoluteURI();
         URI uri;
