@@ -4,6 +4,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
 import lombok.val;
+import org.pac4j.core.adapter.FrameworkAdapter;
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.engine.CallbackLogic;
@@ -47,6 +48,9 @@ public class CallbackHandler implements Handler<RoutingContext> {
 
     @Override
     public void handle(final RoutingContext rc) {
+
+        FrameworkAdapter.INSTANCE.applyDefaultSettingsIfUndefined(config);
+
         val callbackLogic = config.getCallbackLogic();
 
         vertx.<Void>executeBlocking(() -> {
