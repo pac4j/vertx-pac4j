@@ -203,14 +203,14 @@ public class VertxWebContext implements WebContext {
     }
 
     public void removeVertxUser() {
-        UserContextInternal uc = (UserContextInternal) routingContext.user();
+        UserContextInternal uc = (UserContextInternal) routingContext.userContext();
         if (uc != null) {
             uc.setUser(null);
         }
     }
 
     public void setVertxUser(final Pac4jUser pac4jUser) {
-        UserContextInternal uc = (UserContextInternal) routingContext.user();
+        UserContextInternal uc = (UserContextInternal) routingContext.userContext();
         if (uc != null) {
             uc.setUser(pac4jUser);
         }
