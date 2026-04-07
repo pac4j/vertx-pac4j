@@ -11,7 +11,7 @@ It's based on Java 17, Vert.x 5.0 and on the **[pac4j security engine](https://g
 
 1) A [**client**](http://www.pac4j.org/docs/clients.html) represents an authentication mechanism. It performs the login process and returns a user profile. An indirect client is for web applications authentication while a direct client is for web services authentication:
 
-&#9656; OAuth - SAML - CAS - OpenID Connect - HTTP - OpenID - Google App Engine - Kerberos - LDAP - SQL - JWT - MongoDB - CouchDB - IP address - REST API
+&#9656; OpenID Connect - SAML - CAS - OAuth - HTTP - Kerberos - LDAP - SQL - JWT - MongoDB - IP address - REST API
 
 2) An [**authorizer**](http://www.pac4j.org/docs/authorizers.html) is meant to check authorizations on the authenticated user profile(s) or on the current web context:
 
@@ -48,7 +48,7 @@ The demo webapp: [vertx-pac4j-demo](https://github.com/pac4j/vertx-pac4j-demo) i
 
 ## Versions
 
-The latest released version is available in the [Maven central repository](https://repo.maven.apache.org/maven2).
+The latest released version is available in the [![Maven Central](https://img.shields.io/maven-central/v/org.pac4j/vertx-pac4j.svg)](https://repo1.maven.org/maven2/org/pac4j/vertx-pac4j/).
 The [next version](https://github.com/pac4j/vertx-pac4j/wiki/Next-version) is under development.
 
 See the [release notes](https://github.com/pac4j/vertx-pac4j/wiki/Release-Notes).
