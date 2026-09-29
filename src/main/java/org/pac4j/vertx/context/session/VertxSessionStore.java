@@ -1,5 +1,6 @@
 package org.pac4j.vertx.context.session;
 
+import io.vertx.core.Future;
 import io.vertx.ext.web.Session;
 import io.vertx.ext.web.sstore.SessionStore;
 import org.pac4j.core.context.WebContext;
@@ -11,7 +12,6 @@ import org.pac4j.vertx.VertxWebContext;
 import java.util.Base64;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -79,6 +79,10 @@ public class VertxSessionStore implements org.pac4j.core.context.session.Session
                     vertxSession.put(key, value);
                 }
             }
+            if (providedSession != null) {
+                // A tracked session is not flushed by the current request's SessionHandler.
+                await(sessionStore.put(vertxSession));
+            }
         }
     }
 
@@ -86,6 +90,9 @@ public class VertxSessionStore implements org.pac4j.core.context.session.Session
     public boolean destroySession(final WebContext context) {
         final Session vertxSession = getVertxSession(context);
         if (vertxSession != null) {
+            if (providedSession != null) {
+                await(sessionStore.delete(vertxSession.id()));
+            }
             vertxSession.destroy();
             return true;
         }
@@ -104,34 +111,21 @@ public class VertxSessionStore implements org.pac4j.core.context.session.Session
     @Override
     public Optional<org.pac4j.core.context.session.SessionStore> buildFromTrackableSession(final WebContext context, final Object trackableSession) {
         if (trackableSession != null) {
-            final CompletableFuture<Session> vertxSessionFuture = new CompletableFuture<>();
-
-            sessionStore
-                    .get((String) trackableSession)
-                    .onComplete(ar -> {
-                        if (ar.succeeded()) {
-                            vertxSessionFuture.complete(ar.result());
-                        } else {
-                            vertxSessionFuture.completeExceptionally(ar.cause());
-                        }
-                    });
-
-            final CompletableFuture<VertxSessionStore> pac4jSessionFuture = vertxSessionFuture.thenApply(sess -> {
-                if (sess != null) {
-                    return new VertxSessionStore(sessionStore, sess);
-                } else {
-                    return null;
-                }
-            });
-
-            try {
-                return Optional.ofNullable(pac4jSessionFuture.get());
-            } catch (InterruptedException | ExecutionException e) {
-                Thread.currentThread().interrupt();
-                throw new TechnicalException(e);
-            }
+            return Optional.ofNullable(await(sessionStore.get((String) trackableSession)))
+                    .map(session -> new VertxSessionStore(sessionStore, session));
         }
         return Optional.empty();
+    }
+
+    private static <T> T await(final Future<T> future) {
+        try {
+            return future.toCompletionStage().toCompletableFuture().get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new TechnicalException(e);
+        } catch (ExecutionException e) {
+            throw new TechnicalException(e.getCause());
+        }
     }
 
     @Override

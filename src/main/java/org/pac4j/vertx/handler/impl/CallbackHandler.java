@@ -44,6 +44,8 @@ public class CallbackHandler implements Handler<RoutingContext> {
         this.defaultUrl = options.getDefaultUrl();
         this.renewSession = options.getRenewSession();
         this.defaultClient = options.getDefaultClient();
+
+        config.setSessionStoreFactoryIfUndefined(parameters -> sessionStore);
     }
 
     @Override

@@ -35,6 +35,7 @@ It's based on Java 17, Vert.x 5.0 and on the **[pac4j security engine](https://g
 ### - the [security configuration](https://github.com/pac4j/vertx-pac4j/wiki/Security-configuration)
 ### - the [callback configuration](https://github.com/pac4j/vertx-pac4j/wiki/Callback-configuration), only for web applications
 ### - the [logout configuration](https://github.com/pac4j/vertx-pac4j/wiki/Logout-configuration)
+### - the [session stores and clustering configuration](https://github.com/pac4j/vertx-pac4j/wiki/Session-stores-and-clustering), for shared sessions and SSO logout
 
 ### 3) [Apply security](https://github.com/pac4j/vertx-pac4j/wiki/Apply-security)
 
@@ -59,4 +60,3 @@ See the [migration guide](https://github.com/pac4j/vertx-pac4j/wiki/Migration-gu
 ## Need help?
 
 You can use the [mailing lists](http://www.pac4j.org/mailing-lists.html) or the [commercial support](http://www.pac4j.org/commercial-support.html).
-

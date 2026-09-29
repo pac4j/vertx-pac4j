@@ -56,6 +56,8 @@ public class LogoutHandler implements Handler<RoutingContext> {
         this.localLogout = options.isLocalLogout();
         this.destroySession = options.isDestroySession();
         this.centralLogout = options.isCentralLogout();
+
+        config.setSessionStoreFactoryIfUndefined(parameters -> sessionStore);
     }
 
     @Override

@@ -3,7 +3,7 @@
 
   <groupId>org.pac4j</groupId>
   <artifactId>vertx-pac4j</artifactId>
-  <version>7.0.4-SNAPSHOT</version>
+  <version>7.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>vertx-pac4j</name>
@@ -44,7 +44,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <vertx.version>5.2.0</vertx.version>
-    <pac4j.version>6.5.8</pac4j.version>
+    <pac4j.version>6.5.9</pac4j.version>
     <java.version>17</java.version>
     <maven.compiler.plugin.version>3.16.0</maven.compiler.plugin.version>
     <lombok.version>1.18.48</lombok.version>
@@ -96,6 +96,18 @@
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.pac4j</groupId>
+      <artifactId>pac4j-cas</artifactId>
+      <version>${pac4j.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-hazelcast</artifactId>
+      <version>${vertx.version}</version>
       <scope>test</scope>
     </dependency>
 
