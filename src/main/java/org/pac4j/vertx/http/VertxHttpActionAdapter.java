@@ -33,6 +33,7 @@ public class VertxHttpActionAdapter implements HttpActionAdapter {
                 routingContext.response().setStatusCode(code);
             } else {
                 routingContext.fail(code);
+                return null;
             }
 
             if (action instanceof WithLocationAction) {

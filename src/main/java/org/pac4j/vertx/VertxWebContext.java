@@ -1,5 +1,6 @@
 package org.pac4j.vertx;
 
+import io.vertx.core.http.CookieSameSite;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -52,11 +53,11 @@ public class VertxWebContext implements WebContext {
         this.scheme = uri.getScheme();
         this.serverName = uri.getHost();
         this.serverPort = (uri.getPort() != -1) ? uri.getPort() : scheme.equals("http") ? 80 : 443;
-        this.remoteAddress = request.remoteAddress().toString();
+        this.remoteAddress = request.remoteAddress().host();
 
         headers = new JsonObject();
         for (String name : request.headers().names()) {
-            headers.put(name, request.headers().get(name));
+            headers.put(name.toLowerCase(Locale.ROOT), request.headers().get(name));
         }
 
         parameters = new JsonObject();
@@ -105,7 +106,7 @@ public class VertxWebContext implements WebContext {
 
     @Override
     public Optional<String> getRequestHeader(String name) {
-        return Optional.ofNullable(headers.getString(name));
+        return Optional.ofNullable(headers.getString(name.toLowerCase(Locale.ROOT)));
     }
 
     @Override
@@ -186,8 +187,11 @@ public class VertxWebContext implements WebContext {
         *  dont use the default of one of org.pac4j.core.context.Cookie which is -1 but allow the default one of
         *  io.vertx.ext.web.Cookie which uses netty Cookie internally
         * */
-        if(cookie.getMaxAge()>0){
+        if (cookie.getMaxAge() >= 0) {
             vertxCookie.setMaxAge(cookie.getMaxAge());
+        }
+        if (cookie.getSameSitePolicy() != null) {
+            vertxCookie.setSameSite(CookieSameSite.valueOf(cookie.getSameSitePolicy().toUpperCase(Locale.ROOT)));
         }
 
         routingContext.response().addCookie(vertxCookie);

@@ -30,6 +30,14 @@
     </Match>
     <Match>
         <Class name="~.*VertxSessionStore"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
+    <Match>
+        <Class name="~.*SecurityHandler"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
+    <Match>
+        <Class name="~.*VertxSessionStore"/>
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
     <Match>
